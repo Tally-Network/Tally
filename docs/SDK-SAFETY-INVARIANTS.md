@@ -127,18 +127,53 @@ Everything below moves together or not at all; a partial uplift is the silent-fa
 
 **Why it is silent — and why this one is about a *reader*, not a bug.** An empty transfer set and a broken proof look identical to someone who has no reason to know retention windows exist. On day eight an outside reviewer would conclude the cryptography failed. So `verify` checks `getHealth` before enumerating and exits **3** with an explicit explanation, distinct from **2** (proof rejected) and **1** (could not verify). Boundary behaviour is unit-tested in [`cli/test-retention.ts`](../cli/test-retention.ts) rather than waiting a week to observe it.
 
-### Milestone U2 — persistent event archive (`INDEXER.md`)
+### Milestone U2 — durable verification without a trusted archive
 
 **The gap:** Tally has **no durable verification path.** Every published round expires with the RPC window.
 
-The confidential-token specification already defines what is needed — [`INDEXER.md`](../vendor/stellar-contracts/packages/tokens/src/confidential/docs/INDEXER.md), *"Indexing and Off-Chain State Recovery"* — and upstream needs it for a related reason: wallet recovery from seed also depends on an event log that outlives RPC retention (`DESIGN_cont.md` §9.5). **We have not built it, and we are not pretending the mitigation below is a substitute.**
+**The obvious fix is wrong.** Running our own indexer and pointing donors at it would break the property `verify` exists to establish. The verifier reconstructs public inputs from chain state and takes only three values from the funder precisely so a donor need not trust the funder. A donor querying *our* archive trusts us to re-serve chain data honestly — the same trust, moved one step and made less visible. **An indexer we operate is not a fix; it is the problem wearing a different hat.**
+
+So the question is whether a historical round can be enumerated against **canonical, public** Stellar data instead. It can.
+
+#### What the network actually publishes
 
 | | |
 |:---|:---|
-| **Mitigation today** | `pnpm evidence:refresh` republishes a fresh round in one command, so whatever we link is inside the window. `verify` names the expiry when it is hit. `--rpc` accepts an archive node with a longer window. |
-| **Why that is not enough** | It keeps *current* evidence verifiable. It does **not** make a *historical* round verifiable — and a donor auditing a grant programme a year later is exactly the case the product is for. |
-| **Exit criteria** | A round from beyond the RPC window verifies against an archive, with the archive's contents independently checkable against ledger history rather than trusted. |
-| **Sequencing** | After the demonstration targets, before any mainnet claim. A mainnet product whose disclosures expire after a week is not the product described on the landing page. |
+| **History archives** are canonical and public, published by SDF and validators. A checkpoint carries "the ledger headers, transaction sets, results of transactions, and indexing metadata, which permits a variety of fine-grained auditing, **transaction replay**, or direct catchup." | ✅ |
+| **Contract events are not in them.** Events live in `TransactionMeta`, which is not archived. | ⚠️ |
+| **They are regenerable by replay.** Events are a deterministic function of the ledger, and stellar-core **v24.1.0** was released specifically to "guarantee that anyone replaying the network history from genesis will have a complete picture of all token movements." | ✅ |
+| **Archive integrity is verifiable, not trusted.** Ledger headers form a hash chain via `previousLedgerHash`; each bucket's `sha256` must match the id in the HAS file; `verify-checkpoints` "listens to the network until it observes a consensus hash for a checkpoint ledger, and then verifies the entire earlier history of an archive that ends in that ledger hash"; and `catchup --trusted-checkpoint-hashes` checks a replay against that list. | ✅ |
+
+**That last row is the answer to "how would a donor detect the archive lying."** The anchor is a consensus hash observed from the live network, not the archive operator's word. A doctored archive fails the hash chain.
+
+#### The distinction that decides U2's shape
+
+Verifying the **header chain** proves which transactions ran. It does **not** attest the *meta* — events are produced by executing those transactions, so a party who publishes meta is asserting an execution result. **Only re-execution establishes the events.** (This is reasoning from the data model, not a quoted source; it is the load-bearing step, so it should be checked before U2 is built.)
+
+Therefore:
+
+- **Replay is trustless.** A donor who regenerates meta over the round's ledger range trusts nothing but stellar-core and the consensus hash.
+- **Any published meta — ours or a vendor's — is trusted execution**, and must be labelled that way rather than presented as equivalent.
+
+#### Shape
+
+1. **`verify --archive <uri>`** consumes archive-derived `LedgerCloseMeta` (the Galexie/CDP format) in place of RPC, for the round's ledger range only.
+2. **The archive path is a convenience, and says so at runtime** — it prints that events came from a published archive rather than from re-execution, and names what the donor is trusting.
+3. **`verify --replay`** documents and, where practical, drives the trustless path: catch up over the round's range and regenerate meta locally.
+
+**The practical point that makes (3) viable:** a donor verifying one round needs **the round's checkpoint range, not genesis-to-now**. Full-history export is quoted at ~150 days on a single Galexie instance; one round spans about ten ledgers. The cost of a narrow catchup has **not been measured** and is the first thing to measure when U2 is scoped — if it is minutes, the trustless path is the default and the archive is a shortcut; if it is hours, the labelling in (2) carries the weight.
+
+#### Exit criteria
+
+- A round from beyond the RPC window verifies, and the tool states which trust model produced its events.
+- The replay path is documented end to end and reproduced by someone who is not us.
+- If an archive path ships, its output is **checkable against replay**, and the docs state plainly what a donor trusts when they skip that check.
+
+**Do not build an indexer before the replay-cost measurement.** Building one first would answer the easy question and leave the trust question where it started.
+
+#### Sequencing
+
+After the demonstration targets, before any mainnet claim. A mainnet product whose disclosures expire after a week is not the product the landing page describes.
 
 **Stated here so a reviewer sees that we know it**, rather than discovering it by trying to verify a round on day eight.
 

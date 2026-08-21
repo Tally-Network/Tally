@@ -28,6 +28,7 @@ So the question to ask of any claim is not *"is this sentence true?"* — it wil
 
 ### Practice
 
+- **A CLI that executes on import makes its own test suite meaningless.** Guard the dispatch on being the entry point. Without it, importing the module to unit-test a pure function runs the command and exits — and the test file looks like it passed because nothing failed, having never run. `cli/tally.ts` carries the guard; anything else with a top-level dispatch needs one too.
 - **Write the negative test first.** The circuit-family floor bug (`n=4` with `MIN_ACTIVE=5` was structurally unprovable) was caught by a test, not by reasoning. So was the fact that the round registry's window actually excludes anything — which is why `pnpm demo` sends a transfer *before* the round opens on every run.
 - **A demo that cannot fail proves nothing.** If every case in a demonstration passes by construction, it cannot distinguish working machinery from absent machinery.
 - **Re-measure after changing a mode or a version.** Numbers are not portable across proving modes, circuit revisions, or protocol upgrades.
