@@ -371,10 +371,99 @@ Cross-checking against §2: the `transfer` circuit has 24 real public inputs (it
 ### What this settles
 
 - **Aggregate verification is off-chain, permanently** — not "for now". Even a 4× instruction cap (SLP-0004) only lifts n=64 from 147% to 37% of a larger budget, but the *architecture* has no reason to move on-chain: the disclosure layer is off-chain by design (`SELECTIVE_DISCLOSURE.md` §5.4), and putting it on-chain would publish the disclosure's existence, recipient, and timing — destroying the property that makes it useful.
-- **The on-chain round registry is now load-bearing, not optional.** It is the only mechanism supplying **completeness** — the disclosure layer proves positive statements only (§1.4: "It does not prove negatives"). The registry makes the round's event set publicly enumerable from chain state, so the donor can verify the aggregate covers *exactly* that set. Without it, a funder could disclose a favourable subset.
+- **The on-chain round registry is load-bearing, but narrower than first stated** — see §6.9. It pins the **lane set and window**, pre-committed before the round; the transfers themselves are enumerated from topic-indexed chain events, which the funder cannot suppress.
 - **The product boundary is now precise:** proofs verified **off-chain by the donor**, completeness anchored **on-chain by the registry**. Both halves are needed; neither is a fallback.
 
 This is the answer to "is the aggregate ever verified on-chain" — asked before building fan-out, and it does not change the fan-out design, but it does fix the product scope.
+
+---
+
+## 6.9 Completeness — what stops a funder omitting events at registration time?
+
+**The objection is correct as stated, and it retires a step I had assumed: there must be no per-transfer registration call.** If registration were a separate funder-initiated write, cherry-picking would only move earlier — "disclose a favourable subset" becomes "register a favourable subset."
+
+Both proposed remedies were examined. The measurements say (a) is affordable but ineffective in its obvious form, and (b) is **already true and costs nothing** — so nothing needs building.
+
+### (a) Atomic registration — affordable, but a wrapper cannot deliver it
+
+Two facts settle the shape.
+
+**A wrapper contract can never be a chokepoint.** `confidential_transfer` is a public entrypoint gated only by `from.require_auth()`:
+
+```rust
+fn confidential_transfer(e: &Env, from: Address, to: Address, data: Bytes) {
+    from.require_auth();
+    ...
+    Self::Hooks::on_transfer(e, &from, &to, ...);
+    storage::confidential_transfer(e, &from, &to, &payload, &proof);
+}
+```
+
+A funder routing through our wrapper for the transfers it wants counted, and calling the token **directly** for the ones it doesn't, defeats wrapper-based registration entirely. This is an architectural fact, not a cost question.
+
+**The only unbypassable form is a `Hooks` implementation inside our own token deployment** — `on_transfer` runs *inside* the same call, so it cannot be skipped. Measured against the shipped `ComplianceHooks` token as an upper bound (its `on_transfer` gates **both** accounts — storage read plus SAC `authorized()` cross-contract call each — strictly heavier than a round-registry write):
+
+| | Instructions | % of cap |
+|:---|---:|---:|
+| Plain `confidential_transfer` | 92,973,307 | 93.0% |
+| With `ComplianceHooks` | **93,531,122** | 93.5% |
+| **Hook overhead** | **557,815** | **0.56%** |
+| Headroom before the hook | 7,026,693 | 7.0% |
+
+**A hook costs ~558k instructions against ~7.0M of headroom — roughly 12× margin.** Atomic registration *fits comfortably*. My earlier ~9M estimate for a registry write was wrong by an order of magnitude; hooks are far cheaper than the surrounding proof verification makes them look.
+
+But it requires deploying **our own confidential token**, which means recipients register against Tally's token rather than the standard one — real ecosystem fragmentation for a property we get free anyway.
+
+### (b) Omission is already detectable — and this is the answer
+
+Every transfer emits an event whose **sender and recipient are topic-indexed**:
+
+```rust
+pub struct Transfer {
+    #[topic] pub from: Address,
+    #[topic] pub to: Address,
+    pub r_e: BytesN<64>, pub v_tilde: BytesN<32>, pub sigma: BytesN<32>, ...
+}
+```
+
+Emission is unconditional inside `storage::confidential_transfer` — **there is no code path that moves confidential value without publishing the sender's address.** Confidentiality covers amounts, never addresses (`OVERVIEW.md`: "an observer sees that address A transacted with address B").
+
+So the donor does not need the funder to register anything. They **query the chain by topic** for every transfer out of the declared lanes and require the aggregate to cover exactly that set. A funder cannot suppress the event, so an omitted transfer shows up as a set-mismatch and the disclosure is rejected.
+
+### The registry's real job is narrower than §6.8 stated
+
+It records **the lane set and the round window** — not individual transfers.
+
+```
+open_round(round_id, lanes[])    → pins the sender set, records the opening ledger
+close_round(round_id)            → records the closing ledger
+```
+
+**The pre-declaration is the load-bearing part.** If the lane set could be written *after* transfers, the funder would simply declare the flattering lanes — the same cherry-picking one level up. So: `open_round` MUST be on-chain and timestamped **before the round's first transfer**, and the donor MUST reject any round whose declaration ledger is later than the earliest event it covers.
+
+**Donor verification procedure:**
+
+1. Read `lanes[]` and `[open_ledger, close_ledger]` from the registry; reject if `open_ledger` post-dates any covered event.
+2. Enumerate **all** `Transfer` **and** `SpenderTransfer` events with `from ∈ lanes` in the window. (`SpenderTransfer` matters — a delegated send is still a send from the lane.)
+3. Require `n_active` to equal that count and every `ref_E` to match, with no duplicates (§I2 verifier obligations).
+4. Verify the aggregate proof.
+
+Any omission fails at step 3.
+
+### Residual limit — state it plainly
+
+The aggregate proves: *"the transfers out of these declared accounts in this window total exactly X, and these are all of them."*
+
+It does **not** prove the funder ran no activity from **undeclared** accounts. No cryptography here can — it is the on-chain equivalent of "did you also pay people in cash." Two things bound it, and both belong on the landing page rather than in a footnote:
+
+- **Deposits are public.** Funding a lane crosses the confidential boundary in the clear (§Q2), so money flowing from a funder's treasury into any lane is auditable in plaintext. A secret lane has to be funded from somewhere.
+- **The claim is scoped to the declared lanes**, pre-committed on-chain before the round opens.
+
+Inflation by self-dealing — paying accounts the funder controls and counting them — is likewise outside what a value-hiding primitive can settle; it needs recipient attestation, which is out of MVP scope.
+
+### Consequence for fan-out
+
+**Fan-out builds on the stock OpenZeppelin token. No custom token, no hook, no per-transfer registry write.** Completeness comes from the primitive's public addresses plus a pre-committed lane declaration. The hook option stays on the shelf, measured and affordable, if explicit on-chain round tagging later proves worth its own token deployment.
 
 ---
 
