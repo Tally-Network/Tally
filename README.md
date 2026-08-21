@@ -33,6 +33,8 @@ See [docs/TRUST-STATEMENT.md](docs/TRUST-STATEMENT.md) for why it is worded this
 | [`circuits/`](circuits/) | Multi-sender aggregate disclosure circuits (Noir/UltraHonk), `n ∈ {8,16,64}` |
 | [`contracts/round-registry`](contracts/) | On-chain lane set + window declaration — the completeness anchor |
 | [`demo/`](demo/) | `pnpm demo` — one full round on testnet, donor-verified |
+| [`site/`](site/) | Landing page — evidence-led, both trust sentences verbatim |
+| [`docs/DEMONSTRATION-STATUS.md`](docs/DEMONSTRATION-STATUS.md) | §4 target status, honestly counted |
 | [`docs/TRUST-STATEMENT.md`](docs/TRUST-STATEMENT.md) | Exactly what the proof does and does not assure |
 | [`docs/SDK-SAFETY-INVARIANTS.md`](docs/SDK-SAFETY-INVARIANTS.md) | Properties whose violation is invisible on-chain |
 | [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) | Investigation of the confidential-token preview |

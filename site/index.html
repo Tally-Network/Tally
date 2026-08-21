@@ -1,0 +1,552 @@
+<title>Tally</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #EEF1F7;
+    --panel:      #F7F9FC;
+    --ink:        #0F1320;
+    --ink-soft:   #444C63;
+    --ink-faint:  #6B7590;
+    --rule:       #C9D0E0;
+    --rule-soft:  #DDE2ED;
+    --accent:     #2438B8;
+    --accent-dim: #E4E7F7;
+    --sealed:     #A96A12;
+    --sealed-dim: #F4E9D6;
+
+    --f-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:    "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --f-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --col:  66ch;
+    --wide: 1040px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0B0E16;
+      --panel:      #141A28;
+      --ink:        #E6EAF4;
+      --ink-soft:   #A9B2C9;
+      --ink-faint:  #77819C;
+      --rule:       #2A3247;
+      --rule-soft:  #1E2536;
+      --accent:     #8B99FF;
+      --accent-dim: #1B2145;
+      --sealed:     #E3A94A;
+      --sealed-dim: #33270F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0B0E16;
+    --panel:      #141A28;
+    --ink:        #E6EAF4;
+    --ink-soft:   #A9B2C9;
+    --ink-faint:  #77819C;
+    --rule:       #2A3247;
+    --rule-soft:  #1E2536;
+    --accent:     #8B99FF;
+    --accent-dim: #1B2145;
+    --sealed:     #E3A94A;
+    --sealed-dim: #33270F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 28px; }
+  .col  { max-width: var(--col); }
+
+  /* ---------- type ---------- */
+  h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 4rem); line-height: 1.04; letter-spacing: -0.02em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.15; letter-spacing: -0.01em; }
+  h3 { font-size: 1.08rem; font-family: var(--f-body); font-weight: 600; letter-spacing: 0; }
+  p  { margin: 0; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .lede { font-size: 1.17rem; line-height: 1.6; color: var(--ink-soft); }
+  .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- rhythm ---------- */
+  section { border-top: 1px solid var(--rule-soft); }
+  section > .wrap { padding-top: 68px; padding-bottom: 68px; }
+  .stack   { display: flex; flex-direction: column; gap: 20px; }
+  .stack-l { display: flex; flex-direction: column; gap: 34px; }
+
+  /* ---------- hero ---------- */
+  .hero > .wrap { padding-top: 76px; padding-bottom: 56px; }
+  .hero h1 { margin-bottom: 22px; }
+  .hero .lede { max-width: 56ch; }
+
+  /* ---------- the ledger ---------- */
+  .ledger {
+    margin-top: 46px;
+    border: 1px solid var(--rule);
+    background: var(--panel);
+    overflow-x: auto;
+  }
+  .ledger table { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 0.82rem; }
+  .ledger caption {
+    caption-side: top;
+    text-align: left;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .ledger th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--ink-faint);
+    padding: 9px 18px;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ledger td { padding: 7px 18px; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  .ledger tbody tr:last-child td { border-bottom: 1px solid var(--rule); }
+  .addr { color: var(--ink-soft); }
+  .amt  { color: var(--sealed); background: var(--sealed-dim); padding: 1px 7px; font-variant-numeric: tabular-nums; }
+  .total-row td { padding-top: 13px; padding-bottom: 13px; border-bottom: none !important; font-weight: 600; }
+  .total-row .lbl { color: var(--ink-faint); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .total-val { color: var(--ink); font-size: 1.05rem; }
+  .proofchip {
+    display: inline-block;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 3px 9px;
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+
+  /* ---------- trust statement ---------- */
+  .trust {
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    max-width: 72ch;
+  }
+  .trust p { font-size: 1.05rem; line-height: 1.62; }
+  .trust b { font-family: var(--f-display); font-weight: 600; }
+
+  /* ---------- figures ---------- */
+  .figure {
+    border: 1px solid var(--rule);
+    background: var(--panel);
+    padding: 34px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .bignum {
+    font-family: var(--f-mono);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.6rem, 7vw, 4.4rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+  }
+  .bignum small { font-size: 0.3em; letter-spacing: 0.06em; color: var(--ink-faint); margin-left: 8px; font-weight: 500; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .cell { background: var(--panel); padding: 22px 20px; display: flex; flex-direction: column; gap: 5px; }
+  .cell .k { font-family: var(--f-mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .cell .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 1.45rem; font-weight: 600; letter-spacing: -0.02em; }
+  .cell .n { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.45; }
+
+  /* ---------- data tables ---------- */
+  .data-wrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--panel); }
+  table.data { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+  table.data th {
+    text-align: left; font-weight: 500; color: var(--ink-faint);
+    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 11px 18px; border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  table.data td { padding: 9px 18px; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data .num { text-align: right; }
+  .ok   { color: var(--accent); }
+  .warn { color: var(--sealed); }
+
+  /* ---------- terminal ---------- */
+  .term {
+    border: 1px solid var(--rule);
+    background: var(--panel);
+    font-family: var(--f-mono);
+    font-size: 0.8rem;
+    line-height: 1.75;
+    overflow-x: auto;
+    font-variant-numeric: tabular-nums;
+  }
+  .term-bar {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .term pre { margin: 0; padding: 18px; white-space: pre; }
+  .term .c { color: var(--ink-faint); }
+  .term .g { color: var(--accent); }
+  .term .a { color: var(--sealed); }
+
+  /* ---------- flow diagram ---------- */
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 0; margin-top: 6px; }
+  .node {
+    border: 1px solid var(--rule); background: var(--panel);
+    padding: 16px 14px; text-align: center;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .node .t { font-weight: 600; font-size: 0.92rem; }
+  .node .s { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.05em; }
+  .arrow { height: 1px; background: var(--rule); position: relative; min-width: 26px; }
+  .arrow::after {
+    content: ""; position: absolute; right: 0; top: -3px;
+    border-left: 6px solid var(--rule); border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+  }
+  .aside-node { margin-top: 22px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .vline { width: 1px; background: var(--rule); height: 30px; margin: 0 auto; }
+  .donor {
+    border: 1px solid var(--accent); background: var(--accent-dim);
+    padding: 16px 14px; text-align: center; display: flex; flex-direction: column; gap: 4px;
+  }
+  .donor .t { font-weight: 600; font-size: 0.92rem; color: var(--accent); }
+  .donor .s { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-soft); }
+
+  /* ---------- status ---------- */
+  .status-row { display: flex; gap: 14px; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--rule-soft); }
+  .status-row:last-child { border-bottom: none; }
+  .mark { font-family: var(--f-mono); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; min-width: 84px; }
+  .mark.yes  { color: var(--accent); }
+  .mark.part { color: var(--sealed); }
+  .mark.no   { color: var(--ink-faint); }
+
+  ul { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 9px; }
+  li::marker { color: var(--ink-faint); }
+
+  footer { border-top: 1px solid var(--rule); }
+  footer .wrap { padding: 34px 28px 56px; display: flex; flex-wrap: wrap; gap: 18px 34px; align-items: baseline; }
+  .foot-mono { font-family: var(--f-mono); font-size: 0.76rem; color: var(--ink-faint); }
+
+  /* ---------- one orchestrated moment: the amounts seal ---------- */
+  .amt { transition: color 260ms ease, background-color 260ms ease; }
+  .amt.plain { color: var(--ink); background: transparent; }
+  @media (prefers-reduced-motion: reduce) {
+    .amt { transition: none; }
+  }
+
+  @media (max-width: 720px) {
+    .flow { grid-template-columns: 1fr; gap: 10px; }
+    .arrow { width: 1px; height: 22px; min-width: 0; margin: 0 auto; }
+    .arrow::after { right: -3px; top: auto; bottom: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; border-top: 6px solid var(--rule); border-bottom: none; }
+    .aside-node { grid-template-columns: 1fr; }
+  }
+</style>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow" style="margin-bottom:26px;">Tally &nbsp;·&nbsp; Confidential disbursement on Stellar</p>
+    <h1>A ledger with the<br>amounts sealed.</h1>
+    <p class="lede" style="margin-top:22px;">One funder pays many recipients. Who was paid is public. How much each received is not. The total can be proved to a donor on demand.</p>
+
+    <div class="ledger">
+      <table>
+        <caption>Round 03&#8202;0a&#8202;11&#8202;18 &nbsp;·&nbsp; Stellar testnet &nbsp;·&nbsp; 7 of 16 transfers shown</caption>
+        <thead>
+          <tr><th>From (lane)</th><th>To (recipient)</th><th>Amount (sealed)</th><th>Ledger</th></tr>
+        </thead>
+        <tbody id="ledger-rows"></tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td class="lbl">Total disbursed</td>
+            <td></td>
+            <td class="total-val" colspan="2">3,160 <span class="proofchip">proved · 14,592 B</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4260769–4260778. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
+  </div>
+</header>
+
+<!-- ============ PROBLEM ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">The problem</p>
+      <h2>A public ledger publishes every recipient's amount, forever.</h2>
+      <p>For a grant programme, a bounty platform, or an aid disbursement, that is disqualifying. It exposes how much each person received to anyone who looks — including people with an interest in knowing which individuals just received money. The usual answer is to pay off-chain, which gives up the auditability that made paying on-chain worth doing.</p>
+      <p>Tally keeps both halves: amounts stay private, and the round's total stays provable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST STATEMENT ============ -->
+<section>
+  <div class="wrap stack-l">
+    <p class="eyebrow">What the proof does and does not assure</p>
+    <div class="trust">
+      <p><b>The donor is assured that</b> the confidential transfers sent from the lane accounts Tally declared on-chain before the round opened, within that round's declared ledger window, total exactly the disclosed amount and that none has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.</p>
+      <p><b>This does not assure</b> that the funder made no other payments, nor that the recipients are independent of the funder: the guarantee is scoped to transfers from the accounts declared before the round, <b>not to the funder's total spend</b>, and it establishes what amounts moved, not who ultimately controls the accounts that received them.</p>
+    </div>
+    <p class="col" style="color:var(--ink-soft);font-size:0.95rem;">Those two sentences are the whole claim. Nothing elsewhere on this page states it more strongly.</p>
+  </div>
+</section>
+
+<!-- ============ THE NUMBER ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Measured result</p>
+      <h2>The proof is the same size whether it covers 8 payments or 64.</h2>
+    </div>
+    <div class="figure">
+      <div class="bignum">14,592 <small>BYTES</small></div>
+      <p style="color:var(--ink-soft);max-width:58ch;">Constant across every round size we build for. Aggregating more recipients costs proving time, not proof size — and the donor's verification barely moves. That is what makes proving a whole round practical rather than merely possible.</p>
+    </div>
+    <div class="data-wrap">
+      <table class="data">
+        <thead><tr><th>Round size</th><th class="num">ACIR opcodes</th><th class="num">Prove</th><th class="num">Verify</th><th class="num">Proof size</th></tr></thead>
+        <tbody>
+          <tr><td>n = 8</td><td class="num">323</td><td class="num">996 ms</td><td class="num">379 ms</td><td class="num ok">14,592 B</td></tr>
+          <tr><td>n = 16</td><td class="num">619</td><td class="num">1,716 ms</td><td class="num">589 ms</td><td class="num ok">14,592 B</td></tr>
+          <tr><td>n = 64</td><td class="num">2,395</td><td class="num">4,887 ms</td><td class="num">1,459 ms</td><td class="num ok">14,592 B</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="col eyebrow">UltraHonk over Grumpkin, keccak transcript, witnesses spanning five distinct sender accounts.</p>
+  </div>
+</section>
+
+<!-- ============ EVIDENCE ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Evidence</p>
+      <h2>One command runs the whole round on testnet.</h2>
+      <p>Clone the repository, initialise the pinned submodules, and run it. Accounts are created fresh each time, so the run is repeatable and self-contained.</p>
+    </div>
+
+    <div class="term">
+      <div class="term-bar">pnpm demo &nbsp;·&nbsp; Stellar testnet &nbsp;·&nbsp; 21 Aug 2026</div>
+<pre><span class="c">[pre-round]</span> one transfer BEFORE open_round      <span class="c">← must be excluded</span>
+<span class="c">[1]</span> open_round      opened_at <span class="g">4260769</span>       <span class="c">contract-stamped</span>
+<span class="c">[2]</span> 16 transfers across 5 lanes            <span class="g">39.9s</span>
+<span class="c">[3]</span> close_round     window [<span class="g">4260769</span>, <span class="g">4260778</span>]
+<span class="c">[4]</span> DONOR — given only funder address + round id
+      transfers from declared lanes, all time : <span class="a">17</span>
+      inside the declared window              : <span class="g">16</span>
+      excluded by the window                  : <span class="a">1</span>
+<span class="c">[5]</span> proof <span class="g">14,592 B</span> / <span class="g">1,701 ms</span> / 5 sender accounts — verified
+      donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span></pre>
+    </div>
+
+    <div class="col stack">
+      <h3>The demo is built to be able to fail</h3>
+      <p>Every run sends one transfer <em>before</em> the round opens. It must be excluded, and the donor's total must come out 3,160 rather than 4,159. A demo in which everything falls inside the window cannot distinguish a working completeness check from one that returns every event regardless — so the failing case is permanent, not a one-off.</p>
+    </div>
+
+    <div class="grid3">
+      <div class="cell"><span class="k">Recipients paid</span><span class="v">16</span><span class="n">across 5 concurrent lanes</span></div>
+      <div class="cell"><span class="k">Amounts visible</span><span class="v">0</span><span class="n">addresses public, values sealed</span></div>
+      <div class="cell"><span class="k">Proofs the donor checks</span><span class="v">1</span><span class="n">covering the whole round</span></div>
+    </div>
+
+    <div class="col stack">
+      <h3>On chain, testnet</h3>
+    </div>
+    <div class="data-wrap">
+      <table class="data">
+        <thead><tr><th>Artifact</th><th>Address / hash</th></tr></thead>
+        <tbody>
+          <tr><td>Round registry</td><td><a href="https://stellar.expert/explorer/testnet/contract/CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES">CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES</a></td></tr>
+          <tr><td>Confidential token</td><td><a href="https://stellar.expert/explorer/testnet/contract/CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD">CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD</a></td></tr>
+          <tr><td>UltraHonk verifier</td><td><a href="https://stellar.expert/explorer/testnet/contract/CBWGTNURCFB3SGXAYPYS3WWYK4NZC2LETFGP45FGCFXWVZPDOXE73GID">CBWGTNURCFB3SGXAYPYS3WWYK4NZC2LETFGP45FGCFXWVZPDOXE73GID</a></td></tr>
+          <tr><td>Transfer (no amount visible)</td><td><a href="https://stellar.expert/explorer/testnet/tx/089fc19321826f936cb9ad36edf6c7f03d4bbb0bfa8cc095394db2d544f3d4a3">089fc19321826f936cb9ad36edf6c7f03d4bbb0bfa8cc095394db2d544f3d4a3</a></td></tr>
+          <tr><td>Transfer</td><td><a href="https://stellar.expert/explorer/testnet/tx/19679870b22d390d620f75a3ac7b8f60f65ccf43a0c8e5f351b01a9b3bc3a701">19679870b22d390d620f75a3ac7b8f60f65ccf43a0c8e5f351b01a9b3bc3a701</a></td></tr>
+          <tr><td>Transfer</td><td><a href="https://stellar.expert/explorer/testnet/tx/410412bf61e2e1abf83ebca7b7961a4ce6b1d5578fb71461c6f5af841b4560f8">410412bf61e2e1abf83ebca7b7961a4ce6b1d5578fb71461c6f5af841b4560f8</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="col eyebrow">Open a transfer and the sender and recipient are in the clear. Every amount field is a 32-byte commitment or ciphertext.</p>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">How it works</p>
+      <h2>The donor holds no secret of the funder's.</h2>
+      <p>A donor generates its own disclosure keypair and issues a fresh challenge nonce. The funder returns a zero-knowledge proof sealed to that key which reveals only the total. The funder's viewing key is never shared — it would open every individual amount, retroactively.</p>
+    </div>
+
+    <div>
+      <div class="flow">
+        <div class="node"><span class="t">Funder</span><span class="s">declares lanes + window</span></div>
+        <div class="arrow"></div>
+        <div class="node"><span class="t">Confidential token</span><span class="s">amounts encrypted</span></div>
+        <div class="arrow"></div>
+        <div class="node"><span class="t">Recipients</span><span class="s">addresses public</span></div>
+      </div>
+      <div class="aside-node">
+        <div></div><div class="vline"></div><div></div>
+      </div>
+      <div class="aside-node">
+        <div></div>
+        <div class="donor"><span class="t">Donor / auditor</span><span class="s">challenge → proof → total</span></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="stack">
+        <h3>Completeness comes from the chain</h3>
+        <p style="font-size:0.95rem;color:var(--ink-soft);">Every confidential transfer publishes its sender and recipient as indexed event topics, unconditionally. A donor enumerates the round's transfers from chain state rather than from anything the funder hands over, so a withheld transfer surfaces as a set mismatch, not a smaller total.</p>
+      </div>
+      <div class="stack">
+        <h3>The window is fixed before the round runs</h3>
+        <p style="font-size:0.95rem;color:var(--ink-soft);">The registry stamps the opening ledger itself — it is not a parameter a caller can supply — and the lane set cannot be revised afterwards. Without that, a funder could run the round first and declare only the flattering accounts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STELLAR ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Built on Stellar</p>
+      <h2>Native to the confidential-token primitive, not ported onto it.</h2>
+      <p>Tally is built on Stellar's <a href="https://stellar.org/blog/developers/developer-preview-confidential-tokens-on-stellar">Confidential Tokens</a> developer preview — the OpenZeppelin contract suite with Nethermind's UltraHonk verifier — which gives any SEP-41 token private balances and private transfer amounts while keeping addresses visible.</p>
+    </div>
+    <div class="grid2">
+      <div class="cell"><span class="k">Protocol 25 · X-Ray</span><span class="n" style="margin-top:6px;">Introduced the BN254 host functions that make UltraHonk verification possible on Soroban at all.</span></div>
+      <div class="cell"><span class="k">Protocol 26 · Yardstick · CAP-80</span><span class="n" style="margin-top:6px;">Added <span class="mono">g1_msm</span> and the F<sub>r</sub> arithmetic that make that verification cheap enough to batch. Live on mainnet since 6 May 2026.</span></div>
+    </div>
+    <div class="col stack">
+      <h3>Contributed upstream</h3>
+      <ul style="font-size:0.95rem;color:var(--ink-soft);">
+        <li>Aggregate disclosure input table omits a per-event field — <a href="https://github.com/OpenZeppelin/stellar-contracts/issues/849">OpenZeppelin/stellar-contracts#849</a></li>
+        <li>Disclosure circuits' domain tag collides on rebuild against the branch tip — <a href="https://github.com/brozorec/stellar-confidential-token-demo/issues/5">stellar-confidential-token-demo#5</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATUS ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Status</p>
+      <h2>Testnet. Here is exactly what is built and what is not.</h2>
+      <p>The confidential-token suite Tally builds on is an unaudited developer preview on an unmerged branch. Nothing here should touch real value yet, and we would rather say so than let a reviewer discover it.</p>
+    </div>
+    <div style="max-width:80ch;">
+      <div class="status-row"><span class="mark yes">BUILT</span><span>Multi-sender aggregate disclosure circuits, <span class="mono">n ∈ {8, 16, 64}</span></span></div>
+      <div class="status-row"><span class="mark yes">BUILT</span><span>Round registry contract, deployed to testnet — 16 tests, 10 of them negative</span></div>
+      <div class="status-row"><span class="mark yes">BUILT</span><span>End-to-end round, donor-verified, reproducible with one command</span></div>
+      <div class="status-row"><span class="mark part">PARTIAL</span><span>Explorer evidence: the property holds and transactions are linked above; a captured explorer view is not yet published</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>A distributable SDK package — the demo currently runs against a vendored reference client</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>Integration with <a href="https://grainlify.com">Grainlify</a>, the intended first consumer. Planned, not built</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>Mainnet. Gated on the upstream suite's audit, which is outside our control</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHO ============ -->
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Who it is for</p>
+      <h2>Anyone paying many people from one pool, in public.</h2>
+    </div>
+    <div class="grid3">
+      <div class="cell"><span class="k">Grant programmes</span><span class="n">Award sizes stay between the programme and the recipient; the round's total stays provable to donors.</span></div>
+      <div class="cell"><span class="k">Bounty platforms</span><span class="n">Contributors are not ranked against each other by a permanent public record of what each was paid.</span></div>
+      <div class="cell"><span class="k">Public-goods funding</span><span class="n">Aggregate accountability to the public without publishing an individual payment schedule.</span></div>
+      <div class="cell"><span class="k">Aid disbursement</span><span class="n">Recipients are not made targets by a ledger that shows exactly how much each just received.</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="foot-mono">Tally · MIT licensed · built in the open</span>
+    <a class="foot-mono" href="https://github.com/Jagadeeshftw/Tally" style="color:var(--accent);">Repository →</a>
+    <span class="foot-mono">Stellar testnet · Protocol 27</span>
+  </div>
+</footer>
+
+<script>
+  // Real transfer events from the round of 21 Aug 2026, ledgers 4260769–4260778,
+  // read back from Soroban RPC. Addresses are truncated for width; the amount
+  // column shows the actual on-chain ciphertext bytes. Nothing here is invented.
+  const ROWS = [
+    ["GAIUUCWSCGKJPT6Q4MAK7HTFQATDXERVQH2P6DH5V5WTPBG3JPGZL6IC", "GBCGYFBSUY5EF5BVLJIIWNRBNHJXILLEMEYFYXMU7X7MEBPFKSIBZGKJ", "0a966ded2bba240a", "0543", 4260772],
+    ["GBILWNVYBSI4C6WBE4OC7AUTVWTNKW6RMTSMPDQT26AXT57JCYPJFM7O", "GDPRZXHPLCTWTA4L3LJIGAHKEOKGD4AVF4DGQZMALYEPYOFJCBWOYDK3", "0c448a015ffbfe68", "0b0a", 4260772],
+    ["GAXKX4ZT75QEONYQ2ZD5WZQ3VJWVPRFDAK7W6JQA2TYOKVIBE3TDYY6G", "GBGHQTYRYFFOCITDSZU3NMWY6BOJQ3QLZKS2DU3XPRIMM7XEQMZ3ERH7", "140723f70ef4cf7a", "2013", 4260772],
+    ["GD2BSNXD6HW2GIKMIULIZ5DAMXAQLMGI64LTA2BQT2JGG6AYBA6DLXEO", "GB3FLGQBL4XRTP55N3HH2V6PGX2ABF7KIAXDQ5AJ7O5POH4H6MZQTNPC", "03f70e4c451badef", "4ecd", 4260772],
+    ["GBP6CYJFVKMTRTOAIVLKU3OKAFKXU5ZIBCRM3Y4V4MLTNLGXOAAIF72T", "GDLZJFU6MEV2P2ZPLKW6LPGYS53QQQS3IVCX4HVK2TEFMUAHJB3XEUEP", "0093fcb8ccc70684", "a705", 4260772],
+    ["GBP6CYJFVKMTRTOAIVLKU3OKAFKXU5ZIBCRM3Y4V4MLTNLGXOAAIF72T", "GCOBAEKZ3FXKXTLHYEQRYDZW4P73KSXBD6KSCVXPRPTSSA2SQTAWP6YU", "07b0b8ec6ba7782e", "fdb4", 4260774],
+    ["GD2BSNXD6HW2GIKMIULIZ5DAMXAQLMGI64LTA2BQT2JGG6AYBA6DLXEO", "GBFXUAZP5OTMZ4V4W7XJ4SKYZLUMA6BP5RTFK3AQHUUKPU25RC77B2KB", "18f24ced5695d244", "5674", 4260775]
+  ];
+
+  const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+  const tbody = document.getElementById("ledger-rows");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  ROWS.forEach(([from, to, head, tail, ledger], i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="addr">' + short(from) + "</td>" +
+      '<td class="addr">' + short(to) + "</td>" +
+      '<td><span class="amt">' + head + "…" + tail + "</span></td>" +
+      '<td class="addr">' + ledger + "</td>";
+    if (!reduce) {
+      tr.style.opacity = "0";
+      tr.style.transform = "translateY(4px)";
+      tr.style.transition = "opacity 380ms ease, transform 380ms ease";
+      setTimeout(() => { tr.style.opacity = "1"; tr.style.transform = "none"; }, 140 + i * 70);
+    }
+    tbody.appendChild(tr);
+  });
+</script>
