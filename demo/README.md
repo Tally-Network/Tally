@@ -1,6 +1,8 @@
 # `pnpm demo` — one confidential disbursement round, end to end
 
 ```bash
+git clone --recurse-submodules https://github.com/Tally-Network/Tally
+cd Tally
 git submodule update --init      # OZ contracts @ 539968f, reference demo (pinned)
 pnpm install
 pnpm demo

@@ -6,6 +6,11 @@ Built on Stellar's [Confidential Tokens](https://stellar.org/blog/developers/dev
 
 > **Status: pre-MVP, testnet only.** The underlying confidential-token suite is an unaudited developer preview on an unmerged feature branch. Do not use with real value.
 
+```bash
+git clone --recurse-submodules https://github.com/Tally-Network/Tally
+cd Tally && pnpm install && pnpm demo
+```
+
 ## The problem
 
 On a public ledger, every recipient's amount is visible forever. For grant programs, bounty platforms, public-goods funding, and aid disbursement that is disqualifying — it exposes vulnerable recipients and makes them targets. But the alternative, paying off-chain, gives up the auditability that made on-chain funding attractive in the first place.
