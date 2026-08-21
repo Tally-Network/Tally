@@ -323,10 +323,10 @@ The brief's "at least 10 recipients" was written when batch size was believed to
 | Recipient registration (16) | 16 | ~6 s (parallel — distinct source accounts) | one-time per recipient |
 | Lane registration (5) | 5 | ~6 s (parallel) | one-time, reused every round |
 | Lane funding (deposit + merge) | 10 | ~50 s (serialised on one funder source account) | one-time if lanes hold float |
-| **Transfers (16 across 5 lanes)** | **16** | **~25 s** (⌈16/5⌉ = 4 waves × 6.3 s) | **per round** |
+| **Transfers (16 across 5 lanes)** | **16** | **~42 s** (measured, §6.10 — proving contends across lanes) | **per round** |
 | Aggregate proof (n=16) | 0 | **1.7 s** | per disclosure |
 | Donor verification | 0 | **0.6 s** | per disclosure |
-| **Steady-state round + proof + verify** | **16** | **~27 s** | |
+| **Steady-state round + proof + verify** | **16** | **~44 s** (measured) | |
 
 Cost: 16 × ~93M = **~1.49B instructions**, roughly **0.5 XLM** in resource fees.
 
@@ -467,12 +467,64 @@ Inflation by self-dealing — paying accounts the funder controls and counting t
 
 ---
 
+## 6.10 K-lane fan-out — validated end to end on testnet
+
+The whole thesis, run as one flow on the **stock OpenZeppelin token**: 5 funder lanes, 16 recipients, one aggregate proof.
+
+```
+[1] 21 accounts funded                                        108.0 s
+[2] register 21 accounts   proving 14.4s | submit 16.1s        30.5 s
+[3] fund 5 lanes (deposit + merge, no proofs, parallel)         8.5 s
+[4] 16 transfers across 5 lanes, chains sequential             41.6 s
+[5] rebuild round from chain events — 16/16 found, total ✓
+[6] ONE aggregate proof, 14,592 B, 1,735 ms, verified ✓
+    donor decrypts 3160 — matches exactly
+```
+
+| | |
+|:---|---:|
+| Transfers wall clock (16 across 5 lanes) | **41.6 s** |
+| Serial equivalent | ~101 s |
+| **Speed-up** | **2.4×** |
+| Aggregate proof | **14,592 B / 1,735 ms**, spanning **5 sender accounts** |
+| Donor-verified total | 3160 — exact match, individual amounts never revealed |
+
+### What this actually proves
+
+- **The multi-sender aggregate works on real events**, not synthetic witnesses. One proof spanned five distinct funder accounts.
+- **Invariant I1 holds in practice.** The round was rebuilt entirely from chain events with `r_e` **re-derived** from `(lane vk, event σ)` — no per-transfer secret was stored anywhere. A disbursement service needs only its master secret.
+- **The completeness check works.** Querying transfer events by lane address returned exactly 16 of 16. An omitted event would have failed the count assertion before proving began (§6.9).
+- **The donor learns only the total.** They decrypted 3160 from the sealed ciphertext with their own key and nonce, holding nothing of the funder's.
+
+### The speed-up is 2.4×, not 5× — and the reason matters
+
+Adding lanes removes *ledger-close* serialisation but **not proof-generation serialisation**. Proving is CPU-bound, and five lanes proving concurrently on one machine contend for the same core:
+
+```
+wall clock ≈ max( ⌈N/K⌉ × ledger_close ,  N × proof_time / prover_parallelism ) + per-tx RPC overhead
+           ≈ max( 4 × ~5 s , 16 × 1.26 s / 1 ) + submit/poll
+           ≈ 41.6 s measured
+```
+
+**Past K ≈ 4 on a single machine, more lanes buy nothing** — the 16 transfer proofs cost ~20 s of CPU regardless of how they are distributed. Real speed-up beyond that needs *parallel proving* (bb.js worker threads, or a proving pool), not more lanes.
+
+This reframes the tuning knob: **K is sized for ledger-close parallelism; prover concurrency is a separate, independent dial.** Worth measuring bb.js thread scaling before the demo — it is likely the cheaper win.
+
+### Correction to §6.7
+
+§6.7 estimated ~25 s of transfers at n=16, K=5 from ledger-close arithmetic alone. **Measured: 41.6 s.** The estimate omitted proving contention and per-transaction RPC overhead (simulate + submit + poll). The demo-sizing recommendation of **n = 16 stands**; the timing line should read **~42 s of transfers**, ~27 s of one-time setup per fresh recipient set, plus 1.7 s for the aggregate proof.
+
+Account creation (108 s for 21 friendbot accounts) is demo-harness cost, not protocol cost — real recipients already have accounts.
+
+---
+
 ## 7. Open items
 
 | Item | Status |
 |:---|:---|
 | ~~Build the multi-sender aggregate circuit (Option D)~~ | ✅ **Done** — `circuits/`, measured in §6.6. One proof spans 5 sender accounts; 14,592 B at every n. |
-| Validate K-lane fan-out end to end on testnet | **Next.** Unblocked — the circuit spans lanes, so K is now purely a latency knob. |
+| ~~Validate K-lane fan-out end to end on testnet~~ | ✅ **Done** — §6.10. 16 transfers / 5 lanes / one 14,592 B proof, donor total exact. |
+| Measure bb.js prover thread scaling | **Next.** Proving contention, not ledger close, is the fan-out ceiling past K≈4. |
 | ~~Decide on-chain vs off-chain aggregate verification~~ | ✅ **Off-chain, settled by measurement** — §6.8. n=16 leaves 0.017% headroom; n=64 needs 147% of the cap. |
 | Wire the aggregate into an auditor CLI (§3.3 of the brief) | After fan-out |
 | ~~Report the `δ_disc = 13` / `δ_ecdh` collision~~ | ✅ Filed — [demo#5](https://github.com/brozorec/stellar-confidential-token-demo/issues/5). Scoped accurately: correct at the pinned rev, becomes a real collision only on rebuild against the tip. |
