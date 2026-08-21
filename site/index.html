@@ -298,12 +298,12 @@
           <tr class="total-row">
             <td class="lbl">Total disbursed</td>
             <td></td>
-            <td class="total-val" colspan="2">3,160 <span class="proofchip">proved · 14,592 B</span></td>
+            <td class="total-val" colspan="2">3,160 <span style="font-size:0.72rem;color:var(--ink-faint);letter-spacing:0.06em;">STROOPS · TESTNET XLM</span> <span class="proofchip">proved · 14,592 B</span></td>
           </tr>
         </tfoot>
       </table>
     </div>
-    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4260769–4260778. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
+    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4260769–4260778. Amounts are stroops of the wrapped asset — testnet XLM via its Stellar Asset Contract; the values are arbitrary demo figures. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
   </div>
 </header>
 
@@ -352,7 +352,27 @@
         </tbody>
       </table>
     </div>
-    <p class="col eyebrow">UltraHonk over Grumpkin, keccak transcript, witnesses spanning five distinct sender accounts.</p>
+    <p class="col eyebrow">UltraHonk on BN254 with a keccak transcript; Grumpkin is the embedded curve carrying the in-circuit Pedersen commitments and ECDH. Witnesses span five distinct sender accounts.</p>
+
+    <div class="col stack" style="margin-top:14px;">
+      <h3>Why the donor verifies off chain — a measured boundary, not a convenience</h3>
+      <p>We registered the aggregate verification keys on Soroban and measured what verifying a round would actually cost against the 100,000,000-instruction per-transaction cap.</p>
+    </div>
+    <div class="data-wrap">
+      <table class="data">
+        <thead><tr><th>Round size</th><th class="num">Public inputs</th><th class="num">CPU instructions</th><th class="num">Share of cap</th><th>Fits?</th></tr></thead>
+        <tbody>
+          <tr><td>n = 8</td><td class="num">80</td><td class="num">90,833,858</td><td class="num">90.8%</td><td class="warn">barely</td></tr>
+          <tr><td>n = 16</td><td class="num">152</td><td class="num">99,982,874</td><td class="num warn">100.0%</td><td class="warn">17,126 instructions spare</td></tr>
+          <tr><td>n = 64</td><td class="num">584</td><td class="num">147,278,890</td><td class="num warn">147.3%</td><td class="warn">no</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col stack">
+      <p style="font-size:0.95rem;color:var(--ink-soft);">All three verify correctly on chain — this is a capacity result, not a correctness one. At our demo size the margin is <span class="mono">17,126</span> instructions out of a hundred million, and that is the bare verification call before any surrounding contract logic. Fitting the three points gives a cost model for on-chain UltraHonk verification on Soroban:</p>
+      <p class="mono" style="font-size:0.95rem;color:var(--accent);">instructions ≈ 81,000,000 + ~120,000 per public input</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);">We have not found either figure published anywhere else. Off-chain verification is also the right design regardless: putting a disclosure on chain would publish its existence, its recipient and its timing.</p>
+    </div>
   </div>
 </section>
 
@@ -376,7 +396,8 @@
       inside the declared window              : <span class="g">16</span>
       excluded by the window                  : <span class="a">1</span>
 <span class="c">[5]</span> proof <span class="g">14,592 B</span> / <span class="g">1,701 ms</span> / 5 sender accounts — verified
-      donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span></pre>
+      donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span>
+      <span class="c">(stroops of the wrapped asset — testnet XLM via its SAC)</span></pre>
     </div>
 
     <div class="col stack">
@@ -446,6 +467,10 @@
         <h3>The window is fixed before the round runs</h3>
         <p style="font-size:0.95rem;color:var(--ink-soft);">The registry stamps the opening ledger itself — it is not a parameter a caller can supply — and the lane set cannot be revised afterwards. Without that, a funder could run the round first and declare only the flattering accounts.</p>
       </div>
+      <div class="stack">
+        <h3>The donor reads the anonymity set, rather than trusting us for it</h3>
+        <p style="font-size:0.95rem;color:var(--ink-soft);">A total over one payment <em>is</em> that payment. So the number of transfers an aggregate covers, <span class="mono">n_active</span>, is a <b>public input to the proof</b> — the donor reads the true set size and can apply a stricter floor of its own. And the minimum is a <b>circuit constraint</b>, not a library check: an undersized aggregate is <em>unprovable</em>, not merely discouraged. Bypassing our SDK cannot produce a one-payment &ldquo;aggregate&rdquo;.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -508,11 +533,25 @@
   </div>
 </section>
 
+<section>
+  <div class="wrap stack-l">
+    <div class="col stack">
+      <p class="eyebrow">Who built it</p>
+      <h2>Jagadeesh B</h2>
+      <p>Stellar India Ambassador. Builds on Soroban and ships in the open — the measurements, the negative results and the upstream issues on this page are all published rather than summarised. Tally is built alongside <a href="https://grainlify.com">Grainlify</a>, an open-source contribution platform intended as its first consumer.</p>
+    </div>
+    <div class="grid2">
+      <div class="cell"><span class="k">GitHub</span><span class="n" style="margin-top:6px;"><a href="https://github.com/Jagadeeshftw">@Jagadeeshftw</a></span></div>
+      <div class="cell"><span class="k">Repository</span><span class="n" style="margin-top:6px;"><a href="https://github.com/Jagadeeshftw/Tally">Jagadeeshftw/Tally</a> · MIT</span></div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <span class="foot-mono">Tally · MIT licensed · built in the open</span>
     <a class="foot-mono" href="https://github.com/Jagadeeshftw/Tally" style="color:var(--accent);">Repository →</a>
-    <span class="foot-mono">Stellar testnet · Protocol 27</span>
+    <span class="foot-mono">Measured on Stellar testnet, then running Protocol 27</span>
   </div>
 </footer>
 
