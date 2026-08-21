@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Confidential disbursement on Stellar — private recipient amounts, publicly provable totals.",
+  "description": "Confidential disbursement on Stellar \u2014 private recipient amounts, publicly provable totals.",
   "license": "MIT",
   "scripts": {
     "demo": "tsx demo/run-round.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "verify:evidence": "tsx cli/tally.ts verify --funder GBDQSAKMWM3JN2WYXJUJ2DT4X6ANOGBDED5JK66EF2QRXEWQFLP5CWMM --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc --challenge evidence/round-001/challenge.json --bundle evidence/round-001/bundle.json"
   },
   "dependencies": {
     "@aztec/bb.js": "0.87.0",

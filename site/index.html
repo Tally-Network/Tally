@@ -408,6 +408,24 @@
     </div>
 
     <div class="col stack">
+      <h3>Verify a published round yourself</h3>
+      <p>Every verification we had done before this existed was performed by whoever generated the proof, which is evidence of nothing. So a real testnet round is published — funder address, round id, and the disclosure bundle — and anyone can check it with no help from us:</p>
+    </div>
+    <div class="term">
+      <div class="term-bar">two minutes, from a clean clone</div>
+<pre>git clone --recurse-submodules https://github.com/Tally-Network/Tally
+cd Tally &amp;&amp; pnpm install
+pnpm verify:evidence
+
+<span class="c">→</span> <span class="g">TOTAL DISBURSED: 3160</span>  over 16 transfers from 5 declared lanes
+  <span class="c">no individual amount was revealed.</span></pre>
+    </div>
+    <div class="col stack">
+      <p style="font-size:0.95rem;color:var(--ink-soft);">The verifier takes <b>exactly three values</b> from the funder — the proof, <span class="mono">r_disc</span>, and the sealed total. The lane set, the window, the transfer set and every account key are resolved from the chain, so a funder cannot choose which transfers the total covers.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4383959. Durable verification needs an event archive we have not built.</p>
+    </div>
+
+    <div class="col stack">
       <h3>The demo is built to be able to fail</h3>
       <p>Every run sends one transfer <em>before</em> the round opens. It must be excluded, and the donor's total must come out 3,160 rather than 4,159. A demo in which everything falls inside the window cannot distinguish a working completeness check from one that returns every event regardless — so the failing case is permanent, not a one-off.</p>
     </div>
@@ -517,9 +535,14 @@
       <div class="status-row"><span class="mark yes">BUILT</span><span>Round registry contract, deployed to testnet — 16 tests, 10 of them negative</span></div>
       <div class="status-row"><span class="mark yes">BUILT</span><span>End-to-end round, donor-verified, reproducible with one command</span></div>
       <div class="status-row"><span class="mark part">PARTIAL</span><span>Explorer evidence: the property holds and transactions are linked above; a captured explorer view is not yet published</span></div>
+      <div class="status-row"><span class="mark yes">READY</span><span>A published round an <b>independent party</b> can verify with one command — waiting on an outside person to run it and report their output</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>A round with <b>real independent contributors</b> registering non-custodially, so not even we can decrypt their amounts</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>A distributable SDK package — the demo currently runs against a vendored reference client</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>Integration with <a href="https://grainlify.com">Grainlify</a>. Grainlify has <b>never made a payout on any chain</b>; its payout path is currently wired for Aptos, and whether a settlement lands on Stellar is its decision, not ours. We claim no adoption</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>Mainnet. Gated on the upstream suite's audit, which is outside our control</span></div>
+    </div>
+    <div class="col stack">
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>Real people, real wallets, real keys, real verification — nominal value.</b> The round runs on Stellar testnet, where the asset has no monetary worth; what is real is that independent contributors hold their own keys, that no platform can decrypt their amounts, and that anyone can verify the total.</p>
     </div>
   </div>
 </section>

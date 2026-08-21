@@ -1,0 +1,14 @@
+{
+  "round_id": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc",
+  "funder": "GBDQSAKMWM3JN2WYXJUJ2DT4X6ANOGBDED5JK66EF2QRXEWQFLP5CWMM",
+  "registry": "CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES",
+  "token": "CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD",
+  "network": "Stellar testnet",
+  "opened_at_ledger": 4262999,
+  "closed_at_ledger": 4263008,
+  "transfers": 16,
+  "lanes": 5,
+  "expected_total": 3160,
+  "verifiable_until_ledger": 4383959,
+  "note": "Soroban RPC retains ~7 days of events. After that ledger this round is no longer verifiable from RPC alone."
+}

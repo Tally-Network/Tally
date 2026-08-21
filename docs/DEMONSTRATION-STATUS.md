@@ -6,11 +6,27 @@
 |:--|:---|:---|
 | 1 | Funder disburses to ≥10 recipients in one flow on testnet | ✅ **Covered** |
 | 2 | Block explorer shows transactions with no individual amounts visible | ⚠️ **Property holds; evidence artifact not captured** |
-| 3 | Auditor script proves the total, and it matches | ✅ **Covered in substance**, two caveats |
+| 3 | Auditor script proves the total, and it matches | ✅ **Covered** — standalone `tally verify` CLI |
 | 4 | **Grainlify calls the SDK for a real contributor payout on testnet** | ❌ **Not built** |
-| 5 | Live landing page | ❌ **Not built** |
+| 5 | Live landing page | ✅ **Built** |
+| **6** | **Independent third party verifies a published round** *(added)* | 🔄 **Ready to run** — [`evidence/`](../evidence/) |
+| **7** | **Small round with real independent contributors, non-custodial** *(added)* | ❌ **Not built** — [sketch](TARGET4-SKETCH.md) |
 
-**Two covered, one partial, two not built.**
+**Targets 6 and 7 are separate targets, not substitutes for target 4.** Target 4 stays ❌ until a platform actually integrates Tally into its payout path. An honest ❌ beside two well-described additional targets reads better than a ✅ with an asterisk — and a reviewer who notices the asterisk trusts nothing else on the page.
+
+### Target 6 — independent verification *(added 22 Aug 2026)*
+
+Every verification before this was performed by whoever generated the proof, which is not evidence of anything. [`evidence/round-001`](../evidence/) publishes a real testnet round — funder address, round id, and the disclosure bundle — such that anyone with only the repository and those values runs `pnpm verify:evidence` and gets `TOTAL DISBURSED: 3160`.
+
+**Ready, with one honest limit:** Soroban RPC retains ~7 days of events, and `verify` deliberately enumerates transfers from chain rather than from anything we supply, so round 001 stops being verifiable around ledger 4383959. Durable verification needs the event archive `INDEXER.md` specifies, which we have not built.
+
+The target completes when an **outside person** runs it and reports their output. Nothing internal substitutes for that.
+
+### Target 7 — a small round with real contributors *(added 22 Aug 2026)*
+
+n ≥ 5 independent contributors registering **non-custodially** — their keys never leave their devices, so not even we can decrypt their amounts. Shape in [TARGET4-SKETCH.md](TARGET4-SKETCH.md); the registration page is the only substantial unbuilt piece.
+
+**Real people, real wallets, real keys, real verification — nominal value.** The round runs on Stellar testnet, where the asset has no monetary worth; what is real is that independent contributors hold their own keys, that no platform can decrypt their amounts, and that anyone can verify the total.
 
 ---
 
@@ -24,12 +40,12 @@ The property is real and checkable: `Transfer` events carry `from`/`to` as **top
 
 **What is missing is the evidence artifact**: a captured explorer view showing a transfer with addresses visible and no amount, ready to link from the landing page. That is a capture task, not a build task, but it is not done and should not be counted as done.
 
-## 3 — ✅ Covered in substance, with two caveats
+## 3 — ✅ Covered
 
 `pnpm demo` step [5] has the donor verify the aggregate and match the exact total. Caveats, both already documented:
 
 - **"Using the viewing key" was the wrong model** and was corrected to challenge–response — the donor holds its own disclosure keypair and nonce, never a funder secret ([TRUST-STATEMENT.md](TRUST-STATEMENT.md)). The brief's §3.3 wording was updated.
-- **Verification is embedded in the demo script, not a standalone CLI.** §3.3 asks for "a minimal CLI or script"; the script exists, a separable `tally verify --funder <G…> --round <id>` does not. Small, but not done.
+- ~~Verification is embedded in the demo script~~ — **done.** [`cli/`](../cli/) is a standalone `tally challenge` / `prove` / `verify`, with the trust boundary enforced in code and three rejection cases verified.
 
 ## 4 — ❌ Not built. This is the gap that matters.
 
@@ -95,6 +111,6 @@ Every recipient must complete a proof-carrying `register` before it can receive 
 
 **Target 4 is the critical path to submission, not the landing page.** The page can be built and deployed now against real evidence from targets 1–3; it simply must not claim a Grainlify integration that does not exist yet.
 
-## 5 — ❌ Not built
+## 5 — ✅ Built
 
-Next. It must carry both trust-statement sentences verbatim, a headline that asserts nothing, and only evidence that exists.
+Carries both trust-statement sentences verbatim, a headline that asserts nothing, and only evidence that exists. Published; repository link updated after the org transfer.

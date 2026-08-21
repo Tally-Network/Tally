@@ -38,6 +38,8 @@ See [docs/TRUST-STATEMENT.md](docs/TRUST-STATEMENT.md) for why it is worded this
 | [`circuits/`](circuits/) | Multi-sender aggregate disclosure circuits (Noir/UltraHonk), `n ∈ {8,16,64}` |
 | [`contracts/round-registry`](contracts/) | On-chain lane set + window declaration — the completeness anchor |
 | [`demo/`](demo/) | `pnpm demo` — one full round on testnet, donor-verified |
+| [`cli/`](cli/) | `tally verify` — independent round verification |
+| [`evidence/`](evidence/) | A published round anyone can verify: `pnpm verify:evidence` |
 | [`site/`](site/) | Landing page — evidence-led, both trust sentences verbatim |
 | [`docs/DEMONSTRATION-STATUS.md`](docs/DEMONSTRATION-STATUS.md) | §4 target status, honestly counted |
 | [`docs/TRUST-STATEMENT.md`](docs/TRUST-STATEMENT.md) | Exactly what the proof does and does not assure |

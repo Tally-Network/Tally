@@ -4,6 +4,8 @@
 
 **The shape:** a standalone Stellar round with **n ≥ 5 real contributors registering non-custodially**, rather than routing Grainlify's founding payout through Tally.
 
+**This is target 7, not a substitute for target 4.** Target 4 stays ❌ until a platform integrates. See [DEMONSTRATION-STATUS.md](DEMONSTRATION-STATUS.md).
+
 ---
 
 ## What it would prove, and what it would not
@@ -18,11 +20,13 @@
 
 Presented as what it is, it is credible. Presented as target 4, a reviewer who reads carefully will catch it, and that costs more than the gap it papers over.
 
-## ⚠️ "Real amounts" cannot mean real value
+## The sentence that ships with this, verbatim
 
-We are testnet-only, gated on the upstream audit. Testnet XLM has no value, so the round is **real people, real wallets, real keys, real verification — nominal value**. Worth saying in one sentence rather than letting "real payout" imply otherwise.
+Wherever this round is described publicly, unshortened, in the same discipline as the trust statement:
 
-If real value is required, that is a mainnet requirement, and mainnet is outside our control.
+> **Real people, real wallets, real keys, real verification — nominal value.** The round runs on Stellar testnet, where the asset has no monetary worth; what is real is that independent contributors hold their own keys, that no platform can decrypt their amounts, and that anyone can verify the total.
+
+If real monetary value is required, that is a mainnet requirement, and mainnet is gated on the upstream audit — outside our control.
 
 ## What already exists
 
