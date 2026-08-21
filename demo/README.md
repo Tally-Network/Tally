@@ -31,7 +31,7 @@ opened_at 4260769  ·  closed_at 4260778  ·  window [4260769, 4260778]
 transfers from declared lanes (all time) : 17
 inside the declared window               : 16
 excluded by the window                   :  1   ← the pre-round transfer
-proof 14,592 B in 1,701 ms, spans 5 sender accounts, verified
+proof 16,224 B in 1,943 ms (zero-knowledge), spans 5 sender accounts, verified
 donor total = 3160  (expected 3160)  MATCH
 ```
 

@@ -55,7 +55,7 @@ Numbers we published because nobody else had. Full method and transaction hashes
 | `confidential_transfer` CPU cost | **~93,000,000 instructions** (93% of the 100M per-tx cap) |
 | **Max transfers per transaction** | **1** — batching is impossible today |
 | Transfer proof generation | ~1.26 s |
-| Aggregate proof over 16 transfers | 1.72 s, **14,592 B** |
+| Aggregate proof over 16 transfers (zero-knowledge) | 1.94 s, **16,224 B** |
 | Fan-out: 16 transfers across 5 lanes | 41.6 s (2.4× vs serial), one proof |
 | Full round, donor-verified end to end | [`pnpm demo`](demo/) |
 

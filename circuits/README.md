@@ -19,17 +19,19 @@ Vectorising `PVK_A` is what makes concurrency safe. Sends from a single account 
 
 ## Measured
 
-Proved and locally verified with keccak-transcript `bb.js` 0.87.0, witnesses spanning **5 distinct sender accounts** round-robin across events.
+Proved and locally verified with `bb.js` 0.87.0 in **zero-knowledge mode** (`keccakZK`), witnesses spanning **5 distinct sender accounts** round-robin across events.
+
+Disclosure circuits are verified off-chain by the donor, so the on-chain verifier's non-zk-only limitation (OZ `SDK.md` §8.1) does not bind them — and must not, since a non-zk proof is succinct but not witness-hiding, and the whole claim is that the artifact reveals only the total.
 
 | n | ACIR opcodes | Prove | Verify | Proof size | Public inputs |
 |---:|---:|---:|---:|---:|---:|
-| 8 | 323 | 996 ms | 379 ms | 14,592 B | 80 |
-| 16 | 619 | 1,716 ms | 589 ms | 14,592 B | 152 |
-| 64 | 2,395 | 4,887 ms | 1,459 ms | 14,592 B | 584 |
+| 8 | 323 | 1,261 ms | 379 ms | 16,224 B | 80 |
+| 16 | 619 | 1,942 ms | 589 ms | 16,224 B | 152 |
+| 64 | 2,395 | 6,088 ms | 1,459 ms | 16,224 B | 584 |
 
 Scaling is linear: ~**35 ACIR opcodes** and ~**70 ms** per event, over a fixed base. Public inputs are `9n + 8`.
 
-**Proof size is constant at 14,592 B regardless of `n`** — a 64-recipient round proves in the same bytes as an 8-recipient one. That is the property that makes this practical.
+**Proof size is constant at 16,224 B regardless of `n`** — a 64-recipient round proves in the same bytes as an 8-recipient one. That is the property that makes this practical. (Non-zk would be 14,592 B; zero-knowledge costs +1,632 B and ~50 ms, and is not optional here.)
 
 ## Safety
 

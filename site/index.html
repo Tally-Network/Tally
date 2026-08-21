@@ -298,7 +298,7 @@
           <tr class="total-row">
             <td class="lbl">Total disbursed</td>
             <td></td>
-            <td class="total-val" colspan="2">3,160 <span style="font-size:0.72rem;color:var(--ink-faint);letter-spacing:0.06em;">STROOPS · TESTNET XLM</span> <span class="proofchip">proved · 14,592 B</span></td>
+            <td class="total-val" colspan="2">3,160 <span style="font-size:0.72rem;color:var(--ink-faint);letter-spacing:0.06em;">STROOPS · TESTNET XLM</span> <span class="proofchip">proved · 16,224 B</span></td>
           </tr>
         </tfoot>
       </table>
@@ -336,27 +336,33 @@
   <div class="wrap stack-l">
     <div class="col stack">
       <p class="eyebrow">Measured result</p>
-      <h2>The proof is the same size whether it covers 8 payments or 64.</h2>
+      <h2>The donor’s proof is the same size whether it covers 8 payments or 64.</h2>
     </div>
     <div class="figure">
-      <div class="bignum">14,592 <small>BYTES</small></div>
+      <div class="bignum">16,224 <small>BYTES</small></div>
       <p style="color:var(--ink-soft);max-width:58ch;">Constant across every round size we build for. Aggregating more recipients costs proving time, not proof size — and the donor's verification barely moves. That is what makes proving a whole round practical rather than merely possible.</p>
     </div>
     <div class="data-wrap">
       <table class="data">
         <thead><tr><th>Round size</th><th class="num">ACIR opcodes</th><th class="num">Prove</th><th class="num">Verify</th><th class="num">Proof size</th></tr></thead>
         <tbody>
-          <tr><td>n = 8</td><td class="num">323</td><td class="num">996 ms</td><td class="num">379 ms</td><td class="num ok">14,592 B</td></tr>
-          <tr><td>n = 16</td><td class="num">619</td><td class="num">1,716 ms</td><td class="num">589 ms</td><td class="num ok">14,592 B</td></tr>
-          <tr><td>n = 64</td><td class="num">2,395</td><td class="num">4,887 ms</td><td class="num">1,459 ms</td><td class="num ok">14,592 B</td></tr>
+          <tr><td>n = 8</td><td class="num">323</td><td class="num">1,261 ms</td><td class="num">379 ms</td><td class="num ok">16,224 B</td></tr>
+          <tr><td>n = 16</td><td class="num">619</td><td class="num">1,942 ms</td><td class="num">589 ms</td><td class="num ok">16,224 B</td></tr>
+          <tr><td>n = 64</td><td class="num">2,395</td><td class="num">6,088 ms</td><td class="num">1,459 ms</td><td class="num ok">16,224 B</td></tr>
         </tbody>
       </table>
     </div>
     <p class="col eyebrow">UltraHonk on BN254 with a keccak transcript; Grumpkin is the embedded curve carrying the in-circuit Pedersen commitments and ECDH. Witnesses span five distinct sender accounts.</p>
 
+    <div class="col stack">
+      <h3>Two proving modes, deliberately different</h3>
+      <p style="font-size:0.95rem;color:var(--ink-soft);">Transfer proofs go on chain, where Nethermind’s verifier implements only the non-zero-knowledge flavour — so they are <span class="mono">14,592 B</span> and non-zk, as the upstream specification requires. <b>The disclosure proof is different.</b> It is verified off chain by the donor, so that limitation does not apply, and it runs in <b>zero-knowledge mode</b> at <span class="mono">16,224 B</span>.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);">That distinction is load-bearing rather than pedantic. A non-zk proof is succinct but not witness-hiding, so under the on-chain mode the individual amounts would be protected only by the commitments on chain — not by the artifact handed to the donor. The donor already learns the total; only zero-knowledge mode establishes that they learn nothing else. It costs <span class="mono">+1,632 B</span> and about <span class="mono">50 ms</span>.</p>
+    </div>
+
     <div class="col stack" style="margin-top:14px;">
       <h3>Why the donor verifies off chain — a measured boundary, not a convenience</h3>
-      <p>We registered the aggregate verification keys on Soroban and measured what verifying a round would actually cost against the 100,000,000-instruction per-transaction cap.</p>
+      <p>We registered the aggregate verification keys on Soroban and measured what verifying a round would actually cost against the 100,000,000-instruction per-transaction cap. (Measured with non-zk proofs, since that is all the on-chain verifier accepts — the cost is driven by public-input count, not proving mode.)</p>
     </div>
     <div class="data-wrap">
       <table class="data">
@@ -395,7 +401,7 @@
       transfers from declared lanes, all time : <span class="a">17</span>
       inside the declared window              : <span class="g">16</span>
       excluded by the window                  : <span class="a">1</span>
-<span class="c">[5]</span> proof <span class="g">14,592 B</span> / <span class="g">1,701 ms</span> / 5 sender accounts — verified
+<span class="c">[5]</span> proof <span class="g">16,224 B</span> / <span class="g">1,943 ms</span> / 5 sender accounts — verified
       donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span>
       <span class="c">(stroops of the wrapped asset — testnet XLM via its SAC)</span></pre>
     </div>
@@ -408,7 +414,7 @@
     <div class="grid3">
       <div class="cell"><span class="k">Recipients paid</span><span class="v">16</span><span class="n">across 5 concurrent lanes</span></div>
       <div class="cell"><span class="k">Amounts visible</span><span class="v">0</span><span class="n">addresses public, values sealed</span></div>
-      <div class="cell"><span class="k">Proofs the donor checks</span><span class="v">1</span><span class="n">covering the whole round</span></div>
+      <div class="cell"><span class="k">Proofs the donor checks</span><span class="v">1</span><span class="n">zero-knowledge, covering the whole round</span></div>
     </div>
 
     <div class="col stack">

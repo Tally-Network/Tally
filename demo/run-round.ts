@@ -26,6 +26,7 @@ import { DOMAIN } from "../vendor/confidential-token-demo/packages/sdk/src/crypt
 import { buildRegisterWitness } from "../vendor/confidential-token-demo/packages/sdk/src/witness/register.js";
 import { buildTransferWitness } from "../vendor/confidential-token-demo/packages/sdk/src/witness/transfer.js";
 import { CircuitProver } from "../vendor/confidential-token-demo/packages/sdk/src/proving/prover.js";
+import { DisclosureProver } from "./zk-prover.js";
 import { loadCircuit } from "../vendor/confidential-token-demo/packages/sdk/src/proving/artifacts.js";
 import { encodeRegisterData, encodeTransferData } from "../vendor/confidential-token-demo/packages/sdk/src/chain/payload.js";
 import { StateEngine, MemoryStore } from "../vendor/confidential-token-demo/packages/sdk/src/state/index.js";
@@ -170,7 +171,9 @@ async function main() {
   const sDisc = pointCoords(scalarMul(rDisc, pR));
   const vTildeDisc = total + poseidonWithDomain(DISC_BIND, [sDisc.x, nu]);
   const rDiscPt = pointCoords(scalarMul(rDisc, H));
-  const prover = new CircuitProver(JSON.parse(readFileSync(AGG, "utf8")));
+  // Disclosure proofs are ZERO-KNOWLEDGE (off-chain verified). Transfer proofs
+  // above stay non-zk because the on-chain verifier requires it. See zk-prover.ts.
+  const prover = new DisclosureProver(JSON.parse(readFileSync(AGG, "utf8")));
   const tp = Date.now();
   const res = await prover.prove({ ...F, r_disc: hex(rDisc), addr_f: hex(addrF), n_active: hex(BigInt(N)),
     p_r_x: hex(PR.x), p_r_y: hex(PR.y), nu: hex(nu),
