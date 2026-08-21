@@ -7,3 +7,4 @@ dist/
 *.log
 circuits/*/target/
 contracts/target/
+demo/last-round.json

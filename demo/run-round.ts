@@ -14,7 +14,7 @@
  * bearing rather than decorative.
  */
 import { Keypair, TransactionBuilder, Contract, BASE_FEE, rpc, xdr, Address, nativeToScVal, scValToNative } from "@stellar/stellar-sdk";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { RPC_URL, PASSPHRASE, loadDeployment, friendbotFund } from "./shared.js";
 import { ChainClient, keypairSigner, type Signer } from "../vendor/confidential-token-demo/packages/sdk/src/chain/client.js";
 import { deriveKeys, type KeyPair } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/keys.js";
@@ -130,6 +130,19 @@ async function main() {
     [addr(funder.kp.publicKey()), xdr.ScVal.scvBytes(roundId)]);
   const closedAt: number = scValToNative(closed.returnValue!).closed_at;
   console.log(`  closed_at ${closedAt}  window = [${openedAt}, ${closedAt}]`);
+
+  // Emit a manifest so the standalone `tally` CLI can be exercised against
+  // this round. TESTNET ONLY — it contains lane spending keys, which grant
+  // both view and spend. A real funder holds these in a signer service.
+  const manifest = new URL("./last-round.json", import.meta.url);
+  writeFileSync(manifest, JSON.stringify({
+    warning: "TESTNET DEMO ONLY — contains lane spending keys.",
+    funder: funder.kp.publicKey(),
+    round: roundId.toString("hex"),
+    registry: REGISTRY,
+    lanes: Object.fromEntries(lanes.map(l => [l.kp.publicKey(), "0x" + l.keys.sk.toString(16).padStart(64, "0")])),
+  }, null, 2) + "\n");
+  console.log(`\n  wrote demo/last-round.json (funder + round id + lane keys, testnet only)`);
 
   // ================= DONOR SIDE =================
   console.log("\n[4] DONOR — given only the funder address and round id");
