@@ -91,7 +91,29 @@ pub fn ecdh(scalar: Field, point: EmbeddedCurvePoint) -> Field {
 
 A circuit compiled against the tip cannot reconstruct amounts from events produced by contracts built at `539968f` — the shared secret differs. Here it surfaced loudly as an unsatisfiable constraint, which is the *lucky* outcome; `SDK.md` §8.1 warns of the quiet version, where drift yields verification keys that differ from the deployed ones "while every local test passes."
 
-**Note.** The tip's change is a *security hardening* — the Poseidon funnel removes the `(P, −P)` negation invariance of x-only extraction. Tally should adopt it, but doing so requires a coordinated move of contracts, verification keys, and SDK crypto together. Tracked, not silently deferred.
+**Note.** The tip's change is a *security hardening* — the Poseidon funnel removes the `(P, −P)` negation invariance of x-only extraction. Tally must adopt it. It is tracked as a named milestone, not an intention:
+
+### Milestone U1 — Upstream revision uplift
+
+**Move `vendor/stellar-contracts` from `539968f` to the then-current upstream revision, in one coordinated change.**
+
+Everything below moves together or not at all; a partial uplift is the silent-failure case this invariant exists to prevent.
+
+| Component | Action |
+|:---|:---|
+| Contracts | Rebuild + redeploy the token, verifier, and auditor contracts |
+| On-chain VKs | Regenerate all six core circuit VKs; re-register in the verifier |
+| Tally circuits | Recompile the aggregate family against the new lib (`ecdh` changes shape) |
+| Disclosure VKs | Regenerate; re-pin |
+| SDK crypto | Update `ecdh` to the Poseidon2 funnel; re-run the parity vectors (`SDK.md` §6) |
+| Domain tags | Adopt `δ_disc = 16` / `δ_disc_bind = 15` (see the upstream note below) |
+| Evidence | Re-run every Phase 1 measurement — instruction costs will move |
+
+**Exit criteria.** Full testnet e2e green; disclosure e2e green; the §6.8 on-chain capacity numbers re-measured; `PHASE1-MEASUREMENTS.md` updated.
+
+**Why it is scheduled rather than deferred.** SCF expects the most recent stable Stellar stack, and a reviewer who notices we are pinned to an older revision of an unmerged branch will ask. The answer should already be written down: we pin deliberately because the deployed contracts, VKs, and SDK crypto must agree, we have demonstrated what breaks when they don't (§6.6), and the uplift is a scheduled milestone with defined exit criteria — not drift.
+
+**Sequencing.** Best run *after* the demo evidence is captured and *before* submission, so the recorded transaction hashes and the pinned revision describe the same system.
 
 ---
 

@@ -338,14 +338,55 @@ Say **"16 recipients in one disbursement round — 16 transactions"**. Not "one 
 
 ---
 
+## 6.8 Is the aggregate proof ever verified ON-CHAIN? — measured
+
+**Answer: no. Scope the product as off-chain donor verification.** The on-chain path is not merely expensive — at our demo size it lands within 0.017% of the transaction cap, which is not an engineering position anyone should build on.
+
+Measured by registering each `tally_aggregate_nN` verification key into an unused circuit slot on the testnet verifier and simulating `verify_proof(slot, publicInputs, proof)`:
+
+| n | Public inputs | Public-input bytes | CPU instructions | % of 100M cap | Tx size | Verifies? | Fits? |
+|---:|---:|---:|---:|---:|---:|:---:|:---:|
+| 8 | 80 | 2,560 B | 90,833,858 | **90.8%** | 17,452 B | ✅ true | barely |
+| **16** | 152 | 4,864 B | **99,982,874** | **100.0%** | 19,756 B | ✅ true | **17,126 instructions of margin** |
+| 64 | 584 | 18,688 B | 147,278,890 | **147.3%** | 33,580 B | ✅ true | ❌ **no** |
+
+All three verified `true` on-chain, so the circuits and VKs are sound against the deployed Nethermind backend — this is a capacity result, not a correctness one.
+
+**n = 16 has 17,126 instructions of headroom out of 100,000,000.** That is 0.017%. And this is the *bare* `verify_proof` call: a real on-chain consumer would also read the round registry, check state, and emit events — the `confidential_transfer` measurement (§2) shows the token contract's own logic costs ~9M instructions around a verification. Adding any of that pushes even **n = 8** over the cap.
+
+### The cost model this yields
+
+Fitting the three points gives a clean linear model for on-chain UltraHonk verification on Soroban:
+
+```
+instructions ≈ 81,000,000  +  ~120,000 per public input
+```
+
+(Marginal cost measured at ~127k/input over n=8→16 and ~109k/input over n=16→64.)
+
+Cross-checking against §2: the `transfer` circuit has 24 real public inputs (its VK reports 40, of which 16 are fixed pairing-point inputs), predicting ~83.9M for verification. `confidential_transfer` measured 93.0M total, leaving ~9M for the token contract's state reads, Grumpkin point arithmetic and event emission — consistent with `merge` at 2.4M plus the extra work. The model holds.
+
+**No public source states either figure.** Both are worth publishing.
+
+### What this settles
+
+- **Aggregate verification is off-chain, permanently** — not "for now". Even a 4× instruction cap (SLP-0004) only lifts n=64 from 147% to 37% of a larger budget, but the *architecture* has no reason to move on-chain: the disclosure layer is off-chain by design (`SELECTIVE_DISCLOSURE.md` §5.4), and putting it on-chain would publish the disclosure's existence, recipient, and timing — destroying the property that makes it useful.
+- **The on-chain round registry is now load-bearing, not optional.** It is the only mechanism supplying **completeness** — the disclosure layer proves positive statements only (§1.4: "It does not prove negatives"). The registry makes the round's event set publicly enumerable from chain state, so the donor can verify the aggregate covers *exactly* that set. Without it, a funder could disclose a favourable subset.
+- **The product boundary is now precise:** proofs verified **off-chain by the donor**, completeness anchored **on-chain by the registry**. Both halves are needed; neither is a fallback.
+
+This is the answer to "is the aggregate ever verified on-chain" — asked before building fan-out, and it does not change the fan-out design, but it does fix the product scope.
+
+---
+
 ## 7. Open items
 
 | Item | Status |
 |:---|:---|
 | ~~Build the multi-sender aggregate circuit (Option D)~~ | ✅ **Done** — `circuits/`, measured in §6.6. One proof spans 5 sender accounts; 14,592 B at every n. |
 | Validate K-lane fan-out end to end on testnet | **Next.** Unblocked — the circuit spans lanes, so K is now purely a latency knob. |
+| ~~Decide on-chain vs off-chain aggregate verification~~ | ✅ **Off-chain, settled by measurement** — §6.8. n=16 leaves 0.017% headroom; n=64 needs 147% of the cap. |
 | Wire the aggregate into an auditor CLI (§3.3 of the brief) | After fan-out |
-| Report the demo's `δ_disc = 13` / `δ_ecdh` collision upstream | Separate from #849; see docs/SDK-SAFETY-INVARIANTS.md |
+| ~~Report the `δ_disc = 13` / `δ_ecdh` collision~~ | ✅ Filed — [demo#5](https://github.com/brozorec/stellar-confidential-token-demo/issues/5). Scoped accurately: correct at the pinned rev, becomes a real collision only on rebuild against the tip. |
 | Confirm the 17 KB tx-size gap is auth-entry duplication | Low priority; moot while instructions bind |
 | Track SLP-0004's 400M instruction limit | Would raise N from 1 → 4. Status *Final*; not yet live on testnet (Protocol 27 measured here still enforces 100M). Worth asking SDF when it ships. |
 | Upstream spec gap filed | ✅ [OpenZeppelin/stellar-contracts#849](https://github.com/OpenZeppelin/stellar-contracts/issues/849) — §10 `PVK_B,i` omission, plus the multi-account question from §5 |
