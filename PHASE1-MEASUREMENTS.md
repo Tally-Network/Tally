@@ -228,7 +228,7 @@ This is what makes the aggregate proof well-defined over a known event set, and 
 
 > "A funder disburses to at least 10 recipients in one flow on testnet."
 
-Still achievable and still honest — **one flow, 10 transactions**, ~13 s wall-clock at K=5 with the multi-sender circuit (or ~63 s single-lane). Note K=10 must **not** be used for a 10-recipient demo: it collapses the aggregate into per-recipient disclosure (§5). It must **not** be described as one transaction. Given the measurements, I'd state the transaction count openly on the landing page: a reviewer who tries it will find out anyway, and volunteering it reads as rigour.
+Superseded by §6.7: run the demo at **n = 16, K = 5** — 16 transactions, ~25 s of transfers, one 14,592 B aggregate proof. Note K must stay well below n; K = n collapses the aggregate into per-recipient disclosure (§5). It must **not** be described as one transaction. Given the measurements, I'd state the transaction count openly on the landing page: a reviewer who tries it will find out anyway, and volunteering it reads as rigour.
 
 ---
 
@@ -256,12 +256,96 @@ Verification at ~2 s is comfortably inside what an auditor CLI needs, and is unl
 
 ---
 
+## 6.6 Multi-sender aggregate circuit — built and measured
+
+Option D from §5 is implemented in [`circuits/`](circuits/) and measured. It resolves the fan-out fragmentation problem: **one proof spans every funder account in a round.**
+
+| n | ACIR opcodes | Prove | Verify | Proof size | Public inputs |
+|---:|---:|---:|---:|---:|---:|
+| 8 | 323 | 996 ms | 379 ms | 14,592 B | 80 |
+| 16 | 619 | **1,716 ms** | 589 ms | **14,592 B** | 152 |
+| 64 | 2,395 | 4,887 ms | 1,459 ms | 14,592 B | 584 |
+
+Witnesses spanned **5 distinct sender accounts** round-robin across events; every proof verified. Scaling is linear at ~35 ACIR opcodes and ~70 ms per event over a fixed base; public inputs are `9n + 8`.
+
+**The load-bearing result: proof size is constant at 14,592 B for every n.** A 64-recipient round proves in the same bytes as an 8-recipient one, and the donor's verification cost barely moves. Aggregation is effectively free on the wire — which is what makes the differentiator practical rather than merely possible.
+
+Three findings came out of building it:
+
+**A circuit whose capacity is below the safety floor can never prove.** The first family was `n ∈ {4,16,64}` with `MIN_ACTIVE = 5`; `n=4` was structurally unprovable. The family now starts at 8 and the generator refuses to emit a sub-floor circuit. Caught by the negative test, not by reasoning.
+
+**The safety floor belongs in the circuit, not the SDK.** `n_active >= MIN_ACTIVE` is a constraint and `n_active` is a public input, so bypassing the SDK cannot silently produce a one-event "aggregate", and the disclosure recipient reads the true set size rather than trusting a claim. See [docs/SDK-SAFETY-INVARIANTS.md](docs/SDK-SAFETY-INVARIANTS.md) §I2.
+
+**The upstream lib changed `ecdh` under us — a live instance of the Phase 0 "interface may change" risk.** Between the demo's pinned `539968f` and branch tip `98090b3`:
+
+```rust
+// 539968f — deployed contracts + TS SDK
+pub fn ecdh(scalar, point) -> Field { scalar_mul(scalar, point).x }
+
+// 98090b3 — tip: Poseidon2 funnel over BOTH coordinates
+pub fn ecdh(scalar, point) -> Field {
+    let s = scalar_mul(scalar, point);
+    poseidon_with_domain(domain::ECDH_SHARED_SECRET, [s.x, s.y])
+}
+```
+
+A circuit compiled against the tip cannot recover amounts from events produced at the pinned rev. It surfaced as an unsatisfiable constraint — the loud failure. `SDK.md` §8.1 describes the quiet one, where drift yields mismatched verification keys "while every local test passes." Tally now pins upstream as a submodule at `539968f`. The tip's change is a genuine security hardening (it removes the `(P, −P)` negation invariance of x-only extraction) and should be adopted, but only as a coordinated move of contracts, VKs, and SDK crypto together.
+
+**Separately:** the demo's single-event disclosure circuits hardcode `δ_disc = 13`, which is `δ_ecdh`'s value. The normative table (`DESIGN_cont.md` §13) assigns `δ_disc = 16` and `δ_disc_bind = 15`, and requires all sixteen tags be distinct and each confined to one sponge mode. Tally's circuit uses the specified `δ_disc_bind = 15`. To report upstream.
+
+---
+
+## 6.7 Demo sizing — proposed n = 16
+
+The brief's "at least 10 recipients" was written when batch size was believed to be the binding constraint. It no longer is, and 10 is now the weakest defensible point of the whole demo: it is where the *privacy* claim is thinnest, not where the throughput claim is.
+
+**Proposal: run the demo at n = 16.** It satisfies the brief literally ("at least 10") while fixing what changed underneath it.
+
+| Candidate | Anonymity set | Circuit fit | Verdict |
+|---:|:---|:---|:---|
+| 1 | none — the aggregate **is** the amount | — | Below the floor; unprovable |
+| 5 | minimum meaningful | `n=8`, 3 slots padded | The floor, not a target |
+| **10** | workable but thin | `n=16`, **6 slots padded** | Meets the brief, weakest claim, wasteful padding |
+| **16** ✅ | **3.2× the floor** | **`n=16`, exact fit, zero padding** | **Recommended** |
+| 64 | strongest | `n=64`, exact fit | ~82 s of transfers; more setup than a demo needs |
+
+**Why 16.**
+
+- **3.2× the floor.** To pin any single recipient's amount, a donor must already know the other 15. At n=10 they need only 9, and at the K=10 fan-out we nearly shipped, zero.
+- **Exact circuit fit.** 16 is a family size, so no slots are padded — the demo exercises the real path with nothing to explain away.
+- **Realistic.** 16 contributors in a grant or bounty round is an ordinary number, which matters for a demo meant to read as a product rather than a benchmark.
+- **Still comfortably fast.** See below.
+
+### Round timing at n = 16, K = 5 lanes
+
+| Phase | Transactions | Wall clock | Frequency |
+|:---|---:|---:|:---|
+| Recipient registration (16) | 16 | ~6 s (parallel — distinct source accounts) | one-time per recipient |
+| Lane registration (5) | 5 | ~6 s (parallel) | one-time, reused every round |
+| Lane funding (deposit + merge) | 10 | ~50 s (serialised on one funder source account) | one-time if lanes hold float |
+| **Transfers (16 across 5 lanes)** | **16** | **~25 s** (⌈16/5⌉ = 4 waves × 6.3 s) | **per round** |
+| Aggregate proof (n=16) | 0 | **1.7 s** | per disclosure |
+| Donor verification | 0 | **0.6 s** | per disclosure |
+| **Steady-state round + proof + verify** | **16** | **~27 s** | |
+
+Cost: 16 × ~93M = **~1.49B instructions**, roughly **0.5 XLM** in resource fees.
+
+The demo therefore shows: 16 recipients paid with no amounts visible on any explorer, one 14,592-byte proof, and a donor verifying the exact total in under a second — having handed over nothing but a public key and a nonce.
+
+### Wording for the SCF submission
+
+Say **"16 recipients in one disbursement round — 16 transactions"**. Not "one transaction": that is measurably false (§2), and a reviewer who tries it will find out. Volunteering the transaction count alongside the measured instruction cost is the stronger move — it is the number that makes the SLP-0004 roadmap line land (§6).
+
+---
+
 ## 7. Open items
 
 | Item | Status |
 |:---|:---|
-| Build the **multi-sender aggregate circuit (Option D)** | **Now the gating task.** Fan-out code must not be written until this is sound — see §5. |
-| Validate K-lane fan-out end to end | Blocked on Option D; K is only a latency knob once the circuit spans lanes |
+| ~~Build the multi-sender aggregate circuit (Option D)~~ | ✅ **Done** — `circuits/`, measured in §6.6. One proof spans 5 sender accounts; 14,592 B at every n. |
+| Validate K-lane fan-out end to end on testnet | **Next.** Unblocked — the circuit spans lanes, so K is now purely a latency knob. |
+| Wire the aggregate into an auditor CLI (§3.3 of the brief) | After fan-out |
+| Report the demo's `δ_disc = 13` / `δ_ecdh` collision upstream | Separate from #849; see docs/SDK-SAFETY-INVARIANTS.md |
 | Confirm the 17 KB tx-size gap is auth-entry duplication | Low priority; moot while instructions bind |
 | Track SLP-0004's 400M instruction limit | Would raise N from 1 → 4. Status *Final*; not yet live on testnet (Protocol 27 measured here still enforces 100M). Worth asking SDF when it ships. |
 | Upstream spec gap filed | ✅ [OpenZeppelin/stellar-contracts#849](https://github.com/OpenZeppelin/stellar-contracts/issues/849) — §10 `PVK_B,i` omission, plus the multi-account question from §5 |
