@@ -18,11 +18,21 @@ The donor is never given a secret. They generate their own disclosure keypair `(
 
 > The funder's viewing key is **never** shared. It would recompute every ephemeral scalar the funder ever used, opening every individual amount retroactively — including commitments inside recipients' balances. Challenge–response is the only supported model.
 
+## What the proof does and does not assure
+
+**The donor is assured that** the confidential transfers sent from the lane accounts Tally declared on-chain before the round opened, within that round's declared ledger window, total exactly the disclosed amount and that none has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.
+
+**This does not assure** that the funder made no other payments, nor that the recipients are independent of the funder: the guarantee is scoped to transfers from the accounts declared before the round, **not to the funder's total spend**, and it establishes what amounts moved, not who ultimately controls the accounts that received them.
+
+See [docs/TRUST-STATEMENT.md](docs/TRUST-STATEMENT.md) for why it is worded this way and the rules for public copy.
+
 ## What's here
 
 | Path | |
 |:---|:---|
 | [`circuits/`](circuits/) | Multi-sender aggregate disclosure circuits (Noir/UltraHonk), `n ∈ {8,16,64}` |
+| [`contracts/round-registry`](contracts/) | On-chain lane set + window declaration — the completeness anchor |
+| [`docs/TRUST-STATEMENT.md`](docs/TRUST-STATEMENT.md) | Exactly what the proof does and does not assure |
 | [`docs/SDK-SAFETY-INVARIANTS.md`](docs/SDK-SAFETY-INVARIANTS.md) | Properties whose violation is invisible on-chain |
 | [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) | Investigation of the confidential-token preview |
 | [`PHASE1-MEASUREMENTS.md`](PHASE1-MEASUREMENTS.md) | Testnet measurements |
@@ -38,6 +48,7 @@ Numbers we published because nobody else had. Full method and transaction hashes
 | **Max transfers per transaction** | **1** — batching is impossible today |
 | Transfer proof generation | ~1.26 s |
 | Aggregate proof over 16 transfers | 1.72 s, **14,592 B** |
+| Fan-out: 16 transfers across 5 lanes | 41.6 s (2.4× vs serial), one proof |
 
 Transaction size is *not* the constraint — instructions are, at 93% utilisation. [SLP-0004](https://github.com/stellar/stellar-protocol/blob/master/limits/slp-0004.md) raises that cap 4×, which would take max-N from 1 to 4 with no change on our side.
 
