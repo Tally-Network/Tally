@@ -1,0 +1,8 @@
+[package]
+name = "tally_aggregate_n64"
+type = "bin"
+authors = ["Tally"]
+compiler_version = ">=0.30.0"
+
+[dependencies]
+stellar_confidential_lib = { path = "../../vendor/stellar-contracts/packages/tokens/src/confidential/circuits/lib" }
