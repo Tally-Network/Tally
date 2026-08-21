@@ -8,7 +8,9 @@
   "scripts": {
     "demo": "tsx demo/run-round.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "verify:evidence": "tsx cli/tally.ts verify --funder GBDQSAKMWM3JN2WYXJUJ2DT4X6ANOGBDED5JK66EF2QRXEWQFLP5CWMM --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc --challenge evidence/round-001/challenge.json --bundle evidence/round-001/bundle.json"
+    "verify:evidence": "tsx cli/verify-evidence.ts",
+    "evidence:refresh": "tsx cli/refresh-evidence.ts",
+    "test:retention": "tsx cli/test-retention.ts"
   },
   "dependencies": {
     "@aztec/bb.js": "0.87.0",

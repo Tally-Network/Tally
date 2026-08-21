@@ -10,5 +10,7 @@
   "lanes": 5,
   "expected_total": 3160,
   "verifiable_until_ledger": 4383959,
-  "note": "Soroban RPC retains ~7 days of events. After that ledger this round is no longer verifiable from RPC alone."
+  "note": "Soroban RPC retains a rolling window of events. Past verifiable_until_ledger this round is no longer verifiable from RPC alone \u2014 `tally verify` detects that and says so rather than reporting an empty transfer set. Re-run `pnpm evidence:refresh` to republish.",
+  "published_at_ledger": 4263008,
+  "retention_window_ledgers": 120960
 }

@@ -119,6 +119,31 @@ Everything below moves together or not at all; a partial uplift is the silent-fa
 
 ---
 
+## I4 — Durable verification depends on an event archive we have not built
+
+**Invariant.** Anything Tally publishes as verifiable evidence MUST state the ledger past which it stops being verifiable, and `tally verify` MUST distinguish *evidence aged out* from *proof rejected*.
+
+**Why.** Verification enumerates a round's transfers **from chain events** — deliberately, so a funder cannot choose which transfers the total covers. Soroban RPC serves only a rolling window of events (**~120,960 ledgers, about 7 days** on testnet; `getHealth` reports `oldestLedger` and `ledgerRetentionWindow` exactly). Past that window the enumeration returns nothing.
+
+**Why it is silent — and why this one is about a *reader*, not a bug.** An empty transfer set and a broken proof look identical to someone who has no reason to know retention windows exist. On day eight an outside reviewer would conclude the cryptography failed. So `verify` checks `getHealth` before enumerating and exits **3** with an explicit explanation, distinct from **2** (proof rejected) and **1** (could not verify). Boundary behaviour is unit-tested in [`cli/test-retention.ts`](../cli/test-retention.ts) rather than waiting a week to observe it.
+
+### Milestone U2 — persistent event archive (`INDEXER.md`)
+
+**The gap:** Tally has **no durable verification path.** Every published round expires with the RPC window.
+
+The confidential-token specification already defines what is needed — [`INDEXER.md`](../vendor/stellar-contracts/packages/tokens/src/confidential/docs/INDEXER.md), *"Indexing and Off-Chain State Recovery"* — and upstream needs it for a related reason: wallet recovery from seed also depends on an event log that outlives RPC retention (`DESIGN_cont.md` §9.5). **We have not built it, and we are not pretending the mitigation below is a substitute.**
+
+| | |
+|:---|:---|
+| **Mitigation today** | `pnpm evidence:refresh` republishes a fresh round in one command, so whatever we link is inside the window. `verify` names the expiry when it is hit. `--rpc` accepts an archive node with a longer window. |
+| **Why that is not enough** | It keeps *current* evidence verifiable. It does **not** make a *historical* round verifiable — and a donor auditing a grant programme a year later is exactly the case the product is for. |
+| **Exit criteria** | A round from beyond the RPC window verifies against an archive, with the archive's contents independently checkable against ledger history rather than trusted. |
+| **Sequencing** | After the demonstration targets, before any mainnet claim. A mainnet product whose disclosures expire after a week is not the product described on the landing page. |
+
+**Stated here so a reviewer sees that we know it**, rather than discovering it by trying to verify a round on day eight.
+
+---
+
 ## Related upstream defect (not a Tally invariant)
 
 The reference demo's single-event disclosure circuits hardcode `δ_disc = 13`, which is `δ_ecdh`'s value in the normative table (`DESIGN_cont.md` §13, which assigns `δ_disc = 16` and `δ_disc_bind = 15`). That table states all sixteen values "MUST still be distinct and each MUST be confined to a single sponge mode."

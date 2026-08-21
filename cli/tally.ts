@@ -27,6 +27,7 @@
  * hardcoded, so it cannot drift from the circuit when the circuit changes.
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { randomBytes } from "node:crypto";
 import { rpc, xdr, Address, TransactionBuilder, Contract, BASE_FEE, Networks, Keypair, scValToNative } from "@stellar/stellar-sdk";
 import { UltraHonkBackend } from "@aztec/bb.js";
@@ -66,7 +67,9 @@ interface Deployment {
   contracts: { token: string; verifier: string; auditor: string };
 }
 function loadDeployment(): Deployment {
-  return JSON.parse(readFileSync(arg("deployment", new URL("../demo/deployment.testnet.json", import.meta.url).pathname), "utf8"));
+  const d = JSON.parse(readFileSync(arg("deployment", new URL("../demo/deployment.testnet.json", import.meta.url).pathname), "utf8"));
+  d.rpcUrl = arg("rpc", process.env.TALLY_RPC ?? d.rpcUrl);   // archive nodes have longer windows
+  return d;
 }
 function registryId(): string {
   return arg("registry", process.env.TALLY_REGISTRY ?? "CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES");
@@ -99,6 +102,68 @@ async function simulateRead(server: rpc.Server, contractId: string, method: stri
 }
 
 interface Round { funder: string; lanes: string[]; opened_at: number; closed_at: number | null }
+
+/**
+ * A round is verified by enumerating its transfers FROM CHAIN EVENTS, and
+ * Soroban RPC serves only a rolling window of them. Past that window the
+ * enumeration returns nothing — which, unexplained, looks exactly like a
+ * broken proof to someone who has no reason to know retention windows exist.
+ *
+ * So detect it explicitly and say what actually happened. This is not a
+ * verification failure: the proof is untouched, the evidence aged out.
+ */
+export type RetentionVerdict =
+  | { state: "ok"; ledgersLeft: number }
+  | { state: "expiring"; ledgersLeft: number }
+  | { state: "expired"; agedBy: number };
+
+/**
+ * Pure decision, separated from the formatting so it can be tested without
+ * waiting a week for a round to age out.
+ */
+export function retentionVerdict(openedAt: number, oldest: number, warnBelow = 17280): RetentionVerdict {
+  if (openedAt < oldest) return { state: "expired", agedBy: oldest - openedAt };
+  const ledgersLeft = openedAt - oldest;
+  return ledgersLeft < warnBelow ? { state: "expiring", ledgersLeft } : { state: "ok", ledgersLeft };
+}
+
+async function assertWithinRetention(server: rpc.Server, round: Round): Promise<void> {
+  let health: any;
+  try { health = await (server as any).getHealth(); } catch { return; }  // older RPC: skip
+  const oldest = Number(health?.oldestLedger ?? 0);
+  const latest = Number(health?.latestLedger ?? 0);
+  if (!oldest || !latest) return;
+
+  const verdict = retentionVerdict(round.opened_at, oldest);
+  if (verdict.state === "expired") {
+    const agedBy = verdict.agedBy;
+    console.log();
+    bad(`this round has aged out of the RPC's event retention window.`);
+    console.log(`
+    round opened at ledger  ${round.opened_at}
+    RPC serves from ledger  ${oldest}   (${agedBy.toLocaleString()} ledgers ≈ ${(agedBy * 5 / 86400).toFixed(1)} days too old)
+
+  [1mThis is not a proof failure.[0m The proof is untouched and would still verify.
+  Verification enumerates the round's transfers from chain events — deliberately,
+  so a funder cannot choose which transfers the total covers — and this RPC no
+  longer serves events that far back (retention ≈ ${((Number(health.ledgerRetentionWindow) || 120960) * 5 / 86400).toFixed(0)} days).
+
+  Options:
+    · point --rpc at an archive node with a longer window
+    · ask whoever published this round to refresh it:  pnpm evidence:refresh
+    · durable verification needs a persistent event archive; the confidential-token
+      specification defines one (INDEXER.md). Tally has not built it — see
+      docs/SDK-SAFETY-INVARIANTS.md, Milestone U2.
+`);
+    process.exit(3);
+  }
+
+  if (verdict.state === "expiring") {
+    bad(`this round leaves the retention window in ~${(verdict.ledgersLeft * 5 / 86400).toFixed(1)} days — refresh the evidence soon (pnpm evidence:refresh)`);
+  } else {
+    info(`inside the retention window, ~${(verdict.ledgersLeft * 5 / 86400).toFixed(1)} days of margin`);
+  }
+}
 
 async function readRound(server: rpc.Server, funder: string, roundId: Buffer): Promise<Round> {
   return await simulateRead(server, registryId(), "get_round",
@@ -207,9 +272,14 @@ async function cmdVerify() {
   if (round.funder !== funder) die(`registry returned a round owned by ${round.funder}`);
 
   // 2. The transfer set, from chain events.
+  await assertWithinRetention(server, round);
+
   const evs = await roundEvents(client, round, Math.min(round.opened_at, dep.deployedAtLedger));
   ok(`${evs.length} transfers from the declared lanes inside the window`);
-  if (evs.length === 0) die("no transfers in this round");
+  if (evs.length === 0) {
+    die("the round is inside the retention window but contains no transfers from its declared lanes.\n" +
+        "         That is an empty or mis-declared round, not an expired one.");
+  }
 
   const { circuit, capacity } = circuitFor(evs.length);
   const minActive = 5;
@@ -363,9 +433,14 @@ async function cmdProve() {
 
 // ---------------------------------------------------------------- main
 
+// Only dispatch when run directly. Without this guard, importing anything from
+// this file (the retention tests do) executes the CLI and exits.
+const isEntry = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 const cmd = process.argv[2];
 const run = { challenge: cmdChallenge, prove: cmdProve, verify: cmdVerify }[cmd ?? ""];
-if (!run) {
+if (!isEntry) {
+  // imported as a module — export only
+} else if (!run) {
   console.log(`
   tally — independent verification of a confidential disbursement round
 
@@ -376,5 +451,6 @@ if (!run) {
   common:  --registry <C…>  --deployment <file>
 `);
   process.exit(cmd ? 1 : 0);
+} else {
+  run().catch(e => { console.error(`\n  error: ${e?.message ?? e}\n`); process.exit(1); });
 }
-run().catch(e => { console.error(`\n  error: ${e?.message ?? e}\n`); process.exit(1); });

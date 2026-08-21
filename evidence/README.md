@@ -11,7 +11,7 @@ pnpm install
 pnpm verify:evidence
 ```
 
-Expected output:
+`verify:evidence` reads [`latest.json`](latest.json), so it always checks whichever round is currently published. Expected output:
 
 ```
 ✓ round found: 5 lanes, window [4262999, 4263008]
@@ -29,13 +29,28 @@ Exit `0` means verified. Exit `2` means the proof was rejected. Exit `1` means i
 
 ## ⏳ This expires, and that is a real limitation
 
-**Round 001 is verifiable until roughly ledger 4383959 — about seven days from 22 August 2026.**
+**Round 001 is verifiable until roughly ledger 4383959 — about seven days from 22 August 2026.** The exact figure is in [`round-001/round.json`](round-001/round.json).
 
-Soroban RPC serves only about the last seven days of events, and `verify` deliberately enumerates the round's transfers **from chain events** rather than from anything we hand you. Past the window, RPC no longer returns them and verification fails with "no transfers in this round" — not because the proof went bad, but because the source of truth aged out.
+Soroban RPC serves only a rolling window of events (~7 days), and `verify` deliberately enumerates the round's transfers **from chain events** rather than from anything we hand you. Past the window they are simply not served.
 
-That is a property of the evidence, not of the protocol. Durable verification needs a persistent event archive; the confidential-token specification defines one (`INDEXER.md`), and we have not built it. Stated here rather than discovered by whoever tries this on day eight.
+**You will not be left guessing.** `verify` checks the RPC's own `oldestLedger` before enumerating, and if the round has aged out it says exactly that and exits **3** — distinct from **2** (proof rejected) and **1** (could not verify):
 
-**If it has expired:** run `pnpm demo` to produce a fresh round, then `cli/tally.ts challenge` / `prove` to regenerate a bundle.
+```
+✗ this round has aged out of the RPC's event retention window.
+
+    round opened at ledger  4262999
+    RPC serves from ledger  4300000   (37,001 ledgers ≈ 2.1 days too old)
+
+  This is not a proof failure. The proof is untouched and would still verify.
+```
+
+**If it has expired**, one command republishes a fresh round:
+
+```bash
+pnpm evidence:refresh     # runs a real round, then republishes evidence/round-NNN
+```
+
+That keeps *current* evidence verifiable. It does not make a *historical* round verifiable — a donor auditing a programme a year later is exactly the case the product is for, and closing it needs the persistent event archive the specification defines in `INDEXER.md`. **We have not built it.** Tracked as Milestone U2 in [`docs/SDK-SAFETY-INVARIANTS.md`](../docs/SDK-SAFETY-INVARIANTS.md).
 
 ## What you are actually checking
 

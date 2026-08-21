@@ -422,7 +422,7 @@ pnpm verify:evidence
     </div>
     <div class="col stack">
       <p style="font-size:0.95rem;color:var(--ink-soft);">The verifier takes <b>exactly three values</b> from the funder — the proof, <span class="mono">r_disc</span>, and the sealed total. The lane set, the window, the transfer set and every account key are resolved from the chain, so a funder cannot choose which transfers the total covers.</p>
-      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4383959. Durable verification needs an event archive we have not built.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4383959. The tool detects that and says so, rather than reporting an empty result that would look like a failed proof. One command republishes a fresh round. What none of that fixes is verifying a round from <i>last year</i>, which is exactly the case a grant auditor has: that needs the persistent event archive the Stellar specification defines and <b>we have not built it</b>.</p>
     </div>
 
     <div class="col stack">
