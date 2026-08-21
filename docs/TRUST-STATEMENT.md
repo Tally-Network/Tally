@@ -24,7 +24,9 @@ Two sentences. They ship verbatim to the landing page and the SCF submission. No
 
 ## Rules for public copy
 
+- **Both sentences ship verbatim, everywhere they appear** — landing page, SCF submission, README, pitch materials. They are not shortened, split, softened, or paraphrased for readability. Two sentences is a shape people read; a third turns it into a caveat list nobody finishes.
+- **If the page needs something punchier above them, the headline makes no claim.** A headline may name the problem or the category — it may not assert a guarantee. Anything that asserts belongs in sentence 1 or nowhere.
 - Never write "provably disbursed X" without the scope. Write "provably disbursed X from the declared lanes in round R."
 - Never imply the total covers the funder's whole programme.
-- Never claim recipient identity or independence is verified.
+- Never claim recipient identity or independence is verified — see the identity roadmap in the [README](../README.md#roadmap--verified-recipient-identity-future-work-not-v1); until it ships, sentence 2 is the whole story.
 - If a claim cannot be traced to sentence 1, it does not ship.

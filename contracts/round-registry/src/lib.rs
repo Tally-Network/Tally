@@ -28,8 +28,9 @@
 //! |:---|:---|
 //! | `opened_at` is the true ledger | Stamped from `e.ledger().sequence()`. It is not a parameter, so a caller cannot supply or backdate it. |
 //! | The lane set is immutable | Written once in [`open_round`]; no mutator exists on this contract. |
-//! | A round is declared once | [`open_round`] rejects a `round_id` that already exists. |
-//! | A round closes once, by its funder | [`close_round`] rejects a foreign caller, a missing round, or a second close. |
+//! | A round is declared once | [`open_round`] rejects a `round_id` already used **by that funder**. |
+//! | A round cannot be squatted | Rounds are namespaced by funder, so occupying an id affects only the occupier's own namespace. |
+//! | A round closes once, by its funder | [`close_round`] resolves the caller's own namespace, and rejects a second close. |
 //! | Lanes are distinct and non-empty | Rejected at declaration; a duplicated lane would let one event be counted twice. |
 //!
 //! A donor MUST reject any aggregate covering an event whose ledger falls
@@ -69,7 +70,16 @@ pub struct Round {
 
 #[contracttype]
 enum DataKey {
-    Round(BytesN<32>),
+    /// Rounds are namespaced **by funder**. `round_id` alone is not a key.
+    ///
+    /// Round IDs are meant to be published — a donor resolves a round by its
+    /// id — so they are predictable by construction, and a global namespace
+    /// would let anyone occupy one for the price of a transaction, locking the
+    /// funder out of an identifier they may already have announced. Scoping by
+    /// funder also makes ownership structural rather than a check a donor has
+    /// to remember: resolving under the funder's namespace cannot return
+    /// another account's round.
+    Round(Address, BytesN<32>),
 }
 
 #[contracterror]
@@ -82,8 +92,9 @@ pub enum RegistryError {
     RoundNotFound = 2,
     /// The round is already closed; its window is fixed.
     RoundAlreadyClosed = 3,
-    /// Only the declaring funder may close a round.
-    NotRoundFunder = 4,
+    // 4 was `NotRoundFunder`, removed when rounds became funder-namespaced:
+    // a foreign caller resolves its own (empty) namespace and gets
+    // `RoundNotFound`, so ownership is structural rather than checked.
     /// A round with no lanes can never contain a transfer.
     EmptyLaneSet = 5,
     /// A duplicated lane would let one transfer be counted twice.
@@ -146,7 +157,7 @@ impl RoundRegistry {
             }
         }
 
-        let key = DataKey::Round(round_id.clone());
+        let key = DataKey::Round(funder.clone(), round_id.clone());
         if e.storage().persistent().has(&key) {
             panic_with_error(e, RegistryError::RoundAlreadyExists);
         }
@@ -168,16 +179,15 @@ impl RoundRegistry {
     pub fn close_round(e: &Env, funder: Address, round_id: BytesN<32>) -> Round {
         funder.require_auth();
 
-        let key = DataKey::Round(round_id.clone());
+        let key = DataKey::Round(funder.clone(), round_id.clone());
         let mut round: Round = e
             .storage()
             .persistent()
             .get(&key)
             .unwrap_or_else(|| panic_with_error(e, RegistryError::RoundNotFound));
 
-        if round.funder != funder {
-            panic_with_error(e, RegistryError::NotRoundFunder);
-        }
+        // No ownership check is needed: the storage key is namespaced by
+        // funder, so a foreign caller resolves an empty namespace above.
         if round.closed_at.is_some() {
             panic_with_error(e, RegistryError::RoundAlreadyClosed);
         }
@@ -192,16 +202,19 @@ impl RoundRegistry {
 
     /// The declared round. This is the donor's source of truth for the lane set
     /// and window — never the funder's bundle.
-    pub fn get_round(e: &Env, round_id: BytesN<32>) -> Round {
+    ///
+    /// `funder` is part of the lookup, not a field to verify afterwards: a
+    /// donor auditing a given funder cannot be served another account's round.
+    pub fn get_round(e: &Env, funder: Address, round_id: BytesN<32>) -> Round {
         e.storage()
             .persistent()
-            .get(&DataKey::Round(round_id))
+            .get(&DataKey::Round(funder, round_id))
             .unwrap_or_else(|| panic_with_error(e, RegistryError::RoundNotFound))
     }
 
-    /// Whether `who` is a declared lane of `round_id`.
-    pub fn is_lane(e: &Env, round_id: BytesN<32>, who: Address) -> bool {
-        Self::get_round(e, round_id).lanes.contains(&who)
+    /// Whether `who` is a declared lane of `funder`'s round `round_id`.
+    pub fn is_lane(e: &Env, funder: Address, round_id: BytesN<32>, who: Address) -> bool {
+        Self::get_round(e, funder, round_id).lanes.contains(&who)
     }
 }
 

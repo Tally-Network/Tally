@@ -4,13 +4,13 @@
 
 The on-chain half of the completeness story. It records **which sender accounts count** for a disbursement round and **over what ledger window** — and nothing else.
 
-Deployed (testnet): [`CB2JJSZHLLTOMUJH7UN5TGWH3SGB2RHLF357V7QNZTPPNATVBXUACJMH`](https://stellar.expert/explorer/testnet/contract/CB2JJSZHLLTOMUJH7UN5TGWH3SGB2RHLF357V7QNZTPPNATVBXUACJMH) · 4,977 B wasm
+Deployed (testnet): [`CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES`](https://stellar.expert/explorer/testnet/contract/CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES)
 
 ```
-open_round(funder, round_id, lanes[]) -> Round     // stamps opened_at from the ledger
-close_round(funder, round_id)         -> Round     // stamps closed_at
-get_round(round_id)                   -> Round
-is_lane(round_id, who)                -> bool
+open_round(funder, round_id, lanes[])  -> Round    // stamps opened_at from the ledger
+close_round(funder, round_id)          -> Round    // stamps closed_at
+get_round(funder, round_id)            -> Round
+is_lane(funder, round_id, who)         -> bool
 ```
 
 ### It records the lane set, not the transfers
@@ -25,8 +25,9 @@ The constraint that matters is that **a declaration cannot be backdated, extende
 |:---|:---|
 | `opened_at` is the true ledger | Stamped from `e.ledger().sequence()`. Not a parameter — a caller cannot supply or backdate it. |
 | Lane set is immutable | Written once; no mutator exists. |
-| A round is declared once | `open_round` rejects an existing `round_id` — by **any** caller. |
-| A round closes once, by its funder | `close_round` rejects a foreign caller, a missing round, or a second close. |
+| A round is declared once | `open_round` rejects a `round_id` already used **by that funder**. |
+| A round id cannot be squatted | Rounds are **namespaced by funder**. Round ids are meant to be published, so they are predictable by construction; under a global namespace an adversary could occupy an announced id for one transaction fee and deny it to the funder permanently. Namespacing also makes ownership structural — resolving under a funder's namespace cannot return another account's round, so correctness no longer depends on a donor remembering to check `round.funder`. |
+| A round closes once, by its funder | `close_round` resolves the caller's own namespace and rejects a second close. A foreign caller finds nothing. |
 | Lanes distinct and non-empty | Rejected at declaration; a duplicate would let one transfer be counted twice. |
 
 Because both ends of the window are contract-stamped and the lane set is immutable, the donor's rule — *reject any covered event outside `[opened_at, closed_at]` or from a sender not in `lanes`* — is sound against a funder who controls every other input.
@@ -37,7 +38,7 @@ It cannot observe the token, so it cannot stop a funder transferring from an **u
 
 ### Tests
 
-15 tests, **9 of them negative** — every enforced constraint has a test proving it *rejects* the violation, not merely that the happy path works.
+16 tests, **10 of them negative** — every enforced constraint has a test proving it *rejects* the violation, not merely that the happy path works.
 
 ```bash
 cd contracts && cargo test -p tally_round_registry

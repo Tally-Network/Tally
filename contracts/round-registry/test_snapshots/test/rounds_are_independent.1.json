@@ -123,6 +123,9 @@
                     "symbol": "Round"
                   },
                   {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  },
+                  {
                     "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
                   }
                 ]
@@ -188,6 +191,9 @@
                 "vec": [
                   {
                     "symbol": "Round"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                   },
                   {
                     "bytes": "0202020202020202020202020202020202020202020202020202020202020202"

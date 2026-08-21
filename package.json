@@ -1,0 +1,25 @@
+{
+  "name": "@tally-network/tally",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Confidential disbursement on Stellar — private recipient amounts, publicly provable totals.",
+  "license": "MIT",
+  "scripts": {
+    "demo": "tsx demo/run-round.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aztec/bb.js": "0.87.0",
+    "@noble/curves": "^1.9.4",
+    "@noble/hashes": "^1.8.0",
+    "@noir-lang/noir_js": "1.0.0-beta.9",
+    "@stellar/stellar-sdk": "^14.2.0",
+    "@zkpassport/poseidon2": "^0.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

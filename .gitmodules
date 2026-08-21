@@ -1,3 +1,6 @@
 [submodule "vendor/stellar-contracts"]
 	path = vendor/stellar-contracts
 	url = https://github.com/OpenZeppelin/stellar-contracts
+[submodule "vendor/confidential-token-demo"]
+	path = vendor/confidential-token-demo
+	url = https://github.com/brozorec/stellar-confidential-token-demo
