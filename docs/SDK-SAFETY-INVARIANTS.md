@@ -1,5 +1,7 @@
 # Tally SDK — Safety Invariants
 
+> See also [`CONTRIBUTING.md`](../CONTRIBUTING.md) — *an inherited default is true in its original context and can be false one level away*. Both cryptographic errors this project has shipped had that shape, including a false claim about the core guarantee that reached a public page.
+
 These are the properties whose violation **cannot be detected from chain data**. Each fails silently: the system keeps working, the proofs keep verifying, and the guarantee is gone. They are grouped here because they share that failure mode and therefore need the same treatment — enforced in code, covered by a hard test, and never left to caller discipline.
 
 Ordinary bugs surface. These do not. Treat them as a distinct class.

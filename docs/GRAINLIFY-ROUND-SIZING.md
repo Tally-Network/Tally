@@ -35,33 +35,62 @@ This is a large-`n` single round. The aggregate is meaningful by construction, w
 
 Weeks with fewer than 5 recipients carry forward into the next round. That is a product rule worth stating openly rather than hiding: **a round too small to hide anything does not get an aggregate disclosure**, because a "total" over two payments is one subtraction away from both of them. The circuit enforces this rather than trusting the caller (`MIN_ACTIVE` is a constraint, not a policy check), which is the behaviour we want.
 
-## ⚠️ The blocking prerequisite nobody has surfaced
+## ⚠️ RETRACTED: "Grainlify has no contributor address storage"
 
-Grainlify's own payout-path table reports:
+**That claim was wrong, and the way it was wrong matters more than the claim.**
 
-| Component | State |
+I read it from `Grainlify-Docs/docs/reference/payout-path.md` — a documentation table dated **18 August 2026** listing "Contributor payout address: *No such column or table*". I did not read the schema.
+
+The schema says otherwise. `Grainlify-Backend`, branch `main`, rev **`1464b75`** (2026-08-21):
+
+- `migrations/000080_contributor_addresses.up.sql` creates `contributor_addresses` with `verified_at`, `verified_nonce`, `chain_id`, and `superseded_at` history.
+- The design is careful: payout destinations are held **separate from sign-in wallets** ("a wallet somebody added to sign in silently becomes somewhere money gets sent"), addresses are written only after a verified signature, and `auth_nonces.purpose` distinguishes `signin` from `payout_address` so a sign-in challenge cannot be replayed to register a destination.
+- `migrations/000086_one_account_per_payout_address.up.sql` adds one-account-per-address and notes that **production holds one live row** — so the flow has been exercised.
+
+The documentation was three days stale relative to the code. **This is the [inherited-defaults failure](../CONTRIBUTING.md) in another form: a claim sourced from a document rather than from the thing the document describes.** The rule now says to cite the file and revision actually read; this is why.
+
+## ⚠️ The real blocker: the payout path is Aptos, not Stellar
+
+Reading the schema instead of the docs surfaces the actual problem, which is bigger than the one I reported.
+
+**Grainlify's payout path is wired for Aptos.**
+
+| Evidence | Source |
 |:---|:---|
-| Soroban escrow contract | **never deployed** |
-| `internal/chain` adapter | **only a MockAdapter implements it** |
-| Signer service | **does not exist** |
-| Chain configuration | **no environment sets it** |
-| **Contributor payout address** | **no such column or table** |
+| `address TEXT CHECK (address ~ '^0x[0-9a-f]{64}$')` | `000080` — Aptos address format. **A Stellar `G…` strkey fails this constraint.** |
+| `chain_id` example: `'aptos-testnet'` | `000080` |
+| `auth_nonces.wallet_type` gains `'aptos_ed25519'`, with the comment *"Aptos joins here and NOT in wallets.wallet_type: nothing signs in with an Aptos wallet"* | `000080` |
+| `internal/chain/aptos_fixture_drift_test.go` cross-checks Merkle vectors against Move literals in the sibling `Aptos-Contracts` repo | backend |
 
-**Grainlify does not store contributor payout addresses at all.** So "Grainlify calls the SDK for a real contributor payout on testnet" is further away than §4 target 4 implies: before any Tally work matters, someone has to collect and store contributor Stellar addresses, and that is a schema change plus a contributor-facing flow.
+**But it is not architecturally committed to Aptos.** `internal/chain/chain.go`:
 
-This is not a reason to change the target — it is a reason to sequence it correctly. Two options:
+> "Four implementations will eventually sit behind this interface (**Soroban**, Starknet, Flare, Solana) and they must stay behaviourally identical, so the abstraction is built and proven first — against mocks — before any real chain exists."
 
-1. **Grainlify builds its rails first.** Out of our control; timeline risk lands on us.
-2. **Tally supplies the rails.** Our non-custodial registration flow already collects a contributor's address *and* registers their confidential account in one step — the address column falls out of it. This is more work for us, but it removes the dependency and makes a stronger story: Tally is not integrated *into* Grainlify's payout path, Tally *is* Grainlify's payout path.
+And `Grainlify/Stellar-Contracts` already exists: *"GrainHack escrow for Soroban. Merkle claim roots, pull claims only. The cross-implementation counterpart to the Aptos contract."*
 
-**Recommend option 2**, and note that it composes with the non-custodial decision: one contributor-facing flow does wallet connect, address capture, and confidential registration together.
+### So: does the Founding Pool settle on Aptos?
 
-## Revised shape of the integration
+**Today, that is the only wired path — but the decision is open, not foreclosed.** The chain layer is deliberately chain-agnostic, Soroban is explicitly named as a planned implementation, and a Soroban escrow contract is already written. What does not exist is a Stellar settlement wired end to end.
 
-1. Contributor onboarding page (Tally-supplied) — wallet connect → address captured → confidential account registered client-side.
-2. Grainlify stores the address against the contributor.
+**This is a Grainlify product decision and must be made before any integration scoping.** "Grainlify calls the Tally SDK" is not a scheduling question until Grainlify decides a settlement lands on Stellar.
+
+If it does, the concrete work on Grainlify's side is smaller than I implied and well-shaped by what already exists:
+
+1. A migration admitting Stellar addresses — the `^0x[0-9a-f]{64}$` CHECK is Aptos-only, and the table is already per-chain by design (`UNIQUE (user_id, chain_id)`), so this is an extension rather than a redesign.
+2. A `stellar_ed25519` payout-address registration path — `auth_nonces` already supports `stellar_ed25519` for sign-in, and the `purpose` column already separates the two uses.
+3. A Soroban implementation behind `chain.Chain`, which the interface was built to receive.
+
+Tally's non-custodial onboarding composes with (2): one contributor flow does wallet connect, address capture and confidential registration together. But it **extends** Grainlify's existing, well-designed address handling rather than replacing an absence.
+
+## Revised shape of the integration — *conditional on decision 1 below*
+
+1. Contributor onboarding (Tally-supplied) — wallet connect → address captured → confidential account registered client-side, extending Grainlify's existing `contributor_addresses` flow rather than replacing it.
+2. Grainlify stores the Stellar address against the contributor under a Stellar `chain_id`.
 3. Founding-pool settlement calls the payout worker: `open_round` → fan-out → `close_round`.
 4. Grainlify stores `(roundId, funderAddress)` against the settlement.
 5. Anyone verifies with `tally verify --funder <G…> --round <id>`.
 
-**Do not start until the Founding Contributor Pool date is known**, since it is a one-time event and the flagship demonstration depends on it.
+**Two blocking decisions before starting**, in order:
+
+1. **Does a Grainlify settlement land on Stellar?** Until answered, there is no integration to scope.
+2. **When is the Founding Contributor Pool?** It is a one-time event and the flagship demonstration depends on it.

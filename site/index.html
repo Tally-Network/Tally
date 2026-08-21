@@ -340,15 +340,16 @@
     </div>
     <div class="figure">
       <div class="bignum">16,224 <small>BYTES</small></div>
-      <p style="color:var(--ink-soft);max-width:58ch;">Constant across every round size we build for. Aggregating more recipients costs proving time, not proof size — and the donor's verification barely moves. That is what makes proving a whole round practical rather than merely possible.</p>
+      <p style="color:var(--ink-soft);max-width:58ch;">The donor's <b>zero-knowledge</b> aggregate proof, constant across every round size we build for. Aggregating more recipients costs proving time, not proof size — and the donor's verification barely moves. That is what makes proving a whole round practical rather than merely possible.</p>
+      <p class="mono" style="font-size:0.78rem;color:var(--ink-faint);margin-top:4px;">A different artifact from the on-chain transfer proof, which is 14,592 B and non-zk because the on-chain verifier accepts only that flavour.</p>
     </div>
     <div class="data-wrap">
       <table class="data">
-        <thead><tr><th>Round size</th><th class="num">ACIR opcodes</th><th class="num">Prove</th><th class="num">Verify</th><th class="num">Proof size</th></tr></thead>
+        <thead><tr><th>Round size</th><th class="num">ACIR opcodes</th><th class="num">Prove (zk)</th><th class="num">Verify (zk)</th><th class="num">Proof size</th></tr></thead>
         <tbody>
-          <tr><td>n = 8</td><td class="num">323</td><td class="num">1,261 ms</td><td class="num">379 ms</td><td class="num ok">16,224 B</td></tr>
-          <tr><td>n = 16</td><td class="num">619</td><td class="num">1,942 ms</td><td class="num">589 ms</td><td class="num ok">16,224 B</td></tr>
-          <tr><td>n = 64</td><td class="num">2,395</td><td class="num">6,088 ms</td><td class="num">1,459 ms</td><td class="num ok">16,224 B</td></tr>
+          <tr><td>n = 8</td><td class="num">323</td><td class="num">1,098 ms</td><td class="num">377 ms</td><td class="num ok">16,224 B</td></tr>
+          <tr><td>n = 16</td><td class="num">619</td><td class="num">1,827 ms</td><td class="num">559 ms</td><td class="num ok">16,224 B</td></tr>
+          <tr><td>n = 64</td><td class="num">2,395</td><td class="num">5,756 ms</td><td class="num">1,403 ms</td><td class="num ok">16,224 B</td></tr>
         </tbody>
       </table>
     </div>
@@ -401,7 +402,7 @@
       transfers from declared lanes, all time : <span class="a">17</span>
       inside the declared window              : <span class="g">16</span>
       excluded by the window                  : <span class="a">1</span>
-<span class="c">[5]</span> proof <span class="g">16,224 B</span> / <span class="g">1,943 ms</span> / 5 sender accounts — verified
+<span class="c">[5]</span> proof <span class="g">16,224 B</span> (zk) / <span class="g">1,943 ms</span> / 5 sender accounts — verified
       donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span>
       <span class="c">(stroops of the wrapped asset — testnet XLM via its SAC)</span></pre>
     </div>
@@ -517,7 +518,7 @@
       <div class="status-row"><span class="mark yes">BUILT</span><span>End-to-end round, donor-verified, reproducible with one command</span></div>
       <div class="status-row"><span class="mark part">PARTIAL</span><span>Explorer evidence: the property holds and transactions are linked above; a captured explorer view is not yet published</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>A distributable SDK package — the demo currently runs against a vendored reference client</span></div>
-      <div class="status-row"><span class="mark no">NOT YET</span><span>Integration with <a href="https://grainlify.com">Grainlify</a>, the intended first consumer. Planned, not built</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>Integration with <a href="https://grainlify.com">Grainlify</a>. Grainlify has <b>never made a payout on any chain</b>; its payout path is currently wired for Aptos, and whether a settlement lands on Stellar is its decision, not ours. We claim no adoption</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>Mainnet. Gated on the upstream suite's audit, which is outside our control</span></div>
     </div>
   </div>
@@ -544,7 +545,7 @@
     <div class="col stack">
       <p class="eyebrow">Who built it</p>
       <h2>Jagadeesh B</h2>
-      <p>Stellar India Ambassador. Builds on Soroban and ships in the open — the measurements, the negative results and the upstream issues on this page are all published rather than summarised. Tally is built alongside <a href="https://grainlify.com">Grainlify</a>, an open-source contribution platform intended as its first consumer.</p>
+      <p>Stellar India Ambassador. Builds on Soroban and ships in the open — the measurements, the negative results and the upstream issues on this page are all published rather than summarised. Tally is built alongside <a href="https://grainlify.com">Grainlify</a>, an open-source contribution platform that <b>has never disbursed and has no payout rails</b>. That is the point: Grainlify needs rails, and Tally is being built to be them.</p>
     </div>
     <div class="grid2">
       <div class="cell"><span class="k">GitHub</span><span class="n" style="margin-top:6px;"><a href="https://github.com/Jagadeeshftw">@Jagadeeshftw</a></span></div>

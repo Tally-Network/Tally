@@ -57,6 +57,8 @@ verifyDisclosure(bundle)                  // donor side, resolves everything fro
 
 Smallest bridge: a small **Node payout worker** that Go invokes over HTTP or a job queue. This is a real architectural constraint on the integration, not a packaging detail.
 
+> **Superseded in part.** The claim that Grainlify stores no contributor addresses was **wrong** — see [GRAINLIFY-ROUND-SIZING.md](GRAINLIFY-ROUND-SIZING.md). It does, with verification and supersede history. The real blocker is that the payout path is wired for **Aptos**, and whether a Grainlify settlement lands on Stellar is an open Grainlify decision. Target 4 is blocked on that decision, not on missing storage.
+
 ### Prerequisite C — contributors need confidential accounts
 
 Every recipient must complete a proof-carrying `register` before it can receive anything (Phase 0, Q2). Two paths:

@@ -42,6 +42,7 @@ See [docs/TRUST-STATEMENT.md](docs/TRUST-STATEMENT.md) for why it is worded this
 | [`docs/DEMONSTRATION-STATUS.md`](docs/DEMONSTRATION-STATUS.md) | §4 target status, honestly counted |
 | [`docs/TRUST-STATEMENT.md`](docs/TRUST-STATEMENT.md) | Exactly what the proof does and does not assure |
 | [`docs/SDK-SAFETY-INVARIANTS.md`](docs/SDK-SAFETY-INVARIANTS.md) | Properties whose violation is invisible on-chain |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How we check claims — inherited defaults, negative tests first |
 | [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) | Investigation of the confidential-token preview |
 | [`PHASE1-MEASUREMENTS.md`](PHASE1-MEASUREMENTS.md) | Testnet measurements |
 | `vendor/stellar-contracts` | OZ suite, pinned at `539968f` |
@@ -55,11 +56,16 @@ Numbers we published because nobody else had. Full method and transaction hashes
 | `confidential_transfer` CPU cost | **~93,000,000 instructions** (93% of the 100M per-tx cap) |
 | **Max transfers per transaction** | **1** — batching is impossible today |
 | Transfer proof generation | ~1.26 s |
-| Aggregate proof over 16 transfers (zero-knowledge) | 1.94 s, **16,224 B** |
+| Aggregate proof over 16 transfers (zero-knowledge) | 1.83 s, **16,224 B** |
+| On-chain transfer proof (non-zk, verifier-mandated) | **14,592 B** |
 | Fan-out: 16 transfers across 5 lanes | 41.6 s (2.4× vs serial), one proof |
 | Full round, donor-verified end to end | [`pnpm demo`](demo/) |
 
 Transaction size is *not* the constraint — instructions are, at 93% utilisation. [SLP-0004](https://github.com/stellar/stellar-protocol/blob/master/limits/slp-0004.md) raises that cap 4×, which would take max-N from 1 to 4 with no change on our side.
+
+## Who this is for first
+
+[Grainlify](https://grainlify.com) is Tally's intended first consumer. It has **never made a payout on any chain**, and has no payout rails — its chain layer is a deliberately chain-agnostic interface built against mocks, currently wired for Aptos, with Soroban named as one of four planned implementations. Tally is not "used by Grainlify". Grainlify needs rails and has none; Tally is being built to be them, and whether a settlement lands on Stellar is Grainlify's decision.
 
 ## Roadmap — verified recipient identity (future work, not v1)
 
