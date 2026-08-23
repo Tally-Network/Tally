@@ -5,10 +5,10 @@
 | # | Target | Status |
 |:--|:---|:---|
 | 1 | Funder disburses to ≥10 recipients in one flow on testnet | ✅ **Covered** |
-| 2 | Block explorer shows transactions with no individual amounts visible | ⚠️ **Property holds; evidence artifact not captured** |
+| 2 | Block explorer shows transactions with no individual amounts visible | ✅ **Covered** — [`evidence/explorer-view.md`](../evidence/explorer-view.md) |
 | 3 | Auditor script proves the total, and it matches | ✅ **Covered** — standalone `tally verify` CLI |
 | 4 | **Grainlify calls the SDK for a real contributor payout on testnet** | ❌ **Not built** |
-| 5 | Live landing page | ✅ **Built** |
+| 5 | Live landing page | ✅ **Deployed** — <https://tally-network.github.io/Tally/> |
 | **6** | **Independent third party verifies a published round** *(added)* | 🔄 **Ready to run** — [`evidence/`](../evidence/) |
 | **7** | **Small round with real independent contributors, non-custodial** *(added)* | ❌ **Not built** — [sketch](TARGET4-SKETCH.md) |
 
@@ -16,9 +16,9 @@
 
 ### Target 6 — independent verification *(added 22 Aug 2026)*
 
-Every verification before this was performed by whoever generated the proof, which is not evidence of anything. [`evidence/round-001`](../evidence/) publishes a real testnet round — funder address, round id, and the disclosure bundle — such that anyone with only the repository and those values runs `pnpm verify:evidence` and gets `TOTAL DISBURSED: 3160`.
+Every verification before this was performed by whoever generated the proof, which is not evidence of anything. [`evidence/`](../evidence/) publishes a real testnet round — funder address, round id, and the disclosure bundle — such that anyone with only the repository and those values runs `pnpm verify:evidence` and gets `TOTAL DISBURSED: 3160`. Refreshed 22 Aug 2026; `pnpm evidence:refresh` republishes it.
 
-**Ready, with one honest limit:** Soroban RPC retains ~7 days of events, and `verify` deliberately enumerates transfers from chain rather than from anything we supply, so round 001 stops being verifiable around ledger 4383959. Durable verification needs the event archive `INDEXER.md` specifies, which we have not built.
+**Ready, with one honest limit:** Soroban RPC retains ~7 days of events, and `verify` deliberately enumerates transfers from chain rather than from anything we supply, so the published round stops being verifiable around ledger 4410007. Durable verification needs the event archive `INDEXER.md` specifies, which we have not built.
 
 The target completes when an **outside person** runs it and reports their output. Nothing internal substitutes for that.
 
@@ -34,11 +34,11 @@ n ≥ 5 independent contributors registering **non-custodially** — their keys 
 
 `pnpm demo` pays **16 recipients across 5 lanes** on testnet in one round. Exceeds the "at least 10" bar. Reproducible from a clean clone; both upstream submodules pinned.
 
-## 2 — ⚠️ Property holds, artifact missing
+## 2 — ✅ Covered
 
-The property is real and checkable: `Transfer` events carry `from`/`to` as **topics** while every amount appears only as `BytesN<32>` — a Pedersen commitment or an ECDH ciphertext. Real testnet hashes exist ([PHASE1-MEASUREMENTS.md](../PHASE1-MEASUREMENTS.md) §1) and the demo prints more on each run.
+[`evidence/explorer-view.md`](../evidence/explorer-view.md) shows a real transfer decoded from the ledger: `from` and `to` in the clear as indexed topics, and **no amount field anywhere** — only 32-byte ciphertexts. It links the transaction on stellar.expert so a reviewer can open the same event.
 
-**What is missing is the evidence artifact**: a captured explorer view showing a transfer with addresses visible and no amount, ready to link from the landing page. That is a capture task, not a build task, but it is not done and should not be counted as done.
+Published as regenerable output (`npx tsx cli/explorer-view.ts`) rather than a screenshot, deliberately: a screenshot shows the same thing but cannot be checked, and re-running the command against the chain is a stronger claim than an image.
 
 ## 3 — ✅ Covered
 
@@ -111,6 +111,6 @@ Every recipient must complete a proof-carrying `register` before it can receive 
 
 **Target 4 is the critical path to submission, not the landing page.** The page can be built and deployed now against real evidence from targets 1–3; it simply must not claim a Grainlify integration that does not exist yet.
 
-## 5 — ✅ Built
+## 5 — ✅ Deployed
 
-Carries both trust-statement sentences verbatim, a headline that asserts nothing, and only evidence that exists. Published; repository link updated after the org transfer.
+**<https://tally-network.github.io/Tally/>** — GitHub Pages, built from `site/` on push. Carries both trust-statement sentences verbatim, a headline that asserts nothing, and only evidence that exists. Every outbound link was checked and resolves.

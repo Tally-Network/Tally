@@ -1,0 +1,9 @@
+Tally is confidential disbursement on Stellar: one funder pays many recipients, each recipient's amount stays private, and the round's total is provable to a donor on demand. It builds on Stellar's Confidential Tokens developer preview.
+
+The results are measured, not projected. A single zero-knowledge proof covering an entire round is 16,224 bytes, constant whether it covers 8 payments or 64 — more recipients cost proving time, not proof size. We registered the verification keys on Soroban and measured what verifying such a round on-chain would cost: at 16 recipients it consumes 100.0% of the per-transaction instruction budget, and at 64 it needs 147%. It does not fit, which is why donor verification is off-chain and an on-chain round registry supplies completeness instead. We also measured a single confidential transfer at roughly 93 million instructions, 93% of the cap, so batching transfers is impossible today and one-to-many requires a lane fan-out. Neither figure appears published elsewhere.
+
+One command runs a full round on testnet: 16 recipients across 5 lanes, no amount visible on any explorer, one proof, donor-verified. A published round can be independently verified by anyone with the repository and two values.
+
+Built: the aggregate disclosure circuits, the round registry contract, a standalone verification CLI, non-custodial registration, and the site. Not built, and marked so: integration with Grainlify, our intended first consumer, which has never disbursed and has no payout rails — we claim no adoption. Also unbuilt are a round with real independent contributors and durable verification beyond the RPC's seven-day event window.
+
+Funding would take Tally from a measured reference implementation to a usable one: the first real integration, a contributor round, durable verification against Stellar's canonical archives, and the upstream uplift required before any mainnet claim.

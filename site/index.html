@@ -303,7 +303,7 @@
         </tfoot>
       </table>
     </div>
-    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4260769–4260778. Amounts are stroops of the wrapped asset — testnet XLM via its Stellar Asset Contract; the values are arbitrary demo figures. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
+    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4289035–4289043. Amounts are stroops of the wrapped asset — testnet XLM via its Stellar Asset Contract; the values are arbitrary demo figures. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
   </div>
 </header>
 
@@ -362,6 +362,19 @@
     </div>
 
     <div class="col stack" style="margin-top:14px;">
+      <h3>One transfer costs 93% of a transaction</h3>
+      <p>Before any of the above, we measured what a single confidential transfer costs on Soroban.</p>
+    </div>
+    <div class="grid3">
+      <div class="cell"><span class="k">CPU instructions</span><span class="v">92,973,307</span><span class="n">of a 100,000,000 per-transaction cap</span></div>
+      <div class="cell"><span class="k">Share of the cap</span><span class="v">93.0%</span><span class="n">transaction size sits at 24%</span></div>
+      <div class="cell"><span class="k">Transfers per transaction</span><span class="v">1</span><span class="n">two would need 186% of the budget</span></div>
+    </div>
+    <div class="col stack">
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>Batching is not possible today.</b> Instructions bind, not bytes — a fact that is invisible until measured, and one we got wrong ourselves before measuring: our first estimate assumed transaction size was the limit and put 7–8 transfers in a transaction. So one-to-many is a fan-out across lanes rather than a loop inside one call. <a href="https://github.com/stellar/stellar-protocol/blob/master/limits/slp-0004.md">SLP-0004</a> raises exactly the cap that binds, 4×, which would take this from 1 to 4 with no change on our side.</p>
+    </div>
+
+    <div class="col stack" style="margin-top:14px;">
       <h3>Why the donor verifies off chain — a measured boundary, not a convenience</h3>
       <p>We registered the aggregate verification keys on Soroban and measured what verifying a round would actually cost against the 100,000,000-instruction per-transaction cap. (Measured with non-zk proofs, since that is all the on-chain verifier accepts — the cost is driven by public-input count, not proving mode.)</p>
     </div>
@@ -395,9 +408,9 @@
     <div class="term">
       <div class="term-bar">pnpm demo &nbsp;·&nbsp; Stellar testnet &nbsp;·&nbsp; 21 Aug 2026</div>
 <pre><span class="c">[pre-round]</span> one transfer BEFORE open_round      <span class="c">← must be excluded</span>
-<span class="c">[1]</span> open_round      opened_at <span class="g">4260769</span>       <span class="c">contract-stamped</span>
+<span class="c">[1]</span> open_round      opened_at <span class="g">4289035</span>       <span class="c">contract-stamped</span>
 <span class="c">[2]</span> 16 transfers across 5 lanes            <span class="g">39.9s</span>
-<span class="c">[3]</span> close_round     window [<span class="g">4260769</span>, <span class="g">4260778</span>]
+<span class="c">[3]</span> close_round     window [<span class="g">4289035</span>, <span class="g">4289043</span>]
 <span class="c">[4]</span> DONOR — given only funder address + round id
       transfers from declared lanes, all time : <span class="a">17</span>
       inside the declared window              : <span class="g">16</span>
@@ -422,7 +435,7 @@ pnpm verify:evidence
     </div>
     <div class="col stack">
       <p style="font-size:0.95rem;color:var(--ink-soft);">The verifier takes <b>exactly three values</b> from the funder — the proof, <span class="mono">r_disc</span>, and the sealed total. The lane set, the window, the transfer set and every account key are resolved from the chain, so a funder cannot choose which transfers the total covers.</p>
-      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4383959. The tool detects that and says so, rather than reporting an empty result that would look like a failed proof. One command republishes a fresh round. What none of that fixes is verifying a round from <i>last year</i>, which is exactly the case a grant auditor has: that needs the persistent event archive the Stellar specification defines and <b>we have not built it</b>.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4410007. The tool detects that and says so, rather than reporting an empty result that would look like a failed proof. One command republishes a fresh round. What none of that fixes is verifying a round from <i>last year</i>, which is exactly the case a grant auditor has: that needs the persistent event archive the Stellar specification defines and <b>we have not built it</b>.</p>
     </div>
 
     <div class="col stack">
@@ -452,7 +465,7 @@ pnpm verify:evidence
         </tbody>
       </table>
     </div>
-    <p class="col eyebrow">Open a transfer and the sender and recipient are in the clear. Every amount field is a 32-byte commitment or ciphertext.</p>
+    <p class="col eyebrow">Open a transfer and the sender and recipient are in the clear. Every amount field is a 32-byte commitment or ciphertext — decoded field by field in <a href="https://github.com/Tally-Network/Tally/blob/main/evidence/explorer-view.md">evidence/explorer-view.md</a>, regenerable with one command rather than captured as a screenshot.</p>
   </div>
 </section>
 
@@ -586,17 +599,17 @@ pnpm verify:evidence
 </footer>
 
 <script>
-  // Real transfer events from the round of 21 Aug 2026, ledgers 4260769–4260778,
+  // Real transfer events from the published round of 22 Aug 2026, ledgers 4289035–4289043,
   // read back from Soroban RPC. Addresses are truncated for width; the amount
   // column shows the actual on-chain ciphertext bytes. Nothing here is invented.
   const ROWS = [
-    ["GAIUUCWSCGKJPT6Q4MAK7HTFQATDXERVQH2P6DH5V5WTPBG3JPGZL6IC", "GBCGYFBSUY5EF5BVLJIIWNRBNHJXILLEMEYFYXMU7X7MEBPFKSIBZGKJ", "0a966ded2bba240a", "0543", 4260772],
-    ["GBILWNVYBSI4C6WBE4OC7AUTVWTNKW6RMTSMPDQT26AXT57JCYPJFM7O", "GDPRZXHPLCTWTA4L3LJIGAHKEOKGD4AVF4DGQZMALYEPYOFJCBWOYDK3", "0c448a015ffbfe68", "0b0a", 4260772],
-    ["GAXKX4ZT75QEONYQ2ZD5WZQ3VJWVPRFDAK7W6JQA2TYOKVIBE3TDYY6G", "GBGHQTYRYFFOCITDSZU3NMWY6BOJQ3QLZKS2DU3XPRIMM7XEQMZ3ERH7", "140723f70ef4cf7a", "2013", 4260772],
-    ["GD2BSNXD6HW2GIKMIULIZ5DAMXAQLMGI64LTA2BQT2JGG6AYBA6DLXEO", "GB3FLGQBL4XRTP55N3HH2V6PGX2ABF7KIAXDQ5AJ7O5POH4H6MZQTNPC", "03f70e4c451badef", "4ecd", 4260772],
-    ["GBP6CYJFVKMTRTOAIVLKU3OKAFKXU5ZIBCRM3Y4V4MLTNLGXOAAIF72T", "GDLZJFU6MEV2P2ZPLKW6LPGYS53QQQS3IVCX4HVK2TEFMUAHJB3XEUEP", "0093fcb8ccc70684", "a705", 4260772],
-    ["GBP6CYJFVKMTRTOAIVLKU3OKAFKXU5ZIBCRM3Y4V4MLTNLGXOAAIF72T", "GCOBAEKZ3FXKXTLHYEQRYDZW4P73KSXBD6KSCVXPRPTSSA2SQTAWP6YU", "07b0b8ec6ba7782e", "fdb4", 4260774],
-    ["GD2BSNXD6HW2GIKMIULIZ5DAMXAQLMGI64LTA2BQT2JGG6AYBA6DLXEO", "GBFXUAZP5OTMZ4V4W7XJ4SKYZLUMA6BP5RTFK3AQHUUKPU25RC77B2KB", "18f24ced5695d244", "5674", 4260775]
+    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GDNYWTQYRY5X73ITM5WHTDPYVR4K2G7BCKVAS2TW2BZZERY62FNAEG4T", "1cfff9f40ef39b22", "5128", 4289036],
+    ["GDPHXM5C3EEG62SW3RRZTM56XPHJYY4IGZU7XBLS63S47F7P35ALHIOP", "GB35L2JYEH7MXFTQNQ56EUDP5DVXS47QGUGIDCZ6PNAYAMNAPSAMAUJG", "0c9183d23a57045e", "2652", 4289038],
+    ["GC3NATY25KQYFKZQIKMGP4O4DLEX5YZSNUXES5JVGZWWQS46D5MTKQ42", "GAX2Z2XGFQRI43RRWSU7RIN7UPLKX6JM63H6CKG4VYIVYWVY75A7MXJD", "0b528233bd8ae402", "0a75", 4289038],
+    ["GDLQHCIEQ7XE3EHSUHVUZAVB7L2RKBIFZFZPQPFH7HQ2PKGELH6QZUT4", "GDV45LYQARZUYSNF6NUAHSOIWDD45A53NPTWVSOOGBQ5XYZNGZLZDAIU", "033be85935fe9690", "1472", 4289038],
+    ["GD6LT7QFD3JHMSKFDZH7KEC7IN2QFCQTBYLSCFSIJPP74XSOSMKJLBKN", "GDZSJFIVYVAN5IVX62JKEIKX2XAQUNVHDK5GCLTZ4D6E6ZMM7H3HCEJ4", "216d8ef3b52f63f9", "f27c", 4289038],
+    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GD4LR6AGGKV6F67TOEJAXVJXYCI65FACQOF25E6LFNHCTFSX65LN2CHQ", "05eefa6bd97843ec", "b193", 4289038],
+    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GDZVWS3DXF2FSVQAVRH5AZZMOLLK43DOJLI3WVZPNWJKVAVKTRKE5HFB", "2a0cfa925c87ee60", "1229", 4289040]
   ];
 
   const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
