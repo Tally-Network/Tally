@@ -18,6 +18,15 @@
 - research in `docs/research/` (`DEMAND-QUOTES.md`, `SPEC-OPERATOR-GAPS.md`, `OVERLAP.md`)
 - open questions for SDF in OPERATOR-DESIGN §9
 
+## Site (built locally, not deployed)
+
+`site/` holds the landing page and docs (Next.js 16 and Fumadocs on the Agenforce template), with claim and link checks in CI. Planned address: `tally.0xo.in` on Vercel. Nothing is deployed:
+- no Vercel project exists;
+- no DNS record exists;
+- the GitHub Pages redirect (`pages-redirect/`, a manual workflow) has not run.
+
+See `site/README.md` and `site/CLAIMS.md`.
+
 ## Current deployment (testnet, public)
 
 Defined in `demo/deployment.testnet.json`.
@@ -61,6 +70,7 @@ The bb CLI 0.87.0 and nargo beta.11 used this session were downloaded to the scr
 2. Whether to **submit to SCF #46** (Build deadline 2026-11-08) given the Remi overlap and thin demand, or first get SDF's answers to OPERATOR-DESIGN §9.
 3. **Rates and team** in BUDGET-DRAFT (the rates are placeholders), and a **named tenant** for the tranche-3 pilot.
 4. Whether to **contact SDF's privacy team** with the §9 questions. Nobody has been contacted.
+5. **Site deploy:** create the Vercel project (root `site/`), add the Cloudflare CNAME for `tally`, then run the Pages redirect workflow. All three wait on the force-push, because the site links into `main`.
 
 ## Re-check before acting
 

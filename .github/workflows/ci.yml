@@ -86,3 +86,27 @@ jobs:
           targets: wasm32v1-none
       - run: cargo test --manifest-path contracts/Cargo.toml
       - run: cargo build --manifest-path ct/contracts/Cargo.toml --target wasm32v1-none --release
+
+  site:
+    # Builds the landing page and docs. The prebuild step checks every claim
+    # against its source file; the crawl checks links, anchors, repository
+    # paths and the verbatim trust statement.
+    needs: secrets
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Crawl the built site
+        run: |
+          npx next start -p 3123 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3123 >/dev/null && break; sleep 1; done
+          npm run check:site -- http://localhost:3123

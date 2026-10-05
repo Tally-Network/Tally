@@ -1,9 +1,10 @@
-name: Deploy site to GitHub Pages
+name: Redirect GitHub Pages to tally.0xo.in
 
+# The site is served by Vercel at https://tally.0xo.in. This publishes a
+# redirect page at the old GitHub Pages address, keeping the #anchor.
+# Run it by hand once tally.0xo.in is live, so the old address never points
+# at a domain that does not answer yet.
 on:
-  push:
-    branches: [main]
-    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: pages-redirect
       - id: deployment
         uses: actions/deploy-pages@v4

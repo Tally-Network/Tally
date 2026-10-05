@@ -14,7 +14,7 @@
 | 4 | A published round that anyone can re-verify | ✅ while inside the RPC retention window | [`evidence/`](../evidence/), checked with `pnpm verify:evidence` |
 | 5 | Non-custodial registration from a wallet signature | ✅ headless only | `pnpm test:registration`: 9 checks against live testnet, including the v0.9.0 account binding |
 | 6 | Several confidential transfers in one transaction | ✅ as a measurement only | [MEASUREMENTS.md](../MEASUREMENTS.md): 4 per transaction; the demo still sends one per transaction |
-| 7 | Live landing page | ✅ | <https://tally-network.github.io/Tally/> |
+| 7 | Landing page and docs | ✅ built in [`site/`](../site/README.md), not yet deployed | Planned address: https://tally.0xo.in (docs at `/docs`). The old single page stays at <https://tally-network.github.io/Tally/> until the redirect workflow runs |
 | 8 | An independent party verifies a published round and reports the output | ❌ Not done | Nobody outside the project has run it |
 | 9 | A round with real, independent contributors holding their own keys | ❌ Not built | [TARGET4-SKETCH.md](TARGET4-SKETCH.md); the browser registration page does not exist |
 | 10 | A platform pays real contributors through Tally | ❌ Not built | No integration exists |
