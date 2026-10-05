@@ -29,7 +29,6 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
     return () => clearTimeout(t);
   }, [step, paused, fixed]);
 
-  const declared = step >= 0;
   const landed = (i: number) => step >= i + 1;
   const sealedAll = step >= SHOWN.length + 1;
   const verified = step >= LAST;
@@ -37,8 +36,8 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
   return (
     <div className={cn("relative grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr_1fr]", className)}>
       {/* Payer */}
-      <div className={cn("rounded-3xl bg-neutral-50 p-6 transition-opacity dark:bg-neutral-800", declared ? "opacity-100" : "opacity-60")}>
-        <p className="font-inter text-xs uppercase tracking-wide text-neutral-500">Payer · on-chain</p>
+      <div className={cn("rounded-3xl bg-neutral-50 p-6 ring-1 ring-inset transition-shadow dark:bg-neutral-800", !fixed && step <= 1 ? "ring-primary/50" : "ring-transparent")}>
+        <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">Payer · on-chain</p>
         <p className="mt-3 font-display text-xl font-bold">Alice declares the round</p>
         <p className="mt-2 font-inter text-sm text-neutral-600 dark:text-neutral-400">
           {round.chain.lanes} lanes and a ledger window, recorded in the round registry before anything is paid.
@@ -48,12 +47,12 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
             <span key={i} className={cn("size-3 rounded-full transition-colors", step >= 1 ? "bg-primary" : "bg-neutral-300 dark:bg-neutral-600")} />
           ))}
         </div>
-        <p className="mt-4 font-mono text-xs text-neutral-500">window [{round.chain.openedAt}, {round.chain.closedAt}]</p>
+        <p className="mt-4 font-mono text-xs text-neutral-600 dark:text-neutral-400">window [{round.chain.openedAt}, {round.chain.closedAt}]</p>
       </div>
 
       {/* Chain */}
-      <div className="rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800">
-        <p className="font-inter text-xs uppercase tracking-wide text-neutral-500">Stellar testnet · what anyone can read</p>
+      <div className={cn("rounded-3xl bg-neutral-50 p-6 ring-1 ring-inset transition-shadow dark:bg-neutral-800", !fixed && step > 1 && !verified ? "ring-primary/50" : "ring-transparent")}>
+        <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">Stellar testnet · what anyone can read</p>
         <ul className="mt-3 space-y-2">
           {SHOWN.map((t, i) => (
             <li key={t.txHash} className="relative overflow-hidden rounded-lg bg-white px-3 py-2 dark:bg-neutral-900">
@@ -69,7 +68,7 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
               <div className="relative flex items-center justify-between gap-3">
                 <span className="min-w-0 truncate font-inter text-xs text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium">{NAMES[i]}</span>{" "}
-                  <span className="font-mono text-neutral-500">{short(t.to)}</span>
+                  <span className="font-mono text-neutral-600 dark:text-neutral-400">{short(t.to)}</span>
                 </span>
                 <AnimatePresence initial={false}>
                   {landed(i) && (
@@ -88,14 +87,14 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
             </li>
           ))}
         </ul>
-        <p className={cn("mt-3 font-inter text-xs text-neutral-500 transition-opacity", sealedAll ? "opacity-100" : "opacity-0")}>
+        <p className={cn("mt-3 font-inter text-xs text-neutral-600 dark:text-neutral-400 transition-opacity", sealedAll ? "opacity-100" : "opacity-0")}>
           {transfers.length} transfers in the window. Each amount field is ciphertext; the chain never holds an amount in plaintext.
         </p>
       </div>
 
       {/* Donor */}
-      <div className={cn("rounded-3xl bg-neutral-50 p-6 transition-opacity dark:bg-neutral-800", verified ? "opacity-100" : "opacity-60")}>
-        <p className="font-inter text-xs uppercase tracking-wide text-neutral-500">Donor · off-chain, on Dave&apos;s machine</p>
+      <div className={cn("rounded-3xl bg-neutral-50 p-6 ring-1 ring-inset transition-shadow dark:bg-neutral-800", !fixed && verified ? "ring-primary/50" : "ring-transparent")}>
+        <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">Donor · off-chain, on Dave&apos;s machine</p>
         <p className="mt-3 flex items-center gap-2 font-inter text-sm text-neutral-600 dark:text-neutral-400">
           <IconFileCertificate className="size-4" aria-hidden /> One zero-knowledge proof, 16,224 B, answering Dave&apos;s own challenge
         </p>

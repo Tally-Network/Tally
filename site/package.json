@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/check-claims.mjs",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "check:claims": "node scripts/check-claims.mjs",
+    "check:site": "node scripts/check-site.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",

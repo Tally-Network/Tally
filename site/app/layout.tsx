@@ -15,10 +15,14 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+const DESCRIPTION =
+  "Tally is the disclosure and audit service for Stellar's privacy tokens: confidential payouts to many recipients, with totals an outside party can verify, and auditor access that no single party controls.";
+
 export const metadata: Metadata = {
-  title: "Agenforce Marketing Template - Aceternity UI Pro",
-  description:
-    "Agenforce is a multipurpose marketing template built with Next.js, Typescript, Tailwind CSS and Motion for react.",
+  metadataBase: new URL("https://tally.0xo.in"),
+  title: { default: "Tally: disclosure and audit for Stellar's privacy tokens", template: "%s · Tally" },
+  description: DESCRIPTION,
+  openGraph: { title: "Tally", description: DESCRIPTION, url: "https://tally.0xo.in", siteName: "Tally", type: "website" },
 };
 
 export default function RootLayout({

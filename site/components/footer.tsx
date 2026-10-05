@@ -1,164 +1,100 @@
 import React from "react";
+import Link from "next/link";
 import { Logo } from "./logo";
 import { Container } from "./container";
 import { Subheading } from "./subheading";
 import { Button } from "./ui/button";
-import Link from "next/link";
-import {
-  IconBrandInstagram,
-  IconBrandLinkedin,
-  IconBrandTwitter,
-  IconSend,
-} from "@tabler/icons-react";
-import { cn } from "@/lib/utils";
 import { ModeToggle } from "./mode-toggle";
+import { cn } from "@/lib/utils";
+import { REPO, repoFile, explorer, facts, round } from "@/content/facts";
+
+type Item = { title: string; href: string };
+
+const columns: { title: string; items: Item[] }[] = [
+  {
+    title: "Docs",
+    items: [
+      { title: "Introduction", href: "/docs" },
+      { title: "Quickstart", href: "/docs/quickstart" },
+      { title: "Walkthrough", href: "/docs/walkthrough" },
+      { title: "Trust statement", href: "/docs/security/trust-statement" },
+      { title: "Operator design (planned)", href: "/docs/operator/design" },
+    ],
+  },
+  {
+    title: "Code",
+    items: [
+      { title: "Repository", href: REPO },
+      { title: "Circuits", href: repoFile("circuits/README.md") },
+      { title: "Round registry", href: repoFile("contracts/README.md") },
+      { title: "Command-line tool", href: repoFile("cli/README.md") },
+      { title: "Licence (MIT)", href: "/docs/licence" },
+    ],
+  },
+  {
+    title: "Evidence",
+    items: [
+      { title: `Published round (${round.dir})`, href: repoFile("evidence/README.md") },
+      { title: "Measurements", href: "/docs/measurements" },
+      { title: "Demonstration status", href: repoFile("docs/DEMONSTRATION-STATUS.md") },
+      { title: "Token contract on testnet", href: explorer("contract", facts.contracts.token) },
+    ],
+  },
+];
+
+const linkClass = "text-sm text-neutral-600 transition duration-200 hover:text-black dark:text-neutral-400 dark:hover:text-white";
+
+const FooterLink = ({ title, href }: Item) =>
+  href.startsWith("/") ? (
+    <Link href={href} className={linkClass}>{title}</Link>
+  ) : (
+    <a href={href} className={linkClass}>{title}</a>
+  );
 
 export const Footer = () => {
-  const product = [
-    {
-      title: "Agent Simulator",
-      href: "#",
-    },
-    {
-      title: "AI Workflows",
-      href: "#",
-    },
-    {
-      title: "Agent Builder",
-      href: "#",
-    },
-    {
-      title: "Analytics Dashboard",
-      href: "#",
-    },
-    {
-      title: "API Integration",
-      href: "#",
-    },
-    {
-      title: "Enterprise Solutions",
-      href: "#",
-    },
-  ];
-
-  const company = [
-    {
-      title: "About Us",
-      href: "#",
-    },
-    {
-      title: "Careers",
-      href: "#",
-    },
-    {
-      title: "Press",
-      href: "#",
-    },
-    {
-      title: "Contact",
-      href: "#",
-    },
-    {
-      title: "Blog",
-      href: "#",
-    },
-  ];
-
   return (
-    <footer className="border-t perspective-distant overflow-hidden border-neutral-200 dark:border-neutral-800 py-10 md:py-20 lg:py-32 relative">
-      <Container className="grid grid-cols-1 lg:grid-cols-5 gap-10 relative z-20">
-        <div className="lg:col-span-2 flex flex-col gap-4 items-start">
+    <footer className="relative overflow-hidden border-t border-neutral-200 py-10 perspective-distant dark:border-neutral-800 md:py-20 lg:py-32">
+      <Container className="relative z-20 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="flex flex-col items-start gap-4 sm:col-span-2">
           <Logo />
-          <Subheading>Confidential payouts. Totals anyone can verify.</Subheading>
-          <Button className="shadow-brand">Read the docs</Button>
+          <Subheading>Disclosure and audit for Stellar&apos;s privacy tokens.</Subheading>
+          <Button asChild className="shadow-brand"><Link href="/docs">Read the docs</Link></Button>
         </div>
+        {columns.map((col) => (
+          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-4">
+            <h2 className="text-base font-medium text-neutral-500 dark:text-neutral-400">{col.title}</h2>
+            <ul className="flex list-none flex-col gap-2">
+              {col.items.map((item) => <li key={item.title}><FooterLink {...item} /></li>)}
+            </ul>
+          </nav>
+        ))}
         <div className="flex flex-col gap-4">
-          <h4 className="text-base font-medium text-neutral-400">Product</h4>
-          <ul className="list-none flex flex-col gap-2">
-            {product.map((item, index) => (
-              <li key={item.title}>
-                <Link
-                  href={item.href}
-                  className="text-neutral-600 text-sm hover:text-black dark:text-neutral-400 dark:hover:text-white transition duration-200"
-                >
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h4 className="text-base font-medium text-neutral-400">Company</h4>
-          <ul className="list-none flex flex-col gap-2">
-            {company.map((item, index) => (
-              <li key={item.title}>
-                <Link
-                  href={item.href}
-                  className="text-neutral-600 text-sm hover:text-black dark:text-neutral-400 dark:hover:text-white transition duration-200"
-                >
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h4 className="text-base font-medium text-neutral-400">Newsletter</h4>
-          <div className="border relative border-neutral-200  flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 dark:border-neutral-700 rounded-md">
-            <input
-              className="bg-transparent outline-none py-2 pl-2 pr-12 placeholder-neutral-400 text-neutral-600 text-sm"
-              type="email"
-              placeholder="Your email"
-            />
-            <button className="cursor-pointer px-4 py-2 rounded-[7px] bg-black inset-y-0 right-0 absolute">
-              <IconSend className="text-white size-4" />
-            </button>
-          </div>
-          <Subheading className="text-sm md:text-sm lg:text-sm">
-            Get the latest product news and behind the scenes updates.
-          </Subheading>
+          <h2 className="text-base font-medium text-neutral-500 dark:text-neutral-400">Video</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            The demo video is not recorded yet. Until it is, the <Link href="/#video" className="text-primary underline-offset-4 hover:underline">video slot</Link> shows
+            a still of the round explainer.
+          </p>
         </div>
       </Container>
 
-      <Container className="flex flex-col sm:flex-row justify-between mt-10 relative z-20 gap-4 md:gap-0">
-        <p className="text-sm text-neutral-500">
-          &copy; {new Date().getFullYear()} Tally. MIT licensed. Testnet only.
+      <Container className="relative z-20 mt-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          &copy; {new Date().getFullYear()} Tally. MIT licensed. Stellar testnet only; nothing has been audited.
         </p>
-
-        <div className="flex md:items-end items-start flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4 *:text-sm *:text-neutral-500">
-              <Link href="/privacy">Privacy Policy</Link>
-              <Link href="/terms">Terms of Service</Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <ModeToggle />
-            <Link href="/">
-              <IconBrandTwitter className="size-4" />
-            </Link>
-            <Link href="/">
-              <IconBrandInstagram className="size-4" />
-            </Link>
-            <Link href="/">
-              <IconBrandLinkedin className="size-4" />
-            </Link>
-          </div>
-        </div>
+        <ModeToggle />
       </Container>
 
       <div
+        aria-hidden
         className={cn(
-          "flex items-center justify-center gap-20 h-[200%]",
+          "flex h-[200%] items-center justify-center gap-20",
           "absolute -inset-x-[150%] -inset-y-40",
           "[background-size:40px_40px]",
           "[background-image:linear-gradient(to_right,var(--color-neutral-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-neutral-100)_1px,transparent_1px)]",
           "dark:[background-image:linear-gradient(to_right,var(--color-neutral-900)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-neutral-900)_1px,transparent_1px)]",
-          "mask-radial-from-50%"
+          "mask-radial-from-50%",
         )}
-        style={{
-          transform: " rotateX(60deg) ",
-        }}
+        style={{ transform: "rotateX(60deg)" }}
       />
     </footer>
   );

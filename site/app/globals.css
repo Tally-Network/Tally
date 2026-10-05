@@ -168,3 +168,12 @@
 }
 @theme inline { --color-sealed: var(--sealed); --color-sealed-dim: var(--sealed-dim); }
 /* PALETTE END */
+
+/* Docs: Agenforce's faces (Inter body, Manrope headings), no decorative motion. */
+.tally-docs { font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif; }
+.tally-docs :is(h1, h2, h3, h4) { font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif; }
+.tally-docs code, .tally-docs pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+/* Wide reference tables scroll inside their own container on phones instead of squeezing to one word per line. */
+@media (max-width: 640px) {
+  .tally-docs .overflow-auto > table { min-width: 34rem; }
+}

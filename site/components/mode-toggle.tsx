@@ -43,7 +43,9 @@ export const ModeToggle = () => {
   };
   return (
     <button
+      type="button"
       onClick={SWITCH}
+      aria-label="Switch between light and dark theme"
       className="size-4 flex items-center justify-center relative"
     >
       <IconSun

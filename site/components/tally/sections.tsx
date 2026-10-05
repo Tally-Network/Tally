@@ -26,10 +26,10 @@ const Badge = ({ children, tone = "sealed" }: { children: React.ReactNode; tone?
   <span
     className={
       tone === "sealed"
-        ? "inline-flex items-center gap-1 rounded-full bg-sealed-dim px-2.5 py-1 font-inter text-xs font-medium text-sealed"
+        ? "inline-flex w-fit items-center gap-1 rounded-full bg-sealed-dim px-2.5 py-1 font-inter text-xs font-medium text-sealed"
         : tone === "primary"
-          ? "inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-inter text-xs font-medium text-primary"
-          : "inline-flex items-center gap-1 rounded-full border border-neutral-200 px-2.5 py-1 font-inter text-xs text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+          ? "inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-inter text-xs font-medium text-primary"
+          : "inline-flex w-fit items-center gap-1 rounded-full border border-neutral-200 px-2.5 py-1 font-inter text-xs text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
     }
   >
     {children}
@@ -101,7 +101,7 @@ export const Hero = () => (
         <div className="rounded-[2rem] border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 md:p-6">
           <RoundExplainer still />
         </div>
-        <figcaption className="mt-3 font-inter text-xs text-neutral-500">
+        <figcaption className="mt-3 font-inter text-xs text-neutral-600 dark:text-neutral-400">
           Demo video slot. Until the video exists, this is a still of the round explainer below: real addresses and
           ciphertext from {round.dir}, illustrative names.
         </figcaption>
@@ -116,7 +116,7 @@ export const Hero = () => (
 export const BuiltOn = () => (
   <Container className="py-10 md:py-16">
     <Reveal>
-      <p className="text-center font-inter text-sm text-neutral-500">Built on Stellar&apos;s privacy standard</p>
+      <p className="text-center font-inter text-sm text-neutral-600 dark:text-neutral-400">Built on Stellar&apos;s privacy standard</p>
       <div className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-800 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Confidential Tokens", "Stellar's developer preview: private balances and amounts, public addresses"],
@@ -130,7 +130,7 @@ export const BuiltOn = () => (
           </div>
         ))}
       </div>
-      <p className="mt-4 text-center font-inter text-xs text-neutral-500">
+      <p className="mt-4 text-center font-inter text-xs text-neutral-600 dark:text-neutral-400">
         Tally builds on these open-source components. No endorsement by, or partnership with, Stellar, SDF or
         OpenZeppelin is implied.
       </p>
@@ -264,7 +264,7 @@ export const VerifierLearns = () => (
           </ul>
         </div>
         <div className="rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800 md:p-8">
-          <p className="flex items-center gap-2 font-display text-xl font-bold"><IconCircleX className="size-6 text-neutral-500" />Does not learn</p>
+          <p className="flex items-center gap-2 font-display text-xl font-bold"><IconCircleX className="size-6 text-neutral-600 dark:text-neutral-400" />Does not learn</p>
           <ul className="mt-4 list-disc space-y-2 pl-5 font-inter text-neutral-700 dark:text-neutral-300">
             <li>Any individual amount.</li>
             <li>Which recipient received how much.</li>
@@ -274,16 +274,16 @@ export const VerifierLearns = () => (
         </div>
       </div>
       <div className="mt-6 rounded-3xl border border-neutral-200 p-6 dark:border-neutral-800 md:p-8">
-        <p className="font-inter text-xs uppercase tracking-wide text-neutral-500">The trust statement, verbatim</p>
+        <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">The trust statement, verbatim</p>
         <blockquote className="mt-4 space-y-4 font-inter text-neutral-800 dark:text-neutral-200">
           <p>
-            <strong>The donor is assured that</strong> the confidential transfers sent from the lane accounts Tally declared on-chain
+            <strong>The donor is assured that</strong>{" "}the confidential transfers sent from the lane accounts Tally declared on-chain
             before the round opened, within that round&apos;s declared ledger window, total exactly the disclosed amount and that none
             has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder
             chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.
           </p>
           <p>
-            <strong>This does not assure</strong> that the funder made no other payments, nor that the recipients are independent of the
+            <strong>This does not assure</strong>{" "}that the funder made no other payments, nor that the recipients are independent of the
             funder: the guarantee is scoped to transfers from the accounts declared before the round, <strong>not to the funder&apos;s total
             spend</strong>, and it establishes what amounts moved, not who ultimately controls the accounts that received them.
           </p>
@@ -360,7 +360,7 @@ export const Evidence = () => {
                 <React.Fragment key={k}><dt>{k}</dt><dd><Ext href={explorer("contract", v)}><Mono>{short(v, 8, 6)}</Mono></Ext></dd></React.Fragment>
               ))}
             </dl>
-            <p className="mt-3 text-xs text-neutral-500">From <Ext href={repoFile("demo/deployment.testnet.json")}>demo/deployment.testnet.json</Ext>. OpenZeppelin {facts.openZeppelin}.</p>
+            <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-400">From <Ext href={repoFile("demo/deployment.testnet.json")}>demo/deployment.testnet.json</Ext>. OpenZeppelin {facts.openZeppelin}.</p>
           </Cell>
         </Grid>
       </Reveal>
@@ -370,7 +370,7 @@ export const Evidence = () => {
             <caption className="px-4 pt-4 text-left text-neutral-600 dark:text-neutral-400">
               Transfers in the window, read from Stellar testnet RPC ({round.chain.readFrom}) on {round.chain.readAt.slice(0, 10)}. The amount column is the on-chain ciphertext.
             </caption>
-            <thead><tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+            <thead><tr className="text-left text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
               <th className="px-4 py-3 font-medium">Ledger</th><th className="px-4 py-3 font-medium">From (lane)</th><th className="px-4 py-3 font-medium">To</th><th className="px-4 py-3 font-medium">Amount field</th><th className="px-4 py-3 font-medium">Transaction</th>
             </tr></thead>
             <tbody>
@@ -385,7 +385,7 @@ export const Evidence = () => {
               ))}
             </tbody>
           </table>
-          <p className="px-4 pb-4 pt-2 font-inter text-xs text-neutral-500">Showing 6 of {transfers.length}. All of them are listed in the <Link className="text-primary" href="/docs/quickstart">quickstart</Link> output and in the evidence pack.</p>
+          <p className="px-4 pb-4 pt-2 font-inter text-xs text-neutral-600 dark:text-neutral-400">Showing 6 of {transfers.length}. All of them are listed in the <Link className="text-primary" href="/docs/quickstart">quickstart</Link> output and in the evidence pack.</p>
         </div>
       </Reveal>
     </Container>
@@ -418,12 +418,12 @@ no individual amount was revealed.`,
   {
     t: "Run a fresh round yourself",
     cmd: "pnpm demo",
-    out: `transfers from declared lanes (all time) : 17
+    out: `opened_at 5029651  ·  closed_at 5029660  ·  window [5029651, 5029660]
+transfers from declared lanes (all time) : 17
 inside the declared window               : 16
-excluded by the window                   : 1  <- the pre-round transfer
-proof     16224B in 2361ms, spans 5 sender accounts
-donor total = 3160   expected 3160   MATCH
-=== ROUND VERIFIED ===`,
+excluded by the window                   :  1   ← the pre-round transfer
+proof 16224B in 2361ms (zero-knowledge), spans 5 sender accounts, verified
+donor total = 3160   expected 3160   MATCH`,
     note: "Creates fresh testnet accounts with friendbot and takes several minutes. One transfer is sent before the round opens and must be excluded.",
   },
 ];
@@ -435,11 +435,11 @@ export const TryIt = () => (
       {STEPS.map((s, i) => (
         <Reveal key={s.t} delay={i * 0.06} className="min-w-0">
           <div className="flex h-full min-w-0 flex-col rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800">
-            <p className="font-inter text-xs uppercase tracking-wide text-neutral-500">Step {i + 1}</p>
+            <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">Step {i + 1}</p>
             <p className="mt-2 font-display text-lg font-bold">{s.t}</p>
             <div className="mt-4 rounded-xl bg-neutral-900 p-4 text-neutral-100 dark:bg-black">
               <div className="flex items-start justify-between gap-3">
-                <pre className="min-w-0 overflow-x-auto whitespace-pre font-mono text-xs leading-relaxed">{s.cmd}</pre>
+                <pre className="min-w-0 whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">{s.cmd}</pre>
                 <CopyButton text={s.cmd} />
               </div>
             </div>
@@ -480,10 +480,10 @@ export const Measured = () => {
         />
       </Reveal>
       <Reveal>
-        <div className="mt-10 grid grid-cols-1 border-y border-neutral-200 dark:border-neutral-800 sm:grid-cols-2 md:mt-16 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-px border-y border-neutral-200 bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-800 sm:grid-cols-2 md:mt-16 lg:grid-cols-3">
           {stats.map((s) => (
-            <div key={s.k} className="border-b border-neutral-200 p-6 last:border-b-0 dark:border-neutral-800 sm:[&:nth-child(odd)]:border-r lg:[&:nth-child(odd)]:border-r-0 lg:[&:not(:nth-child(3n))]:border-r lg:[&:nth-last-child(-n+3)]:border-b-0 md:p-8">
-              <p className="font-inter text-sm text-neutral-500">{s.k}</p>
+            <div key={s.k} className="bg-background p-6 md:p-8">
+              <p className="font-inter text-sm text-neutral-600 dark:text-neutral-400">{s.k}</p>
               <p className="mt-2 font-display text-4xl font-bold tabular-nums">{s.v}</p>
               <p className="mt-2 font-inter text-sm text-neutral-600 dark:text-neutral-400">{s.d}</p>
             </div>
@@ -515,7 +515,7 @@ export const Safeguards = () => (
           <p>The client reproduces all 19 OpenZeppelin v0.9.0 test vectors for the primitives it uses. One spender-only vector is not used.</p>
         </Cell>
         <Cell icon={<IconShieldCheck className="size-5" />} title="Tampering rejected">
-          <p>A bundle with the total raised by one, and a bundle replayed against a different challenge, both fail with exit code 2.</p>
+          <p>A bundle whose sealed total was altered by one, and a bundle replayed against a different challenge, both fail with exit code 2.</p>
         </Cell>
       </Grid>
     </Reveal>
@@ -539,7 +539,7 @@ export const Compare = () => (
     <Reveal>
       <div className="mt-10 overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 md:mt-16">
         <table className="w-full min-w-[760px] font-inter text-sm">
-          <thead><tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+          <thead><tr className="text-left text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
             <th className="px-4 py-3 font-medium">Project</th><th className="px-4 py-3 font-medium">Privacy system</th><th className="px-4 py-3 font-medium">What it covers</th><th className="px-4 py-3 font-medium">Relation to Tally</th>
           </tr></thead>
           <tbody>
@@ -577,7 +577,7 @@ const DESIGNED = [
   "Tax export statement",
   "Allow and deny lists for both privacy systems",
   "Durable event archive",
-  "Wallet registration page",
+  "Auditor client that decrypts every event type",
 ];
 const LIMITS = [
   "Testnet only. Nothing has been audited",
@@ -586,13 +586,14 @@ const LIMITS = [
   "No users, integrations or partners",
   "Recipient independence is not verified",
   "The demo sends one transfer per transaction",
+  "Registration runs headless; there is no wallet page yet",
   "In the design, the auditor key is reassembled briefly in an enclave for some proofs",
 ];
 
 const StatusCard = ({ title, items, tone }: { title: string; items: string[]; tone: "built" | "designed" | "limits" }) => (
   <div className="h-full rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800 md:p-8">
     <p className="flex items-center gap-2 font-display text-xl font-bold">
-      {tone === "built" ? <IconCircleCheck className="size-6 text-primary" /> : tone === "designed" ? <IconFileInvoice className="size-6 text-sealed" /> : <IconAlertTriangle className="size-6 text-neutral-500" />}
+      {tone === "built" ? <IconCircleCheck className="size-6 text-primary" /> : tone === "designed" ? <IconFileInvoice className="size-6 text-sealed" /> : <IconAlertTriangle className="size-6 text-neutral-600 dark:text-neutral-400" />}
       {title}
     </p>
     <ul className="mt-4 list-disc space-y-2 pl-5 font-inter text-neutral-700 dark:text-neutral-300">
@@ -649,7 +650,7 @@ export const Team = () => (
         {team.map((m) => (
           <div key={m.name} className="rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800 md:p-8">
             <p className="font-display text-xl font-bold">{m.name}</p>
-            <p className="mt-1 font-inter text-sm text-neutral-500">{m.role}</p>
+            <p className="mt-1 font-inter text-sm text-neutral-600 dark:text-neutral-400">{m.role}</p>
             {m.bio && <p className="mt-4 font-inter text-neutral-700 dark:text-neutral-300">{m.bio}</p>}
             {m.links && (
               <ul className="mt-4 flex flex-wrap gap-3 font-inter text-sm">

@@ -30,7 +30,7 @@ export const MobileNavbar = () => {
   return (
     <div className="flex md:hidden px-4 py-2 justify-between relative">
       <Logo />
-      <button onClick={() => setOpen(!open)}>
+      <button type="button" onClick={() => setOpen(!open)} aria-label="Open menu" aria-expanded={open}>
         <IconLayoutSidebar className="size-4" />
       </button>
 
@@ -54,7 +54,7 @@ export const MobileNavbar = () => {
             <div>
               <div className="flex justify-between">
                 <Logo />
-                <button onClick={() => setOpen(false)}>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Close menu">
                   <IconX />
                 </button>
               </div>
