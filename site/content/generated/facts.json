@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T08:13:21.902Z",
+  "generatedAt": "2026-10-05T09:26:56.500Z",
   "network": "testnet",
   "openZeppelin": "stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65",
   "contracts": {
@@ -160,6 +160,23 @@
     "retention_window_ledgers": 120960,
     "verifiable_until_ledger": 5153815,
     "note": "Soroban RPC retains a rolling window of events. Past verifiable_until_ledger this round is no longer verifiable from RPC alone — `tally verify` detects that and says so rather than reporting an empty transfer set. Re-run `pnpm evidence:refresh` to republish.",
+    "run": {
+      "note": "Figures from the `pnpm demo` run that produced this round, parsed from its output.",
+      "date": "2026-10-05",
+      "commit": "bf56134",
+      "openedAt": 5032842,
+      "closedAt": 5032851,
+      "lanes": 5,
+      "allTime": 17,
+      "inWindow": 16,
+      "excluded": 1,
+      "proofBytes": 16224,
+      "proofMs": 2032,
+      "senders": 5,
+      "donorTotal": 3160,
+      "expectedTotal": 3160
+    },
+    "vkBytes": 1760,
     "chain": {
       "openedAt": 5032842,
       "closedAt": 5032851,
@@ -278,7 +295,7 @@
           "vTilde": "0b71e28715eadddb30b6d47f84123f453aa236485aa278e29abb882a40f324af"
         }
       ],
-      "readAt": "2026-10-05T08:13:21.901Z",
+      "readAt": "2026-10-05T09:26:56.500Z",
       "readFrom": "https://soroban-testnet.stellar.org"
     }
   },

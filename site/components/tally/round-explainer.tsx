@@ -8,13 +8,13 @@ import { cn } from "@/lib/utils";
 /**
  * One round, animated: Alice declares it, transfers land on-chain as sealed
  * ciphertext, Dave verifies the total off-chain. Addresses and ciphertext are
- * round-004's real on-chain values; the names are illustrative. No amount is
+ * the published round's real on-chain values; the names are illustrative. No amount is
  * ever drawn on the chain side.
  */
 const NAMES = ["Bob", "Charlie", "Erin", "Frank", "Grace"];
 const SHOWN = transfers.slice(0, 5);
 const LAST = SHOWN.length + 2; // declare, 5 transfers, sealed summary, donor
-const TOTAL = 3160; // evidence/README.md: "TOTAL DISBURSED: 3160"
+const TOTAL = round.run.donorTotal; // evidence/<dir>/run.json, as verified by the donor
 
 export function RoundExplainer({ still = false, className }: { still?: boolean; className?: string }) {
   const reduce = useReducedMotion();
@@ -96,7 +96,7 @@ export function RoundExplainer({ still = false, className }: { still?: boolean; 
       <div className={cn("rounded-3xl bg-neutral-50 p-6 ring-1 ring-inset transition-shadow dark:bg-neutral-800", !fixed && verified ? "ring-primary/50" : "ring-transparent")}>
         <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">Donor · off-chain, on Dave&apos;s machine</p>
         <p className="mt-3 flex items-center gap-2 font-inter text-sm text-neutral-600 dark:text-neutral-400">
-          <IconFileCertificate className="size-4" aria-hidden /> One zero-knowledge proof, 16,224 B, answering Dave&apos;s own challenge
+          <IconFileCertificate className="size-4" aria-hidden /> One zero-knowledge proof, {n(round.run.proofBytes)} B, answering Dave&apos;s own challenge
         </p>
         <p className={cn("mt-4 flex items-center gap-2 font-display text-4xl font-bold text-primary transition-opacity", verified ? "opacity-100" : "opacity-0")}>
           <IconCircleCheck className="size-8" aria-hidden /> {n(TOTAL)}

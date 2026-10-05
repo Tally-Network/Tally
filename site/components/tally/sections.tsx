@@ -16,6 +16,7 @@ import { CopyButton } from "./copy-button";
 import { team } from "@/content/team";
 import {
   REPO, repoFile, explorer, facts, n, pct, short, cap, sizeCap, batch, largest, aggRows, ozRev, round, transfers,
+  published, verifyOutput, demoSummary,
 } from "@/content/facts";
 import { FAQ } from "./faq";
 import { HeroHeadline } from "./hero-headline";
@@ -352,7 +353,7 @@ export const Evidence = () => {
               <dt>Round id</dt><dd><Mono>{short(round.round_id, 12, 6)}</Mono></dd>
               <dt>Window</dt><dd><Mono>ledgers {n(round.chain.openedAt)} to {n(round.chain.closedAt)}</Mono></dd>
               <dt>Transfers</dt><dd>{transfers.length} across {round.chain.lanes} declared lanes</dd>
-              <dt>Verified total</dt><dd>3,160 stroops of the wrapped asset, from the declared lanes in {round.dir}</dd>
+              <dt>Verified total</dt><dd>{n(round.run.donorTotal)} stroops of the wrapped asset, from the declared lanes in {round.dir}</dd>
             </dl>
           </Cell>
           <Cell icon={<IconCode className="size-5" />} title="Contracts (testnet)">
@@ -405,26 +406,13 @@ const STEPS = [
   {
     t: "Verify the published round",
     cmd: "pnpm verify:evidence",
-    out: `✓ round found: 5 lanes, window [5032842, 5032851]
-✓ 16 transfers from the declared lanes inside the window
-✓ public inputs reconstructed from chain state only
-✓ verification key matches the pinned artifact (1760 B)
-✓ proof verified (16224 B, zero-knowledge)
-
-TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5032842–5032851
-no individual amount was revealed.`,
+    out: verifyOutput(published),
     note: "Exit 0 means verified, 2 means the proof was rejected, 3 means the round aged out of the RPC window, 1 means it could not be checked.",
   },
   {
     t: "Run a fresh round yourself",
     cmd: "pnpm demo",
-    out: `opened_at 5032842  ·  closed_at 5032851  ·  window [5032842, 5032851]
-transfers from declared lanes (all time) : 17
-inside the declared window               : 16
-excluded by the window                   :  1   ← the pre-round transfer
-proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified
-donor total = 3160   expected 3160   MATCH`,
+    out: demoSummary(published),
     note: "Creates fresh testnet accounts with friendbot and takes several minutes. One transfer is sent before the round opens and must be excluded.",
   },
 ];
@@ -479,7 +467,7 @@ export const Measured = () => {
   const stats = [
     { k: "Confidential transfer", v: n(m.confidentialTransfer.instructions), d: `CPU instructions, ${pct(m.confidentialTransfer.instructions, cap)} of the ${n(cap)} per-transaction cap` },
     { k: "Transfers in one transaction", v: String(batch.largestThatFits), d: `From one sender. At ${batch.largestThatFits}: ${pct(largest.instructions!, cap)} of instructions and ${pct(largest.txSizeBytes!, sizeCap)} of size` },
-    { k: "Aggregate proof size", v: "16,224 B", d: "Zero-knowledge, the same size for 8, 16 or 64 transfers" },
+    { k: "Aggregate proof size", v: `${n(round.run.proofBytes)} B`, d: "Zero-knowledge, the same size for 8, 16 or 64 transfers" },
     { k: "On-chain check of a 64-transfer proof", v: pct(a64.instructions, cap), d: "Of the cap. It fits; Tally still verifies off-chain, for privacy" },
     { k: "Register an account", v: n(m.register.instructions), d: `CPU instructions, ${pct(m.register.instructions, cap)} of the cap` },
     { k: "Transfer proof", v: "1.32 s", d: "Warm, on an Apple M4 Pro" },

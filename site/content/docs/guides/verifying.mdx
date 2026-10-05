@@ -130,21 +130,11 @@ The repository publishes a round anyone can verify, with the donor's key include
 pnpm verify:evidence
 ```
 
-This reads [`evidence/latest.json`](https://github.com/Tally-Network/Tally/blob/main/evidence/latest.json), which currently points at `round-004` (published 2026-10-05), and runs `tally verify` with that round's funder, round id, challenge and bundle. It needs no Noir toolchain. It exits with the same code as `tally verify`. The expected output:
+This reads [`evidence/latest.json`](https://github.com/Tally-Network/Tally/blob/main/evidence/latest.json), which currently points at <RoundFact k="dir" code /> (published <RoundFact k="published" />), and runs `tally verify` with that round's funder, round id, challenge and bundle. It needs no Noir toolchain. It exits with the same code as `tally verify`. The expected output:
 
-```
-✓ round found: 5 lanes, window [5032842, 5032851]
-✓ 16 transfers from the declared lanes inside the window
-✓ public inputs reconstructed from chain state only
-✓ verification key matches the pinned artifact (1760 B)
-✓ proof verified (16224 B, zero-knowledge)
+<RoundOutput kind="verify" />
 
-TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5032842–5032851
-no individual amount was revealed.
-```
-
-`round-004` is verifiable until ledger 5153815. After that, `verify` exits with code 3 until someone republishes with `pnpm evidence:refresh`. The recipients in this round are freshly created testnet accounts, not people, and testnet XLM has no value.
+<RoundFact k="dir" code /> is verifiable until ledger <RoundFact k="until-ledger" />. After that, `verify` exits with code 3 until someone republishes with `pnpm evidence:refresh`. A [scheduled job](https://github.com/Tally-Network/Tally/blob/main/.github/workflows/refresh-evidence.yml) checks every day at 05:30 UTC and republishes when the current round has less than two days left. The recipients in this round are freshly created testnet accounts, not people, and testnet XLM has no value.
 
 ## Try to break it
 
@@ -152,21 +142,11 @@ The verifier should reject both of these. If either passes, something is wrong.
 
 **Inflate the sealed total by one.** Expect `PROOF FAILED` and exit code 2.
 
-```bash
-python3 -c "import json;b=json.load(open('evidence/round-004/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
-npx tsx cli/tally.ts verify --funder GBMWOS4742DB75WWYUBE62ZJJ3ZR7KJN4TRNFDCFMCVCOMTZHWLR654R \
-  --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge evidence/round-004/challenge.json --bundle /tmp/t.json
-```
+<RoundOutput kind="tamper-alter" />
 
 **Replay the bundle against a challenge it was not built for.** Expect `PROOF FAILED` and exit code 2.
 
-```bash
-npx tsx cli/tally.ts challenge --out /tmp/c2.json
-npx tsx cli/tally.ts verify --funder GBMWOS4742DB75WWYUBE62ZJJ3ZR7KJN4TRNFDCFMCVCOMTZHWLR654R \
-  --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge /tmp/c2.json --bundle evidence/round-004/bundle.json
-```
+<RoundOutput kind="tamper-replay" />
 
 Passing the wrong funder for a round id is a different failure: the registry has no such round in that funder's namespace, and `verify` exits with code 1.
 

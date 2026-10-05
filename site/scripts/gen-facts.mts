@@ -7,7 +7,7 @@
  * this file, and site/scripts/check-claims.mjs re-checks it against the sources
  * on every build.
  */
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { rpc, xdr, scValToNative, Contract, TransactionBuilder, BASE_FEE, Networks, Address } from "@stellar/stellar-sdk";
 
 const R = new URL("../../", import.meta.url).pathname;
@@ -18,6 +18,9 @@ const dep = json("demo/deployment.testnet.json");
 const meas = json("ct/measurements.testnet.json");
 const latest = json("evidence/latest.json");
 const round = json(`evidence/${latest.dir}/round.json`);
+const run = json(`evidence/${latest.dir}/run.json`);
+const capacity = [8, 16, 64].find(c => run.inWindow <= c)!;
+const vkBytes = statSync(`${R}circuits/aggregate_n${capacity}/vk.zk.bin`).size;
 const lock = readFileSync(R + ".gitmodules", "utf8");
 
 async function roundEvents() {
@@ -62,7 +65,7 @@ const facts = {
     limits: meas.limits, register: meas.register, confidentialTransfer: meas.confidentialTransfer,
     batching: meas.batching, aggregate: meas.aggregateOnChainVerification,
   },
-  round: { dir: latest.dir, published: latest.published, ...round, chain },
+  round: { dir: latest.dir, published: latest.published, ...round, run, vkBytes, chain },
   submodule: /url = (.*)/.exec(lock)?.[1] ?? null,
 };
 writeFileSync(OUT, JSON.stringify(facts, null, 2) + "\n");

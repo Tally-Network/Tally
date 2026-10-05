@@ -13,6 +13,7 @@
  * Exit 1 on any failure.
  */
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join, relative } from "node:path";
 
 const SITE = new URL("../", import.meta.url).pathname;
@@ -46,6 +47,18 @@ const factChecks = [
   ["round.dir", facts.round.dir, latest.dir],
 ];
 for (const k of Object.keys(round)) factChecks.push([`round.${k}`, facts.round[k], round[k]]);
+const run = json(repo(`evidence/${latest.dir}/run.json`));
+factChecks.push(["round.run", facts.round.run, run]);
+const cap = [8, 16, 64].find(c => run.inWindow <= c);
+factChecks.push(["round.vkBytes", facts.round.vkBytes, statSync(repo(`circuits/aggregate_n${cap}/vk.zk.bin`)).size]);
+if (run.inWindow !== facts.round.chain.transfers.length) fail(`run.json counts ${run.inWindow} transfers in the window; the chain snapshot has ${facts.round.chain.transfers.length}`);
+if (run.donorTotal !== run.expectedTotal) fail(`run.json donor total ${run.donorTotal} differs from the expected ${run.expectedTotal}`);
+
+// The READMEs' round blocks are generated; they must match the published round.
+{
+  const r = spawnSync(process.execPath, [repo("scripts/render-round-docs.ts"), "--check"], { encoding: "utf8" });
+  if (r.status !== 0) fail((r.stderr || r.stdout).trim() || "scripts/render-round-docs.ts --check failed");
+}
 for (const [k, got, want] of factChecks) if (!same(got, want)) fail(`facts.json ${k} differs from the repository; run \`pnpm site:facts\``);
 
 // The chain snapshot must agree with the published evidence's own summary line.
@@ -61,7 +74,8 @@ for (const t of c.transfers) if (!/^[0-9a-f]{64}$/.test(t.vTilde) || !/^[0-9a-f]
 
 const checkSources = (where, sources) => {
   for (const s of sources) {
-    const p = repo(s.file);
+    // {latest} is the published round's directory, so claims follow each refresh.
+    const p = repo(s.file.replace("{latest}", latest.dir));
     if (!existsSync(p)) { fail(`${where}: source ${s.file} does not exist`); continue; }
     if (s.exists) continue;
     if (s.contains && !norm(read(p)).includes(norm(s.contains))) fail(`${where}: ${s.file} no longer contains "${s.contains}"`);

@@ -11,7 +11,7 @@ This page follows one round through four people:
 | **Bob** and **Charlie** | Recipients | Their own confidential accounts, keyed from their own wallets |
 | **Dave** | Donor | Nothing from Alice. He makes his own disclosure key and nonce |
 
-Every step maps to code in the repository. `pnpm demo` runs steps 1 to 5 on Stellar testnet with freshly created accounts, and the commands in steps 6 to 8 are the standalone `tally` tool. The published round [`round-004`](/docs/quickstart) is a real run of this flow: 16 transfers across 5 lanes.
+Every step maps to code in the repository. `pnpm demo` runs steps 1 to 5 on Stellar testnet with freshly created accounts, and the commands in steps 6 to 8 are the standalone `tally` tool. The published round, [<RoundFact k="dir" code />](/docs/quickstart), is a real run of this flow: <RoundFact k="transfers" /> transfers across <RoundFact k="lanes" /> lanes.
 
 ## 1. Alice prepares her lanes
 
@@ -41,7 +41,7 @@ open_round(funder, round_id, lanes[])
 
 The contract records the lane set and stamps the opening ledger itself. Alice cannot backdate it, and she cannot change the lane set afterwards. This is what stops her from paying first and choosing the flattering lanes later. See [Rounds and lanes](/docs/concepts/rounds-and-lanes).
 
-In `round-004` the round has 5 lanes and opened at ledger 5032842.
+In <RoundFact k="dir" code /> the round has <RoundFact k="lanes" /> lanes and opened at ledger <RoundFact k="opened-at" />.
 
 ## 4. Alice pays Bob, Charlie and the others
 
@@ -62,7 +62,7 @@ The demo also sends one transfer **before** the round opens. It must not count, 
 close_round(funder, round_id)
 ```
 
-The contract stamps the closing ledger. The round now has a fixed window. In `round-004` it is ledgers 5032842 to 5032851.
+The contract stamps the closing ledger. The round now has a fixed window. In <RoundFact k="dir" code /> it is ledgers <RoundFact k="opened-at" /> to <RoundFact k="closed-at" />.
 
 ## 6. Dave asks for the total
 
@@ -99,13 +99,9 @@ npx tsx cli/tally.ts verify --funder <Alice's address> --round <round id> \
 5. verifies the proof;
 6. opens the total with Dave's own key and nonce.
 
-For `round-004` the result is:
+For <RoundFact k="dir" code /> the full output is:
 
-```text
-TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5032842–5032851
-no individual amount was revealed.
-```
+<RoundOutput kind="verify" />
 
 ## What each person ends up knowing
 

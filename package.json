@@ -23,7 +23,9 @@
     "verify:evidence": "tsx cli/verify-evidence.ts",
     "evidence:refresh": "tsx cli/refresh-evidence.ts",
     "bench:aggregate": "tsx ct/scripts/bench-aggregate.ts",
-    "site:facts": "tsx site/scripts/gen-facts.mts"
+    "site:facts": "tsx site/scripts/gen-facts.mts",
+    "round-docs": "tsx scripts/render-round-docs.ts",
+    "evidence:margin": "tsx scripts/evidence-margin.ts"
   },
   "dependencies": {
     "@aztec/bb.js": "0.87.0",

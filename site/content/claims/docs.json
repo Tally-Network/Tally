@@ -106,7 +106,7 @@
           "site": "about 120,960 ledgers or roughly seven days",
           "sources": [
             {
-              "file": "evidence/round-004/round.json",
+              "file": "evidence/{latest}/round.json",
               "contains": "120960"
             }
           ]
@@ -157,13 +157,14 @@
         },
         {
           "page": "reference/circuits.mdx",
-          "site": "The demo's own n = 16 proof took 2,032 ms",
+          "site": "The demo's own n = 16 proof took <RoundFact k=\"proof-ms\" /> ms",
           "sources": [
             {
               "file": "demo/README.md",
-              "contains": "proof 16224B in 2032ms"
+              "contains": "<!-- round:last-run -->"
             }
-          ]
+          ],
+          "fact": "round.run"
         },
         {
           "page": "measurements.mdx",

@@ -9,6 +9,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { parseDemoRun } from "../scripts/round-docs.ts";
 
 const root = new URL("..", import.meta.url).pathname;
 const sh = (cmd: string, args: string[]) => {
@@ -23,7 +24,11 @@ const next = String(existing.length ? Number(existing.at(-1)!.slice(6)) + 1 : 1)
 const dir = `evidence/round-${next}`;
 
 step(1, "running a fresh round on testnet (several minutes)");
-sh("npx", ["tsx", "demo/run-round.ts"]);
+// Captured as well as shown: the round's own figures are recorded in run.json.
+const demo = spawnSync("npx", ["tsx", "demo/run-round.ts"], { cwd: root, encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] });
+process.stdout.write(demo.stdout ?? "");
+if (demo.status !== 0) { console.error("\n  failed: npx tsx demo/run-round.ts\n"); process.exit(1); }
+const run = parseDemoRun(demo.stdout);
 
 step(2, "donor issues a challenge");
 mkdirSync(`${root}${dir}`, { recursive: true });
@@ -62,6 +67,12 @@ writeFileSync(`${root}${dir}/round.json`, JSON.stringify({
   note: "Soroban RPC retains a rolling window of events. Past verifiable_until_ledger this round is no " +
         "longer verifiable from RPC alone — `tally verify` detects that and says so rather than reporting " +
         "an empty transfer set. Re-run `pnpm evidence:refresh` to republish.",
+}, null, 2) + "\n");
+
+const commit = spawnSync("git", ["rev-parse", "--short", "HEAD"], { cwd: root, encoding: "utf8" }).stdout.trim();
+writeFileSync(`${root}${dir}/run.json`, JSON.stringify({
+  note: "Figures from the `pnpm demo` run that produced this round, parsed from its output.",
+  date: new Date().toISOString().slice(0, 10), commit, ...run,
 }, null, 2) + "\n");
 
 writeFileSync(`${root}evidence/latest.json`, JSON.stringify({

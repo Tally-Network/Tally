@@ -64,7 +64,7 @@
           "sources": [
             {
               "file": "evidence/latest.json",
-              "contains": "round-004"
+              "contains": "\"dir\""
             }
           ]
         },
@@ -194,16 +194,19 @@
           ]
         },
         {
-          "site": "TOTAL = 3160",
+          "site": "const TOTAL = round.run.donorTotal;",
+          "fact": "round.run",
+          "note": "The donor's verified total from the run that produced the published round",
           "sources": [
             {
               "file": "evidence/README.md",
-              "contains": "TOTAL DISBURSED: 3160"
+              "contains": "TOTAL DISBURSED: 3160  (stroops of the wrapped asset)"
             }
           ]
         },
         {
-          "site": "One zero-knowledge proof, 16,224 B",
+          "site": "One zero-knowledge proof, {n(round.run.proofBytes)} B",
+          "fact": "round.run",
           "sources": [
             {
               "file": "evidence/README.md",
@@ -214,11 +217,11 @@
         {
           "site": "{t.vTilde.slice(0, 8)}",
           "fact": "round.chain.transfers",
-          "note": "Ciphertext prefixes are round-004's on-chain v_tilde values; names are illustrative",
+          "note": "Ciphertext prefixes are the published round's on-chain v_tilde values; names are illustrative",
           "sources": [
             {
-              "file": "evidence/round-004/round.json",
-              "contains": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc"
+              "file": "evidence/{latest}/round.json",
+              "contains": "\"round_id\""
             }
           ]
         },
@@ -346,13 +349,14 @@
           "fact": "round.verifiable_until_ledger",
           "sources": [
             {
-              "file": "evidence/round-004/round.json",
-              "contains": "5153815"
+              "file": "evidence/{latest}/round.json",
+              "contains": "\"verifiable_until_ledger\""
             }
           ]
         },
         {
-          "site": "3,160 stroops of the wrapped asset, from the declared lanes in {round.dir}",
+          "site": "{n(round.run.donorTotal)} stroops of the wrapped asset, from the declared lanes in {round.dir}",
+          "fact": "round.run",
           "sources": [
             {
               "file": "evidence/README.md",
@@ -388,38 +392,32 @@
       "agenforce": "features/ (cards) with copy buttons",
       "claims": [
         {
-          "site": "✓ round found: 5 lanes, window [5032842, 5032851]",
+          "site": "out: verifyOutput(published),",
+          "fact": "round.run",
+          "note": "Rendered by scripts/round-docs.ts, the same function that writes the README block the check compares against",
           "sources": [
             {
               "file": "evidence/README.md",
-              "contains": "✓ round found: 5 lanes, window [5032842, 5032851]"
-            }
-          ]
-        },
-        {
-          "site": "✓ verification key matches the pinned artifact (1760 B)",
-          "sources": [
+              "contains": "<!-- round:verify-output -->"
+            },
             {
-              "file": "evidence/README.md",
-              "contains": "✓ verification key matches the pinned artifact (1760 B)"
+              "file": "scripts/round-docs.ts",
+              "contains": "export function verifyOutput("
             }
           ]
         },
         {
-          "site": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified",
+          "site": "out: demoSummary(published),",
+          "fact": "round.run",
+          "note": "Rendered from the run that produced the published round",
           "sources": [
             {
               "file": "demo/README.md",
-              "contains": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified"
-            }
-          ]
-        },
-        {
-          "site": "excluded by the window                   :  1   ← the pre-round transfer",
-          "sources": [
+              "contains": "<!-- round:last-run -->"
+            },
             {
-              "file": "demo/README.md",
-              "contains": "excluded by the window                   :  1   ← the pre-round transfer"
+              "file": "scripts/round-docs.ts",
+              "contains": "export function demoSummary("
             }
           ]
         },
@@ -486,7 +484,8 @@
           ]
         },
         {
-          "site": "\"16,224 B\", d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"",
+          "site": "v: `${n(round.run.proofBytes)} B`, d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"",
+          "fact": "round.run",
           "sources": [
             {
               "file": "MEASUREMENTS.md",

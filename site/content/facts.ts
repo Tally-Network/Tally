@@ -4,6 +4,7 @@
  * scripts/check-claims.mjs re-checks those values against the sources at build.
  */
 import facts from "./generated/facts.json";
+import type { PublishedRound } from "../../scripts/round-docs";
 
 export { facts };
 
@@ -26,3 +27,10 @@ export const aggRows = facts.measurements.aggregate.rows as Array<{
 export const ozRev = facts.openZeppelin.match(/@ ([0-9a-f]{7})/)?.[1] ?? "";
 export const round = facts.round;
 export const transfers = round.chain.transfers;
+
+/** The published round with its demo-run figures, for the shared renderers in scripts/round-docs.ts. */
+export const published: PublishedRound = {
+  dir: round.dir, published: round.published, funder: round.funder, round_id: round.round_id,
+  verifiable_until_ledger: round.verifiable_until_ledger, run: round.run, vkBytes: round.vkBytes,
+};
+export { verifyOutput, demoDonorOutput, demoSummary, tamperCommands, tamperAlter, tamperReplay, expiredExample } from "../../scripts/round-docs";

@@ -1,0 +1,109 @@
+name: Refresh published evidence
+
+# Keeps the published round verifiable. Soroban RPC serves about seven days of
+# events, so a round ages out a week after it is published. Every day this
+# checks how long the current round has left; under two days, it runs a fresh
+# round on testnet, regenerates the site facts and the README blocks, checks
+# everything, commits as the project owner and pushes. The push deploys the
+# site through Vercel's GitHub integration, and the job then waits until
+# tally.0xo.in serves the new round.
+#
+# No secrets: the round's accounts are created with friendbot during the run,
+# registration needs only the public auditor key in demo/deployment.testnet.json,
+# and the lane keys stay in the runner's gitignored demo/last-round.json.
+#
+# Any failing step fails the run, and GitHub notifies by email.
+
+on:
+  schedule:
+    - cron: "30 5 * * *" # daily, 05:30 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Refresh even if the current round has more than two days left"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-evidence
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: How long does the published round have left?
+        id: margin
+        run: pnpm -s evidence:margin --days 2 ${{ inputs.force && '--force' || '' }} >> "$GITHUB_OUTPUT"
+
+      - name: Run a fresh round on testnet and publish it
+        if: steps.margin.outputs.refresh == 'true'
+        run: pnpm evidence:refresh
+
+      - name: Verify the new round from chain
+        if: steps.margin.outputs.refresh == 'true'
+        run: pnpm verify:evidence
+
+      - name: Regenerate the site facts and the README blocks
+        if: steps.margin.outputs.refresh == 'true'
+        run: |
+          pnpm site:facts
+          pnpm round-docs
+
+      - name: Secret guard
+        if: steps.margin.outputs.refresh == 'true'
+        run: pnpm check:secrets
+
+      - name: Build the site (claims checked first)
+        if: steps.margin.outputs.refresh == 'true'
+        working-directory: site
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and push
+        if: steps.margin.outputs.refresh == 'true'
+        id: commit
+        run: |
+          git config user.name "Jagadeesh"
+          git config user.email "jagadeesh26062002@gmail.com"
+          round=$(node -p "require('./evidence/latest.json').dir")
+          git add evidence site/content/generated/facts.json site/CLAIMS.md demo/README.md
+          git commit -m "Publish $round (scheduled evidence refresh)" \
+            -m "The previous round had ${{ steps.margin.outputs.days_left }} days left in the RPC's event window."
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "round=$round" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for tally.0xo.in to serve the new round
+        if: steps.margin.outputs.refresh == 'true'
+        run: |
+          for i in $(seq 1 60); do
+            live=$(curl -sf https://tally.0xo.in/verify-data/latest.json | node -pe "JSON.parse(require('fs').readFileSync(0)).dir" 2>/dev/null || true)
+            echo "attempt $i: tally.0xo.in serves ${live:-nothing}"
+            [ "$live" = "${{ steps.commit.outputs.round }}" ] && exit 0
+            sleep 20
+          done
+          echo "::error::tally.0xo.in did not serve ${{ steps.commit.outputs.round }} within 20 minutes; check the Vercel deployment"
+          exit 1
+
+      - name: Check the live site
+        if: steps.margin.outputs.refresh == 'true'
+        working-directory: site
+        run: npm run check:site -- https://tally.0xo.in
