@@ -15,14 +15,14 @@ pnpm verify:evidence
 
 <!-- round:verify-output -->
 ```
-✓ round found: 5 lanes, window [5033961, 5033976]
+✓ round found: 5 lanes, window [5042242, 5042257]
 ✓ 16 transfers from the declared lanes inside the window
 ✓ public inputs reconstructed from chain state only
 ✓ verification key matches the pinned artifact (1760 B)
 ✓ proof verified (16224 B, zero-knowledge)
 
 TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5033961–5033976
+over 16 transfers from 5 declared lanes, ledgers 5042242–5042257
 no individual amount was revealed.
 ```
 <!-- /round:verify-output -->
@@ -32,7 +32,7 @@ Exit `0` means verified. Exit `2` means the proof was rejected. Exit `1` means i
 ## ⏳ This expires, and that is a real limitation
 
 <!-- round:expiry -->
-**The current round (`round-005`, published 2026-10-05 by `pnpm evidence:refresh`) is verifiable until ledger 5154939 — about seven days later.** A scheduled job publishes the next round before then. The exact figure is in [`latest.json`](latest.json) and the round's own `round.json`.
+**The current round (`round-006`, published 2026-10-05 by `pnpm evidence:refresh`) is verifiable until ledger 5163221 — about seven days later.** A scheduled job publishes the next round before then. The exact figure is in [`latest.json`](latest.json) and the round's own `round.json`.
 <!-- /round:expiry --> The exact figure is in [`latest.json`](latest.json) and the round's own `round.json`.
 
 Soroban RPC serves only a rolling window of events (~7 days), and `verify` deliberately enumerates the round's transfers **from chain events** rather than from anything we hand you. Past the window they are simply not served.
@@ -43,8 +43,8 @@ Soroban RPC serves only a rolling window of events (~7 days), and `verify` delib
 ```
 ✗ this round has aged out of the RPC's event retention window.
 
-    round opened at ledger  5033961
-    RPC serves from ledger  5044310   (10,349 ledgers ≈ 0.6 days too old)
+    round opened at ledger  5042242
+    RPC serves from ledger  5052591   (10,349 ledgers ≈ 0.6 days too old)
 
   This is not a proof failure. The proof is untouched and would still verify.
 ```
@@ -84,16 +84,16 @@ The verifier should reject these. If any of them passes, something is wrong and 
 <!-- round:tamper -->
 ```bash
 # inflate the sealed total by one
-python3 -c "import json;b=json.load(open('evidence/round-005/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
-npx tsx cli/tally.ts verify --funder GBNYNIHC6ZFH5D2Z5KPVWRFUG76L2NWHUKAX2KTOEJRAM2WPSUSB3PQY \
+python3 -c "import json;b=json.load(open('evidence/round-006/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
+npx tsx cli/tally.ts verify --funder GCZCMZN43LZL4QXDKH5T3FQFXNV2GMGFY4FI433EYGE4KZ3IZ2TYIVAG \
   --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge evidence/round-005/challenge.json --bundle /tmp/t.json        # expect PROOF FAILED, exit 2
+  --challenge evidence/round-006/challenge.json --bundle /tmp/t.json        # expect PROOF FAILED, exit 2
 
 # replay the bundle against a challenge it was not built for
 npx tsx cli/tally.ts challenge --out /tmp/c2.json
-npx tsx cli/tally.ts verify --funder GBNYNIHC6ZFH5D2Z5KPVWRFUG76L2NWHUKAX2KTOEJRAM2WPSUSB3PQY \
+npx tsx cli/tally.ts verify --funder GCZCMZN43LZL4QXDKH5T3FQFXNV2GMGFY4FI433EYGE4KZ3IZ2TYIVAG \
   --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge /tmp/c2.json --bundle evidence/round-005/bundle.json          # expect PROOF FAILED, exit 2
+  --challenge /tmp/c2.json --bundle evidence/round-006/bundle.json          # expect PROOF FAILED, exit 2
 ```
 <!-- /round:tamper -->
 
@@ -107,11 +107,11 @@ npx tsx cli/tally.ts verify --funder GBNYNIHC6ZFH5D2Z5KPVWRFUG76L2NWHUKAX2KTOEJR
 | | |
 |:---|:---|
 | Network | Stellar testnet |
-| Funder | `GBNYNIHC6ZFH5D2Z5KPVWRFUG76L2NWHUKAX2KTOEJRAM2WPSUSB3PQY` |
+| Funder | `GCZCMZN43LZL4QXDKH5T3FQFXNV2GMGFY4FI433EYGE4KZ3IZ2TYIVAG` |
 | Round id | `030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc` |
 | Registry | [`CDWIXFBO…BK7W`](https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W) |
 | Token | [`CDRRP2JF…URGN`](https://stellar.expert/explorer/testnet/contract/CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN) (OpenZeppelin v0.9.0) |
-| Window | ledgers 5033961 – 5033976 |
+| Window | ledgers 5042242 – 5042257 |
 | Transfers | 16, across 5 lanes |
 | Total | 3160 stroops — **real people are not involved; see the note below** |
 <!-- /round:current -->
