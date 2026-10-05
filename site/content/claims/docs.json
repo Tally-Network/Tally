@@ -18,12 +18,12 @@
     {
       "id": "use", "title": "Use it",
       "claims": [
-        { "page": "quickstart.mdx", "site": "about 120,960 ledgers or roughly seven days", "sources": [{ "file": "evidence/round-003/round.json", "contains": "120960" }] },
+        { "page": "quickstart.mdx", "site": "about 120,960 ledgers or roughly seven days", "sources": [{ "file": "evidence/round-004/round.json", "contains": "120960" }] },
         { "page": "guides/verifying.mdx", "site": "at least 17,280 ledgers (about a day)", "sources": [{ "file": "cli/tally.ts", "contains": "warnBelow = 17280" }] },
         { "page": "guides/registering.mdx", "site": "generated the proof client-side in 882 ms", "sources": [{ "file": "registration/README.md", "contains": "proof generated client-side in **882 ms**" }] },
         { "page": "guides/running-a-round.mdx", "site": "the donor total matching the expected 3160", "sources": [{ "file": "demo/README.md", "contains": "donor total = 3160   expected 3160   MATCH" }] },
         { "page": "reference/exit-codes.mdx", "site": "if the window does not contain exactly 16 transfers", "sources": [{ "file": "demo/run-round.ts", "contains": "if (inWindow.length !== N) throw" }, { "file": "demo/run-round.ts", "contains": "process.exit(1)" }] },
-        { "page": "reference/circuits.mdx", "site": "The demo's own n = 16 proof took 2,361 ms", "sources": [{ "file": "demo/README.md", "contains": "proof 16224B in 2361ms" }] },
+        { "page": "reference/circuits.mdx", "site": "The demo's own n = 16 proof took 2,032 ms", "sources": [{ "file": "demo/README.md", "contains": "proof 16224B in 2032ms" }] },
         { "page": "measurements.mdx", "site": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |" }] },
         { "page": "measurements.mdx", "site": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |" }] },
         { "page": "measurements.mdx", "site": "**363,272,171**", "sources": [{ "file": "MEASUREMENTS.md", "contains": "**363,272,171**" }] },

@@ -1,0 +1,10 @@
+{
+  "round_id": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc",
+  "funder": "GBMWOS4742DB75WWYUBE62ZJJ3ZR7KJN4TRNFDCFMCVCOMTZHWLR654R",
+  "registry": "CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W",
+  "network": "Stellar testnet",
+  "published_at_ledger": 5032855,
+  "retention_window_ledgers": 120960,
+  "verifiable_until_ledger": 5153815,
+  "note": "Soroban RPC retains a rolling window of events. Past verifiable_until_ledger this round is no longer verifiable from RPC alone — `tally verify` detects that and says so rather than reporting an empty transfer set. Re-run `pnpm evidence:refresh` to republish."
+}

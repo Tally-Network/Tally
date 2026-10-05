@@ -404,25 +404,25 @@ const STEPS = [
   {
     t: "Verify the published round",
     cmd: "pnpm verify:evidence",
-    out: `✓ round found: 5 lanes, window [5029651, 5029660]
+    out: `✓ round found: 5 lanes, window [5032842, 5032851]
 ✓ 16 transfers from the declared lanes inside the window
 ✓ public inputs reconstructed from chain state only
 ✓ verification key matches the pinned artifact (1760 B)
 ✓ proof verified (16224 B, zero-knowledge)
 
 TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5029651–5029660
+over 16 transfers from 5 declared lanes, ledgers 5032842–5032851
 no individual amount was revealed.`,
     note: "Exit 0 means verified, 2 means the proof was rejected, 3 means the round aged out of the RPC window, 1 means it could not be checked.",
   },
   {
     t: "Run a fresh round yourself",
     cmd: "pnpm demo",
-    out: `opened_at 5029651  ·  closed_at 5029660  ·  window [5029651, 5029660]
+    out: `opened_at 5032842  ·  closed_at 5032851  ·  window [5032842, 5032851]
 transfers from declared lanes (all time) : 17
 inside the declared window               : 16
 excluded by the window                   :  1   ← the pre-round transfer
-proof 16224B in 2361ms (zero-knowledge), spans 5 sender accounts, verified
+proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified
 donor total = 3160   expected 3160   MATCH`,
     note: "Creates fresh testnet accounts with friendbot and takes several minutes. One transfer is sent before the round opens and must be excluded.",
   },

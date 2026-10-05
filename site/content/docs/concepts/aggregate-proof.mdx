@@ -61,7 +61,7 @@ The sealing works like this. The funder picks a fresh secret `r_disc` and publis
 
 The donor computes the same point from its own side, `S_disc = r_R·R_disc`, and subtracts the mask. Only the holder of `r_R` can do this.
 
-Because the nonce `ν` is a public input to the proof, a bundle made for one challenge fails against any other. Replaying `round-003`'s bundle against a fresh challenge gives `PROOF FAILED` and exit code `2`.
+Because the nonce `ν` is a public input to the proof, a bundle made for one challenge fails against any other. Replaying `round-004`'s bundle against a fresh challenge gives `PROOF FAILED` and exit code `2`.
 
 The funder's viewing key is never part of this. Sharing it would let the holder recompute every ephemeral scalar the funder ever used and open every individual amount, including past ones. Challenge–response is the only model Tally supports.
 

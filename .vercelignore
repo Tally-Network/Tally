@@ -1,0 +1,12 @@
+# Vercel deploys the site from site/ (Root Directory), but its prebuild check
+# reads repository files (demo/, evidence/, MEASUREMENTS.md, docs/ ...), so the
+# upload is the repository minus what the site build never reads.
+node_modules
+**/node_modules
+site/.next
+vendor
+target
+**/target
+contracts/target
+ct/contracts/target
+.git

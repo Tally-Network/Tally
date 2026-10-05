@@ -26,14 +26,14 @@ Runs against Stellar **testnet** using the deployment in [`deployment.testnet.js
 
 ## Last verified run
 
-2026-10-05, OpenZeppelin v0.9.0 deployment, from a clean clone (`pnpm evidence:refresh`, which runs this demo and published `evidence/round-003`):
+2026-10-05, OpenZeppelin v0.9.0 deployment, from `main` at `bf56134` (`pnpm evidence:refresh`, which runs this demo and published `evidence/round-004`):
 
 ```
-opened_at 5029651  ·  closed_at 5029660  ·  window [5029651, 5029660]
+opened_at 5032842  ·  closed_at 5032851  ·  window [5032842, 5032851]
 transfers from declared lanes (all time) : 17
 inside the declared window               : 16
 excluded by the window                   :  1   ← the pre-round transfer
-proof 16224B in 2361ms (zero-knowledge), spans 5 sender accounts, verified
+proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified
 donor total = 3160   expected 3160   MATCH
 ```
 

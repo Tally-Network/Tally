@@ -7,7 +7,7 @@
 - The exposed demo auditor key is retired and removed from history: rewritten with `git filter-repo`, map in `docs/HISTORY-REWRITE.md`.
 - A secret guard and CI are added.
 - Costs were re-measured: `MEASUREMENTS.md`.
-- Evidence was refreshed from a clean clone: `evidence/round-003`, verifiable until about ledger 5150624.
+- Evidence was refreshed after the push: `evidence/round-004`, verifiable until about ledger 5153815 (round-003 was the clean-clone run).
 
 **Nothing has been pushed.** `origin` (`git@github.com:Tally-Network/Tally.git`) still has the old history, including the retired key value. Publishing the rewrite needs `git push --force origin main`. That waits on the user's explicit approval, because it replaces public history.
 
@@ -77,5 +77,5 @@ The bb CLI 0.87.0 and nargo beta.11 used this session were downloaded to the scr
 - OZ: whether `v0.9.0` is tagged, and which branch mainnet will use (`main` lacks clawback).
 - Confidential Tokens and SPP mainnet dates.
 - Whether Remi ships its auditor dashboard.
-- The published round's expiry (ledger ~5150624).
+- The published round's expiry (ledger ~5153815).
 - CI's first run on GitHub. It has only been exercised locally; the circuits job assumes bb.js VK bytes are identical across platforms.

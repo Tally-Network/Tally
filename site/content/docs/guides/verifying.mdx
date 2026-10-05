@@ -130,21 +130,21 @@ The repository publishes a round anyone can verify, with the donor's key include
 pnpm verify:evidence
 ```
 
-This reads [`evidence/latest.json`](https://github.com/Tally-Network/Tally/blob/main/evidence/latest.json), which currently points at `round-003` (published 2026-10-05), and runs `tally verify` with that round's funder, round id, challenge and bundle. It needs no Noir toolchain. It exits with the same code as `tally verify`. The expected output:
+This reads [`evidence/latest.json`](https://github.com/Tally-Network/Tally/blob/main/evidence/latest.json), which currently points at `round-004` (published 2026-10-05), and runs `tally verify` with that round's funder, round id, challenge and bundle. It needs no Noir toolchain. It exits with the same code as `tally verify`. The expected output:
 
 ```
-✓ round found: 5 lanes, window [5029651, 5029660]
+✓ round found: 5 lanes, window [5032842, 5032851]
 ✓ 16 transfers from the declared lanes inside the window
 ✓ public inputs reconstructed from chain state only
 ✓ verification key matches the pinned artifact (1760 B)
 ✓ proof verified (16224 B, zero-knowledge)
 
 TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
-over 16 transfers from 5 declared lanes, ledgers 5029651–5029660
+over 16 transfers from 5 declared lanes, ledgers 5032842–5032851
 no individual amount was revealed.
 ```
 
-`round-003` is verifiable until ledger 5150624. After that, `verify` exits with code 3 until someone republishes with `pnpm evidence:refresh`. The recipients in this round are freshly created testnet accounts, not people, and testnet XLM has no value.
+`round-004` is verifiable until ledger 5153815. After that, `verify` exits with code 3 until someone republishes with `pnpm evidence:refresh`. The recipients in this round are freshly created testnet accounts, not people, and testnet XLM has no value.
 
 ## Try to break it
 
@@ -153,19 +153,19 @@ The verifier should reject both of these. If either passes, something is wrong.
 **Inflate the sealed total by one.** Expect `PROOF FAILED` and exit code 2.
 
 ```bash
-python3 -c "import json;b=json.load(open('evidence/round-003/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
-npx tsx cli/tally.ts verify --funder GAVEHZKUKR3LFUBQLZUZM2L2G45DCPHSZ6BTDAG6XRXEK3M3CSUATVOF \
+python3 -c "import json;b=json.load(open('evidence/round-004/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
+npx tsx cli/tally.ts verify --funder GBMWOS4742DB75WWYUBE62ZJJ3ZR7KJN4TRNFDCFMCVCOMTZHWLR654R \
   --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge evidence/round-003/challenge.json --bundle /tmp/t.json
+  --challenge evidence/round-004/challenge.json --bundle /tmp/t.json
 ```
 
 **Replay the bundle against a challenge it was not built for.** Expect `PROOF FAILED` and exit code 2.
 
 ```bash
 npx tsx cli/tally.ts challenge --out /tmp/c2.json
-npx tsx cli/tally.ts verify --funder GAVEHZKUKR3LFUBQLZUZM2L2G45DCPHSZ6BTDAG6XRXEK3M3CSUATVOF \
+npx tsx cli/tally.ts verify --funder GBMWOS4742DB75WWYUBE62ZJJ3ZR7KJN4TRNFDCFMCVCOMTZHWLR654R \
   --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
-  --challenge /tmp/c2.json --bundle evidence/round-003/bundle.json
+  --challenge /tmp/c2.json --bundle evidence/round-004/bundle.json
 ```
 
 Passing the wrong funder for a round id is a different failure: the registry has no such round in that funder's namespace, and `verify` exits with code 1.

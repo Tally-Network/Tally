@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * One round, animated: Alice declares it, transfers land on-chain as sealed
  * ciphertext, Dave verifies the total off-chain. Addresses and ciphertext are
- * round-003's real on-chain values; the names are illustrative. No amount is
+ * round-004's real on-chain values; the names are illustrative. No amount is
  * ever drawn on the chain side.
  */
 const NAMES = ["Bob", "Charlie", "Erin", "Frank", "Grace"];
