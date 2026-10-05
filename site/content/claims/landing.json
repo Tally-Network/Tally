@@ -16,7 +16,7 @@
     {
       "id": "built-on", "title": "Built on Stellar's privacy standard", "agenforce": "logo-cloud.tsx (slot reused for the stack, no logos)",
       "claims": [
-        { "site": "v0.9.0 @ ${ozRev}", "fact": "openZeppelin", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65" }, { "file": ".gitmodules", "contains": "OpenZeppelin/stellar-contracts" }] },
+        { "site": "v0.9.0 @ ${ozRev}", "fact": "openZeppelin", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65" }, { "file": "ct/NOTICE.md", "contains": "vendor/stellar-contracts" }] },
         { "site": "Stellar testnet, protocol ${facts.measurements.protocolVersion}", "fact": "measurements.protocolVersion", "sources": [{ "file": "ct/measurements.testnet.json", "contains": "\"protocolVersion\": 29" }] },
         { "site": "No endorsement by, or partnership with, Stellar, SDF or\n        OpenZeppelin is implied.", "sources": [{ "file": "ct/NOTICE.md", "contains": "MIT (OpenZeppelin)" }] }
       ]
