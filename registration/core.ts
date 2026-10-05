@@ -7,12 +7,13 @@
  * call. It runs identically in Node and in a browser, so it is tested headless
  * (`test-core.ts`) against real testnet rather than only by clicking a button.
  *
- * `index.html` is the thin shell around it: connect a wallet, get a signature,
- * call `register()`. A broken wallet button fails visibly. A wrong key
- * derivation does not — it registers an account that looks fine and is
+ * A wallet UI (not built; no browser page exists in this repository) would be
+ * a thin shell around it: connect a wallet, get a signature, call
+ * `register()`. A broken wallet button fails visibly. A wrong key derivation
+ * does not — it registers an account that looks fine and is
  * unreachable from the key the contributor believes controls it.
  *
- * KEY DERIVATION IS NORMATIVE, NOT OURS TO CHOOSE (OZ `SDK.md` §5.1–§5.2).
+ * KEY DERIVATION IS NORMATIVE, NOT OURS TO CHOOSE (OZ v0.9.0 `docs/sdk/key-derivation.md`).
  * Implementations MUST NOT substitute a different KDF: the choice is arbitrary
  * in isolation but has to be identical across clients, or the same wallet
  * derives different accounts in different apps.
@@ -30,13 +31,13 @@ import { hkdf } from "@noble/hashes/hkdf";
 import { sha512 } from "@noble/hashes/sha2";
 import { sha256 } from "@noble/hashes/sha2";
 
-import { deriveKeys, type KeyPair } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/keys.js";
-import { addressToField } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/address.js";
-import { FR_MODULUS } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/constants.js";
-import { fromBytesBE, toBytes32BE } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/field.js";
-import { vkFromSk } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/poseidon2.js";
-import { buildRegisterWitness } from "../vendor/confidential-token-demo/packages/sdk/src/witness/register.js";
-import { encodeRegisterData } from "../vendor/confidential-token-demo/packages/sdk/src/chain/payload.js";
+import { deriveKeys, type KeyPair } from "../ct/sdk/src/crypto/keys.js";
+import { addressToField } from "../ct/sdk/src/crypto/address.js";
+import { FR_MODULUS } from "../ct/sdk/src/crypto/constants.js";
+import { fromBytesBE, toBytes32BE } from "../ct/sdk/src/crypto/field.js";
+import { vkFromSk } from "../ct/sdk/src/crypto/poseidon2.js";
+import { buildRegisterWitness } from "../ct/sdk/src/witness/register.js";
+import { encodeRegisterData } from "../ct/sdk/src/chain/payload.js";
 
 /** SEP-0053's fixed prefix — 24 ASCII bytes. */
 const SEP53_PREFIX = new TextEncoder().encode("Stellar Signed Message:\n");
@@ -51,7 +52,7 @@ const concat = (...parts: Uint8Array[]): Uint8Array => {
 };
 
 /**
- * The exact bytes a wallet is asked to sign (§5.2).
+ * The exact bytes a wallet is asked to sign (key-derivation.md, "Signer roots").
  *
  * Strkeys rather than their compressed field forms, deliberately: a wallet that
  * renders SEP-0053 messages as text then shows the user addresses they can
@@ -67,7 +68,7 @@ export function derivationDigest(tokenContract: string, account: string): Uint8A
 }
 
 /**
- * §5.1 derivation. Rejection-samples until the candidate is a valid scalar and
+ * key-derivation.md "Derivation". Rejection-samples until the candidate is a valid scalar and
  * the resulting `vk` is non-zero (register constraint R5).
  */
 export function skFromRoot(root: Uint8Array, tokenContract: string, account: string): bigint {
@@ -78,7 +79,7 @@ export function skFromRoot(root: Uint8Array, tokenContract: string, account: str
     new DataView(le4.buffer).setUint32(0, j, true);
     const info = concat(toBytes32BE(addrF), toBytes32BE(acctF), le4);
     const out = hkdf(sha512, root, enc.encode(DOMAIN), info, 32);
-    out[0] &= 0x3f;                       // clear the top 2 bits (§4.7)
+    out[0] &= 0x3f;                       // clear the top 2 bits (crypto-core.md "Scalar sampling")
     const cand = fromBytesBE(out);
     if (cand >= 1n && cand < FR_MODULUS && vkFromSk(cand, addrF) !== 0n) return cand;
   }
@@ -104,15 +105,15 @@ export interface MessageSigner {
 
 export interface DerivationResult {
   keys: KeyPair;
-  /** How the key was produced — a user must not be offered a recovery path their account cannot satisfy (§5.3). */
+  /** How the key was produced — a user must not be offered a recovery path their account cannot satisfy (key-derivation.md "Raw roots"). */
   form: "signer-root" | "raw-root";
-  /** The signer that enrolled. `sk` binds to the ADDRESS, not to this key, and which signer enrolled is not recoverable from chain state (§5.2). */
+  /** The signer that enrolled. `sk` binds to the ADDRESS, not to this key, and which signer enrolled is not recoverable from chain state (key-derivation.md, "Signer roots"). */
   enrolledSigner: string;
 }
 
 /**
- * Derive the confidential keys from a wallet, performing every check `SDK.md`
- * §5.2 marks mandatory. Each of these guards a failure that otherwise succeeds
+ * Derive the confidential keys from a wallet, performing every check `docs/sdk/key-derivation.md`
+ * key-derivation.md "Signer roots" marks mandatory. Each of these guards a failure that otherwise succeeds
  * quietly and strands the account.
  */
 export async function deriveFromWallet(
@@ -154,7 +155,7 @@ export async function deriveFromWallet(
 }
 
 /**
- * §5.3 fallback for wallets with no SEP-0053 path and for contract addresses
+ * key-derivation.md "Raw roots" fallback for wallets with no SEP-0053 path and for contract addresses
  * (a smart account has no ed25519 signer of its own).
  *
  * A raw root is reproducible from NOTHING the user already holds, so a caller
@@ -167,13 +168,17 @@ export function deriveFromRawRoot(root: Uint8Array, tokenContract: string, accou
   return { keys: deriveKeys(sk, addressToField(tokenContract)), form: "raw-root", enrolledSigner: account };
 }
 
-/** Build the `register` call arguments. Proving happens in the caller's prover. */
-export function registerPayload(keys: KeyPair, proof: Uint8Array) {
-  const witness = buildRegisterWitness(keys);
+/**
+ * Build the `register` call arguments. Proving happens in the caller's prover.
+ * `account` is the address that will call `register`: since OpenZeppelin
+ * v0.9.0 the proof is bound to it (`acct_f`, #775).
+ */
+export function registerPayload(keys: KeyPair, account: string, proof: Uint8Array) {
+  const witness = buildRegisterWitness(keys, account);
   return { witness, data: encodeRegisterData(witness, proof) };
 }
 
 /** Witness only — feed `.inputs` to a prover, then pass the proof to `registerPayload`. */
-export function registerWitness(keys: KeyPair) {
-  return buildRegisterWitness(keys);
+export function registerWitness(keys: KeyPair, account: string) {
+  return buildRegisterWitness(keys, account);
 }

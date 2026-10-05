@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = ["token", "verifier", "auditor", "bench-batch"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+
+# The confidential-token crates come from OpenZeppelin/stellar-contracts at the
+# v0.9.0 branch head (df602b6), vendored as the git submodule
+# vendor/stellar-contracts. soroban-sdk must match the version that tree pins
+# (27.x), not the newer 28.x used by contracts/round-registry.
+#
+# stellar-tokens enables soroban-sdk's experimental_spec_shaking_v2 feature, so
+# build with `stellar contract build`, not plain `cargo build`.
+[workspace.dependencies]
+soroban-sdk = { version = "27.0.2" }
+stellar-access = { path = "../../vendor/stellar-contracts/packages/access" }
+stellar-macros = { path = "../../vendor/stellar-contracts/packages/macros" }
+stellar-tokens = { path = "../../vendor/stellar-contracts/packages/tokens" }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true

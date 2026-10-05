@@ -16,31 +16,31 @@
 import { Keypair, TransactionBuilder, Contract, BASE_FEE, rpc, xdr, Address, nativeToScVal, scValToNative } from "@stellar/stellar-sdk";
 import { readFileSync, writeFileSync } from "node:fs";
 import { RPC_URL, PASSPHRASE, loadDeployment, friendbotFund } from "./shared.js";
-import { ChainClient, keypairSigner, type Signer } from "../vendor/confidential-token-demo/packages/sdk/src/chain/client.js";
-import { deriveKeys, type KeyPair } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/keys.js";
-import { addressToField } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/address.js";
-import { randomScalar, frSub } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/field.js";
-import { scalarMul, ecdh, pointCoords, H } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/grumpkin.js";
-import { deriveEphemeralRE, poseidonWithDomain } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/poseidon2.js";
-import { DOMAIN } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/constants.js";
-import { buildRegisterWitness } from "../vendor/confidential-token-demo/packages/sdk/src/witness/register.js";
-import { buildTransferWitness } from "../vendor/confidential-token-demo/packages/sdk/src/witness/transfer.js";
-import { CircuitProver } from "../vendor/confidential-token-demo/packages/sdk/src/proving/prover.js";
+import { ChainClient, keypairSigner, type Signer } from "../ct/sdk/src/chain/client.js";
+import { deriveKeys, type KeyPair } from "../ct/sdk/src/crypto/keys.js";
+import { addressToField } from "../ct/sdk/src/crypto/address.js";
+import { randomScalar, frSub } from "../ct/sdk/src/crypto/field.js";
+import { scalarMul, ecdh, pointCoords, H } from "../ct/sdk/src/crypto/grumpkin.js";
+import { deriveEphemeralRE, poseidonWithDomain } from "../ct/sdk/src/crypto/poseidon2.js";
+import { DOMAIN } from "../ct/sdk/src/crypto/constants.js";
+import { buildRegisterWitness } from "../ct/sdk/src/witness/register.js";
+import { buildTransferWitness } from "../ct/sdk/src/witness/transfer.js";
+import { CircuitProver } from "../ct/sdk/src/proving/prover.js";
 import { DisclosureProver } from "./zk-prover.js";
-import { loadCircuit } from "../vendor/confidential-token-demo/packages/sdk/src/proving/artifacts.js";
-import { encodeRegisterData, encodeTransferData } from "../vendor/confidential-token-demo/packages/sdk/src/chain/payload.js";
-import { StateEngine, MemoryStore } from "../vendor/confidential-token-demo/packages/sdk/src/state/index.js";
-import { fetchEvents } from "../vendor/confidential-token-demo/packages/sdk/src/chain/events.js";
+import { loadCircuit } from "../ct/sdk/src/proving/artifacts.js";
+import { encodeRegisterData, encodeTransferData } from "../ct/sdk/src/chain/payload.js";
+import { StateEngine, MemoryStore } from "../ct/sdk/src/state/index.js";
+import { fetchEvents } from "../ct/sdk/src/chain/events.js";
 
-const REGISTRY = process.env.TALLY_REGISTRY ?? "CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES";
 const K = 5, N = 16, AUDITOR = 0, LANE_FUND = 5000n;
-const AGG = new URL("../circuits/aggregate_n16/target/tally_aggregate_n16.json", import.meta.url);
+const AGG = new URL("../circuits/aggregate_n16/circuit.json", import.meta.url);
 const DISC_BIND = 15n;
 const hex = (x: bigint) => "0x" + x.toString(16).padStart(64, "0");
 interface Party { kp: Keypair; signer: Signer; keys: KeyPair }
 
 async function main() {
   const dep = loadDeployment();
+  const REGISTRY = process.env.TALLY_REGISTRY ?? dep.contracts.registry;
   const server = new rpc.Server(RPC_URL);
   const client = new ChainClient({ rpcUrl: RPC_URL, networkPassphrase: PASSPHRASE,
     contracts: { token: dep.contracts.token, verifier: dep.contracts.verifier, auditor: dep.contracts.auditor } });
@@ -65,7 +65,7 @@ async function main() {
   const regProver = new CircuitProver(loadCircuit("register"));
   const txProver = new CircuitProver(loadCircuit("transfer"));
   for (const p of [...lanes, ...recips]) {
-    const w = buildRegisterWitness(p.keys);
+    const w = buildRegisterWitness(p.keys, p.kp.publicKey());
     const { proof } = await regProver.prove(w.inputs);
     await send(server, p.signer, dep.contracts.token, "register",
       [addr(p.kp.publicKey()), xdr.ScVal.scvU32(AUDITOR), encodeRegisterData(w, proof)]);
@@ -170,7 +170,7 @@ async function main() {
   for (const ev of inWindow as any[]) {
     const lane = laneBy.get(ev.from)!, rec = recBy.get(ev.to)!;
     const rE = deriveEphemeralRE(lane.keys.vk, ev.sigma);
-    const vTx = frSub(ev.vTilde, poseidonWithDomain(DOMAIN.TX_AMOUNT, [ecdh(rE, rec.keys.PVK), ev.sigma]));
+    const vTx = frSub(ev.vTilde, poseidonWithDomain(DOMAIN.TRANSFER_AMOUNT, [ecdh(rE, rec.keys.PVK), ev.sigma]));
     total += vTx;
     const A = pointCoords(lane.keys.PVK), B = pointCoords(rec.keys.PVK), R = pointCoords(ev.rE);
     F.sk.push(hex(lane.keys.sk)); F.r_e.push(hex(rE)); F.v_tx.push(hex(vTx)); F.active.push(hex(1n));

@@ -8,8 +8,10 @@ export const FRIENDBOT = "https://friendbot.stellar.org";
 
 export interface Deployment {
   network: string; rpcUrl: string; passphrase: string; deployedAtLedger: number;
-  contracts: { token: string; verifier: string; auditor: string; underlying: string };
-  auditor: { id: number; secretHex: string; keyXHex: string; keyYHex: string };
+  openZeppelin: string;
+  contracts: { token: string; verifier: string; auditor: string; underlying: string; registry: string };
+  /** Public auditor key only. The secret is never stored in this repository. */
+  auditor: { id: number; keyXHex: string; keyYHex: string };
   addrF: string;
 }
 

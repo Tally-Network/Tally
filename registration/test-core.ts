@@ -13,11 +13,11 @@ import { sha256 } from "@noble/hashes/sha2";
 
 import { deriveFromWallet, deriveFromRawRoot, derivationMessage, registerWitness,
          type MessageSigner } from "./core.js";
-import { encodeRegisterData } from "../vendor/confidential-token-demo/packages/sdk/src/chain/payload.js";
-import { CircuitProver } from "../vendor/confidential-token-demo/packages/sdk/src/proving/prover.js";
-import { loadCircuit } from "../vendor/confidential-token-demo/packages/sdk/src/proving/artifacts.js";
-import { ChainClient, keypairSigner } from "../vendor/confidential-token-demo/packages/sdk/src/chain/client.js";
-import { pointCoords } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/grumpkin.js";
+import { encodeRegisterData } from "../ct/sdk/src/chain/payload.js";
+import { CircuitProver } from "../ct/sdk/src/proving/prover.js";
+import { loadCircuit } from "../ct/sdk/src/proving/artifacts.js";
+import { ChainClient, keypairSigner } from "../ct/sdk/src/chain/client.js";
+import { pointCoords } from "../ct/sdk/src/crypto/grumpkin.js";
 
 const dep = JSON.parse(readFileSync(new URL("../demo/deployment.testnet.json", import.meta.url), "utf8"));
 const PREFIX = new TextEncoder().encode("Stellar Signed Message:\n");
@@ -51,12 +51,12 @@ async function main() {
   const other = Keypair.random();
   await (await fetch(`https://friendbot.stellar.org/?addr=${other.publicKey()}`)).text();
   const c = await deriveFromWallet(walletSigner(other), token);
-  a.keys.sk !== c.keys.sk ? pass("different address -> different key (acct_f binding, §5.1)") : fail("keys collide across addresses");
+  a.keys.sk !== c.keys.sk ? pass("different address -> different key (acct_f binding, key-derivation.md)") : fail("keys collide across addresses");
 
   const d = await deriveFromWallet(w, dep.contracts.verifier);   // pretend another deployment
   a.keys.sk !== d.keys.sk ? pass("different deployment -> different key (addr_f binding)") : fail("keys collide across deployments");
 
-  console.log("\n[2] the mandatory §5.2 checks actually reject\n");
+  console.log("\n[2] the mandatory signer checks (key-derivation.md, Signer roots) actually reject\n");
   const wrongAccount: MessageSigner = { ...w, async verify() { return false; } };
   try { await deriveFromWallet(wrongAccount, token); fail("accepted a signature that does not verify"); }
   catch (e: any) { /wallet has the intended account/.test(e.message) ? pass("rejects a signature from the wrong account") : fail(`wrong error: ${e.message}`); }
@@ -67,12 +67,12 @@ async function main() {
   catch (e: any) { /not deterministic/.test(e.message) ? pass("rejects a non-deterministic (MPC/threshold) signer") : fail(`wrong error: ${e.message}`); }
 
   const raw = deriveFromRawRoot(new Uint8Array(32).fill(9), token, kp.publicKey());
-  raw.form === "raw-root" ? pass("raw-root fallback derives and reports its form (§5.3)") : fail("raw-root form mislabelled");
+  raw.form === "raw-root" ? pass("raw-root fallback derives and reports its form (key-derivation.md, Raw roots)") : fail("raw-root form mislabelled");
 
   console.log("\n[3] register on live testnet, then read the account back\n");
   const prover = new CircuitProver(loadCircuit("register"));
   const t0 = Date.now();
-  const witness = registerWitness(a.keys);
+  const witness = registerWitness(a.keys, kp.publicKey());
   const { proof } = await prover.prove(witness.inputs);
   const proveMs = Date.now() - t0;
   await prover.destroy();

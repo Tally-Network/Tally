@@ -10,8 +10,8 @@
  * assured of something; if verification only runs inside our own demo script,
  * no donor can perform it and the assurance is theoretical.
  *
- * THE TRUST BOUNDARY (SELECTIVE_DISCLOSURE.md §5.2–§5.3)
- * -----------------------------------------------------
+ * THE TRUST BOUNDARY (OZ v0.9.0 docs/selective-disclosure/protocol.md)
+ * --------------------------------------------------------------------
  * The verifier constructs every public input itself, from chain state and from
  * its own challenge. From the funder's bundle it takes EXACTLY THREE VALUES:
  *
@@ -32,16 +32,16 @@ import { randomBytes } from "node:crypto";
 import { rpc, xdr, Address, TransactionBuilder, Contract, BASE_FEE, Networks, Keypair, scValToNative } from "@stellar/stellar-sdk";
 import { UltraHonkBackend } from "@aztec/bb.js";
 
-import { ChainClient } from "../vendor/confidential-token-demo/packages/sdk/src/chain/client.js";
-import { addressToField } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/address.js";
-import { randomScalar, frSub } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/field.js";
-import { scalarMul, pointCoords, H, Grumpkin, type Point } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/grumpkin.js";
-import { poseidonWithDomain, deriveEphemeralRE, encryptAmount, vkFromSk } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/poseidon2.js";
-import { DOMAIN } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/constants.js";
-import { ecdh } from "../vendor/confidential-token-demo/packages/sdk/src/crypto/grumpkin.js";
-import { fetchEvents } from "../vendor/confidential-token-demo/packages/sdk/src/chain/events.js";
+import { ChainClient } from "../ct/sdk/src/chain/client.js";
+import { addressToField } from "../ct/sdk/src/crypto/address.js";
+import { randomScalar, frSub } from "../ct/sdk/src/crypto/field.js";
+import { scalarMul, pointCoords, H, Grumpkin, type Point } from "../ct/sdk/src/crypto/grumpkin.js";
+import { poseidonWithDomain, deriveEphemeralRE, encryptAmount, vkFromSk } from "../ct/sdk/src/crypto/poseidon2.js";
+import { DOMAIN } from "../ct/sdk/src/crypto/constants.js";
+import { ecdh } from "../ct/sdk/src/crypto/grumpkin.js";
+import { fetchEvents } from "../ct/sdk/src/chain/events.js";
 
-/** δ_disc_bind — DESIGN_cont.md §13. The aggregate U-block's domain tag. */
+/** δ_disc_bind = 15 — OpenZeppelin v0.9.0 docs/protocol/domain-separators.md. */
 const DISC_BIND = 15n;
 /** Disclosure proofs are zero-knowledge. See demo/zk-prover.ts. */
 const ZK = { keccakZK: true } as const;
@@ -64,7 +64,7 @@ const bad  = (m: string) => console.log(`  \x1b[31m✗\x1b[0m ${m}`);
 
 interface Deployment {
   rpcUrl: string; deployedAtLedger: number;
-  contracts: { token: string; verifier: string; auditor: string };
+  contracts: { token: string; verifier: string; auditor: string; registry?: string };
 }
 function loadDeployment(): Deployment {
   const d = JSON.parse(readFileSync(arg("deployment", new URL("../demo/deployment.testnet.json", import.meta.url).pathname), "utf8"));
@@ -72,7 +72,10 @@ function loadDeployment(): Deployment {
   return d;
 }
 function registryId(): string {
-  return arg("registry", process.env.TALLY_REGISTRY ?? "CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES");
+  const fromDeployment = loadDeployment().contracts.registry;
+  const id = arg("registry", process.env.TALLY_REGISTRY ?? fromDeployment ?? "");
+  if (!id) die("no round registry: pass --registry or use a deployment file that names one");
+  return id;
 }
 
 // ---------------------------------------------------------------- chain
@@ -220,7 +223,7 @@ function publicInputsFromAbi(circuit: any, values: Record<string, string | strin
 function circuitFor(n: number): { circuit: any; capacity: number } {
   for (const cap of [8, 16, 64]) {
     if (n <= cap) {
-      const path = new URL(`../circuits/aggregate_n${cap}/target/tally_aggregate_n${cap}.json`, import.meta.url);
+      const path = new URL(`../circuits/aggregate_n${cap}/circuit.json`, import.meta.url);
       return { circuit: JSON.parse(readFileSync(path, "utf8")), capacity: cap };
     }
   }
@@ -389,7 +392,7 @@ async function cmdProve() {
     const vk = vkFromSk(sk, addressToField(dep.contracts.token));
     const rE = deriveEphemeralRE(vk, e.sigma);            // re-derived, never stored
     const B = await pvk(e.to);
-    const vTx = frSub(e.vTilde, poseidonWithDomain(DOMAIN.TX_AMOUNT, [ecdh(rE, B), e.sigma]));
+    const vTx = frSub(e.vTilde, poseidonWithDomain(DOMAIN.TRANSFER_AMOUNT, [ecdh(rE, B), e.sigma]));
     if (encryptAmount(vTx, ecdh(rE, B), e.sigma) !== e.vTilde) die(`event ${e.txHash} is not disclosable by this key`);
     total += vTx;
     const A = pointCoords(await pvk(e.from)), Bc = pointCoords(B), R = pointCoords(e.rE);

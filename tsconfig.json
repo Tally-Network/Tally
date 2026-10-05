@@ -10,5 +10,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["demo/**/*.ts"]
+  "include": ["demo/**/*.ts", "cli/**/*.ts", "registration/**/*.ts", "ct/**/*.ts", "circuits/scripts/**/*.ts", "scripts/**/*.ts"]
 }

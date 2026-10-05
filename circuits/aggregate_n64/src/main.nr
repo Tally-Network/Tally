@@ -10,15 +10,16 @@ use stellar_confidential_lib::{
 // on-chain confidential transfers, ORIGINATED BY ACCOUNTS THE PROVER CONTROLS,
 // sum to exactly V_total -- without revealing any individual amount.
 //
-// Extends SELECTIVE_DISCLOSURE.md Section 10 in two ways, both raised upstream
-// in OpenZeppelin/stellar-contracts#849:
+// Extends the aggregate disclosure of OpenZeppelin stellar-contracts v0.9.0
+// (docs/selective-disclosure/circuits/aggregate.md) in two ways, both raised
+// upstream in OpenZeppelin/stellar-contracts#849:
 //
-//   1. PVK_B is PER-EVENT. Section 10's public-input table lists only
+//   1. PVK_B is PER-EVENT. The upstream public-input table listed only
 //      (R_e_i, sigma_i, v_tilde_i) per event, which is the D-recipient shape.
 //      The D-sender block ECDHs against the RECIPIENT's viewing key (DS4), and
 //      in an outbound aggregate every event has a different recipient.
 //
-//   2. PVK_A and sk are PER-EVENT. Section 10 lists PVK_A as a COMMON input,
+//   2. PVK_A and sk are PER-EVENT. Upstream lists PVK_A as a COMMON input,
 //      which pins an aggregate to a single sender account. Sends from one
 //      account serialise (each spend replaces C_spend), so parallelism forces
 //      a fan-out across accounts -- and one-proof-per-account leaks per-account
@@ -38,7 +39,7 @@ use stellar_confidential_lib::{
 // nothing to the sum. The verifier pads by REPEATING a real event's public data
 // with active = 0, which keeps every padded point on-curve.
 //
-// Verifier obligations (in addition to SELECTIVE_DISCLOSURE.md Section 5.3):
+// Verifier obligations (in addition to docs/selective-disclosure/protocol.md):
 //   - Resolve PVK_A_i from E_i.from and PVK_B_i from E_i.to, never from the
 //     bundle.
 //   - Reject DUPLICATE event references among active slots. The circuit cannot
@@ -51,8 +52,8 @@ use stellar_confidential_lib::{
 //   D1_i   vk_i    = Poseidon2(delta_vk, sk_i, addr_f)
 //   D2_i   PVK_A_i = vk_i * H                      binds event i to its sender
 //   DS3_i  R_e_i   = r_e_i * H, r_e_i != 0         originator binding
-//   DS4_i  S_B_i   = ECDH(r_e_i, PVK_B_i)
-//   DS5_i  v_tilde_i = v_tx_i + Poseidon2(delta_tx_amount, S_B_i, sigma_i)
+//   DS4_i  s_B_i   = ECDH(r_e_i, PVK_B_i)   (Poseidon2(delta_ecdh, S.x, S.y) since v0.9.0)
+//   DS5_i  v_tilde_i = v_tx_i + Poseidon2(delta_transfer_amount, s_B_i, sigma_i)
 //   D5_i   v_tx_i in [0, 2^127)
 //   AGG    V_total  = sum(active_i * v_tx_i)
 //   CNT    n_active = sum(active_i),  n_active >= MIN_ACTIVE
@@ -61,11 +62,10 @@ use stellar_confidential_lib::{
 //   U3     v_tilde_disc = V_total + Poseidon2(delta_disc_bind, S_disc.x, nu)
 //
 // NOTE ON THE DOMAIN TAG. delta_disc_bind = 15 per the normative table in
-// DESIGN_cont.md Section 13, which Section 10 requires for the aggregate
-// U-block ("delta_disc_bind replacing delta_disc to separate domain"). The
-// reference demo's single-event circuits hardcode 13 for delta_disc, which is
-// delta_ecdh's value -- a domain-separation collision reported separately. This
-// circuit follows the spec.
+// OpenZeppelin v0.9.0 docs/protocol/domain-separators.md, which reserves 15 for
+// the aggregate disclosure ciphertext and 16 for the single-event one. (The
+// earlier reference demo used 13 for delta_disc, which v0.9.0 assigns to
+// delta_ecdh; that collision was reported upstream and is resolved there.)
 
 pub global N: u32 = 64;
 
@@ -77,7 +77,7 @@ pub global N: u32 = 64;
 /// why the family starts at n = 8.
 pub global MIN_ACTIVE: Field = 5;
 
-/// delta_disc_bind -- DESIGN_cont.md Section 13.
+/// delta_disc_bind -- docs/protocol/domain-separators.md (v0.9.0).
 pub global DISC_BIND: Field = 15;
 
 fn main(

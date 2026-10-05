@@ -5,14 +5,15 @@
  *
  *   Transfer-family circuits  →  { keccak: true }    NON-zk, mandatory.
  *       These are verified by the on-chain Nethermind verifier, which
- *       implements only the non-zk flavour. OZ SDK.md §8.1: "Zero-knowledge
- *       mode MUST NOT be enabled while the verifier implements only the non-zk
- *       flavour." A zk proof simply fails on chain.
+ *       implements only the non-zk flavour (OZ v0.9.0
+ *       circuits/vks/README.md: "Do not pass --zk"). A zk proof simply fails
+ *       on chain.
  *
  *   Disclosure circuits        →  { keccakZK: true }  ZK, and it matters.
  *       These never register with the on-chain verifier set — they are
- *       verified OFF-CHAIN by the donor via bb.js (SELECTIVE_DISCLOSURE.md
- *       §5.5), so the on-chain verifier's limitation does not bind them.
+ *       verified OFF-CHAIN by the donor via bb.js (OZ v0.9.0
+ *       docs/selective-disclosure/protocol.md), so the on-chain verifier's
+ *       limitation does not bind them.
  *
  * Why the disclosure proof MUST be zero-knowledge: the entire claim is that it
  * reveals only the aggregate. A non-zk Honk proof is succinct but not
