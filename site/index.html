@@ -303,7 +303,7 @@
         </tfoot>
       </table>
     </div>
-    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 4289035–4289043. Amounts are stroops of the wrapped asset — testnet XLM via its Stellar Asset Contract; the values are arbitrary demo figures. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
+    <p class="eyebrow" style="margin-top:14px;">Read back from Soroban RPC, ledgers 5029651–5029660. Amounts are stroops of the wrapped asset — testnet XLM via its Stellar Asset Contract; the values are arbitrary demo figures. The amount column is the actual on-chain ciphertext — amounts are encrypted client-side and never exist in plaintext on chain. The total below is what the donor proved.</p>
   </div>
 </header>
 
@@ -404,16 +404,16 @@
     </div>
 
     <div class="term">
-      <div class="term-bar">pnpm demo &nbsp;·&nbsp; Stellar testnet &nbsp;·&nbsp; 21 Aug 2026</div>
+      <div class="term-bar">pnpm demo &nbsp;·&nbsp; Stellar testnet &nbsp;·&nbsp; 5 Oct 2026</div>
 <pre><span class="c">[pre-round]</span> one transfer BEFORE open_round      <span class="c">← must be excluded</span>
-<span class="c">[1]</span> open_round      opened_at <span class="g">4289035</span>       <span class="c">contract-stamped</span>
-<span class="c">[2]</span> 16 transfers across 5 lanes            <span class="g">39.9s</span>
-<span class="c">[3]</span> close_round     window [<span class="g">4289035</span>, <span class="g">4289043</span>]
+<span class="c">[1]</span> open_round      opened_at <span class="g">5029651</span>       <span class="c">contract-stamped</span>
+<span class="c">[2]</span> 16 transfers across 5 lanes            <span class="g">40.5s</span>
+<span class="c">[3]</span> close_round     window [<span class="g">5029651</span>, <span class="g">5029660</span>]
 <span class="c">[4]</span> DONOR — given only funder address + round id
       transfers from declared lanes, all time : <span class="a">17</span>
       inside the declared window              : <span class="g">16</span>
       excluded by the window                  : <span class="a">1</span>
-<span class="c">[5]</span> proof <span class="g">16,224 B</span> (zk) / <span class="g">1,943 ms</span> / 5 sender accounts — verified
+<span class="c">[5]</span> proof <span class="g">16,224 B</span> (zk) / <span class="g">2,361 ms</span> / 5 sender accounts — verified
       donor total <span class="g">3160</span>   expected <span class="g">3160</span>   <span class="g">MATCH</span>
       <span class="c">(stroops of the wrapped asset — testnet XLM via its SAC)</span></pre>
     </div>
@@ -433,7 +433,7 @@ pnpm verify:evidence
     </div>
     <div class="col stack">
       <p style="font-size:0.95rem;color:var(--ink-soft);">The verifier takes <b>exactly three values</b> from the funder — the proof, <span class="mono">r_disc</span>, and the sealed total. The lane set, the window, the transfer set and every account key are resolved from the chain, so a funder cannot choose which transfers the total covers.</p>
-      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 4410007. The tool detects that and says so, rather than reporting an empty result that would look like a failed proof. One command republishes a fresh round. What none of that fixes is verifying a round from <i>last year</i>, which is exactly the case a grant auditor has: that needs the persistent event archive the Stellar specification defines and <b>we have not built it</b>.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>It expires, and that is a real limit.</b> Soroban RPC serves about seven days of events, and verification deliberately reads transfers from the chain rather than from anything we hand over — so this round stops being checkable around ledger 5150624. The tool detects that and says so, rather than reporting an empty result that would look like a failed proof. One command republishes a fresh round. What none of that fixes is verifying a round from <i>last year</i>, which is exactly the case a grant auditor has: that needs the persistent event archive the Stellar specification defines and <b>we have not built it</b>.</p>
     </div>
 
     <div class="col stack">
@@ -454,12 +454,12 @@ pnpm verify:evidence
       <table class="data">
         <thead><tr><th>Artifact</th><th>Address / hash</th></tr></thead>
         <tbody>
-          <tr><td>Round registry</td><td><a href="https://stellar.expert/explorer/testnet/contract/CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES">CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES</a></td></tr>
-          <tr><td>Confidential token</td><td><a href="https://stellar.expert/explorer/testnet/contract/CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD">CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD</a></td></tr>
-          <tr><td>UltraHonk verifier</td><td><a href="https://stellar.expert/explorer/testnet/contract/CBWGTNURCFB3SGXAYPYS3WWYK4NZC2LETFGP45FGCFXWVZPDOXE73GID">CBWGTNURCFB3SGXAYPYS3WWYK4NZC2LETFGP45FGCFXWVZPDOXE73GID</a></td></tr>
-          <tr><td>Transfer (no amount visible)</td><td><a href="https://stellar.expert/explorer/testnet/tx/089fc19321826f936cb9ad36edf6c7f03d4bbb0bfa8cc095394db2d544f3d4a3">089fc19321826f936cb9ad36edf6c7f03d4bbb0bfa8cc095394db2d544f3d4a3</a></td></tr>
-          <tr><td>Transfer</td><td><a href="https://stellar.expert/explorer/testnet/tx/19679870b22d390d620f75a3ac7b8f60f65ccf43a0c8e5f351b01a9b3bc3a701">19679870b22d390d620f75a3ac7b8f60f65ccf43a0c8e5f351b01a9b3bc3a701</a></td></tr>
-          <tr><td>Transfer</td><td><a href="https://stellar.expert/explorer/testnet/tx/410412bf61e2e1abf83ebca7b7961a4ce6b1d5578fb71461c6f5af841b4560f8">410412bf61e2e1abf83ebca7b7961a4ce6b1d5578fb71461c6f5af841b4560f8</a></td></tr>
+          <tr><td>Round registry</td><td><a href="https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W">CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W</a></td></tr>
+          <tr><td>Confidential token</td><td><a href="https://stellar.expert/explorer/testnet/contract/CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN">CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN</a></td></tr>
+          <tr><td>UltraHonk verifier</td><td><a href="https://stellar.expert/explorer/testnet/contract/CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL">CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL</a></td></tr>
+          <tr><td>Transfer (no amount visible)</td><td><a href="https://stellar.expert/explorer/testnet/tx/310ccf759644f7671b4e86815abb4ddda46bd194205c9c594fcce63a655ea995">310ccf759644f7671b4e86815abb4ddda46bd194205c9c594fcce63a655ea995</a></td></tr>
+          <tr><td>Transfer</td><td><a href="https://stellar.expert/explorer/testnet/tx/0ae081b7673f0f5bb533d4ff995dab8da630178f21b7cc6016a0eac88530787f">0ae081b7673f0f5bb533d4ff995dab8da630178f21b7cc6016a0eac88530787f</a></td></tr>
+          <tr><td>Four transfers, one transaction</td><td><a href="https://stellar.expert/explorer/testnet/tx/fe362834f8ddf8cb16cde66e71d64fc75dd7103a4968141bca4bd2faeab59384">fe362834f8ddf8cb16cde66e71d64fc75dd7103a4968141bca4bd2faeab59384</a></td></tr>
         </tbody>
       </table>
     </div>
@@ -597,17 +597,17 @@ pnpm verify:evidence
 </footer>
 
 <script>
-  // Real transfer events from the published round of 22 Aug 2026, ledgers 4289035–4289043,
+  // Real transfer events from the published round of 5 Oct 2026, ledgers 5029651–5029660,
   // read back from Soroban RPC. Addresses are truncated for width; the amount
   // column shows the actual on-chain ciphertext bytes. Nothing here is invented.
   const ROWS = [
-    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GDNYWTQYRY5X73ITM5WHTDPYVR4K2G7BCKVAS2TW2BZZERY62FNAEG4T", "1cfff9f40ef39b22", "5128", 4289036],
-    ["GDPHXM5C3EEG62SW3RRZTM56XPHJYY4IGZU7XBLS63S47F7P35ALHIOP", "GB35L2JYEH7MXFTQNQ56EUDP5DVXS47QGUGIDCZ6PNAYAMNAPSAMAUJG", "0c9183d23a57045e", "2652", 4289038],
-    ["GC3NATY25KQYFKZQIKMGP4O4DLEX5YZSNUXES5JVGZWWQS46D5MTKQ42", "GAX2Z2XGFQRI43RRWSU7RIN7UPLKX6JM63H6CKG4VYIVYWVY75A7MXJD", "0b528233bd8ae402", "0a75", 4289038],
-    ["GDLQHCIEQ7XE3EHSUHVUZAVB7L2RKBIFZFZPQPFH7HQ2PKGELH6QZUT4", "GDV45LYQARZUYSNF6NUAHSOIWDD45A53NPTWVSOOGBQ5XYZNGZLZDAIU", "033be85935fe9690", "1472", 4289038],
-    ["GD6LT7QFD3JHMSKFDZH7KEC7IN2QFCQTBYLSCFSIJPP74XSOSMKJLBKN", "GDZSJFIVYVAN5IVX62JKEIKX2XAQUNVHDK5GCLTZ4D6E6ZMM7H3HCEJ4", "216d8ef3b52f63f9", "f27c", 4289038],
-    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GD4LR6AGGKV6F67TOEJAXVJXYCI65FACQOF25E6LFNHCTFSX65LN2CHQ", "05eefa6bd97843ec", "b193", 4289038],
-    ["GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOYM5WBGOYPB4MWM6UEZDQMSD", "GDZVWS3DXF2FSVQAVRH5AZZMOLLK43DOJLI3WVZPNWJKVAVKTRKE5HFB", "2a0cfa925c87ee60", "1229", 4289040]
+    ["GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO", "GDLBCDWLGA2IKDUWRO52KJ5BAJIEX5BSNIBX2MI2G7UFZLGWTMQYP7W3", "1afd054cf60856da", "c791", 5029653],
+    ["GBOAR2CW5GIXT7NXO5KY4AEE4AAIJ54UFZOVRXIMBGVIOZQ7KZVVGL6Q", "GDTABP7UT75M2GXX3JM2RXBFOABAM6UW3YL7LHVM655WOAQ2LD23L7VT", "1e552a949f6b1581", "ea0b", 5029654],
+    ["GA763SRGXC7BIVZKLW7DZMJREPZOZJ7JS5IKZCO3DB4MY5QIJQRESVZ3", "GCSZTYBICVCEAJOHPUO2R7HHELDEO6M33KYUI2A2NDPYK2LHL5HCLTXG", "1d45ea58f0417e1b", "46f8", 5029654],
+    ["GBKR4CCDXALBCK6DAAPSCPN2D72THHAXDY7G6FG4J23PGEKT7S46IA76", "GDJG5ZASGBTZ77VCZWXC3NQUPJS2AOWFPPQCNPHT74IN7MYECLQFOD7G", "11cb003fdb0cdcc3", "94bd", 5029654],
+    ["GDK7GRMR4TU3AKSJN34W7M3ITQCTNU3MUOS6UXF7WCKZUADUU4IGP4A2", "GDHN6NSVAPWFIEAAMUZRA36BSZTOVCHA6RDSZ6DYH3HZOYZAXRCUHLQW", "08edac4f3068ffa1", "233a", 5029654],
+    ["GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO", "GBEEZ2IHANXQZ2CXFB2REM6QP45G3NV42C362KLXX2DGVEYAW7QC6HTL", "250897875298a0be", "9040", 5029655],
+    ["GBOAR2CW5GIXT7NXO5KY4AEE4AAIJ54UFZOVRXIMBGVIOZQ7KZVVGL6Q", "GAE2WI43P2IDI2FLXBSAR4VTIF4F655RZ3WZ3ATTMVEL5PY5DJICAGLZ", "1e21aa32deb0499b", "c0a2", 5029656]
   ];
 
   const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);

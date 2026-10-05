@@ -2,24 +2,25 @@
 
 Generated from the ledger by `npx tsx cli/explorer-view.ts`. Re-run it and you get the same answer; that is the point of publishing it this way rather than as a screenshot.
 
-**Transaction:** [`238e76e1608c863523a2ea251d4c9bae5b87bbd38ec4fc0d901b371e15432068`](https://stellar.expert/explorer/testnet/tx/238e76e1608c863523a2ea251d4c9bae5b87bbd38ec4fc0d901b371e15432068)
-**Contract:** [`CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD`](https://stellar.expert/explorer/testnet/contract/CCDZ52D7ERL4AC4COSLCAUZF442CS7XTV2OXT5YPHLLE23W2IXDKJYHD)
-**Ledger:** 4289034
+**Transaction:** [`310ccf759644f7671b4e86815abb4ddda46bd194205c9c594fcce63a655ea995`](https://stellar.expert/explorer/testnet/tx/310ccf759644f7671b4e86815abb4ddda46bd194205c9c594fcce63a655ea995)
+**Contract:** [`CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN`](https://stellar.expert/explorer/testnet/contract/CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN)
+**Ledger:** 5029650
 
 | Field | Visibility | Value |
 |:---|:---|:---|
-| `from` | 🔓 **Public** | `GCNLQPYI67UPSC5RU4NIZ6TPWYMUCFFGOY…ZDQMSD` |
-| `to` | 🔓 **Public** | `GASV2GPGEYY2ZTNVSMLXWNZPB6DIFVW2EA…VP4QEE` |
-| `ledger` | 🔓 **Public** | `4289034` |
-| `tx` | 🔓 **Public** | `238e76e1608c863523a2ea251d4c9bae5b…432068` |
-| `b_aud_s` | 🔒 Encrypted | `0x0c82abf062f427859a6474e11ee6aa65…0b8bed` |
-| `b_tilde` | 🔒 Encrypted | `0x2ad26c21e882d7a966202d444e3a4be6…d385c2` |
-| `r_aud_r` | 🔒 Encrypted | `0x1ac1a9fca36f86314091eefa817dd71d…45b2cc` |
-| `r_e` | 🔒 Encrypted | `0x20122fe07bf6d857fd99bea933c80878…1be80f` |
-| `sigma` | 🔒 Encrypted | `0x00e3f02363abcd8436121de6317946ad…fc17dd` |
-| `v_aud_r` | 🔒 Encrypted | `0x1d745bc0558df4344652ede1c01bf7ea…7b04d4` |
-| `v_aud_s` | 🔒 Encrypted | `0x0dfd2775b20dba29ac7c08bf7dc91245…bc26a4` |
-| `v_tilde` | 🔒 Encrypted | `0x05ffd9d6b040557fa536aac24fc78297…f7753e` |
+| `from` | 🔓 **Public** | `GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB…UMDYIO` |
+| `to` | 🔓 **Public** | `GD5KASCZUIFXKXNG2RLDLIMT6EACDCQCAN…F3BNJ5` |
+| `ledger` | 🔓 **Public** | `5029650` |
+| `tx` | 🔓 **Public** | `310ccf759644f7671b4e86815abb4ddda4…5ea995` |
+| `b_tilde` | 🔒 Encrypted | `0x2e5607dfa1310ecab0e317ed82adf942…6f93fe` |
+| `b_tilde_aud_s` | 🔒 Encrypted | `0x2a8d28f89a03cf04e308b638a4220156…201222` |
+| `r_e_point` | 🔒 Encrypted | `0x1b116267d8335eb00d5f45d4db187b04…1edbd8` |
+| `r_tilde_aud_r` | 🔒 Encrypted | `0x106c571e49d07e803b30bd1bcd1244cb…fb2825` |
+| `r_tilde_aud_s` | 🔒 Encrypted | `0x29dce3188fda9f48285094f01b452ff9…0e9ef4` |
+| `sigma` | 🔒 Encrypted | `0x001e30b7c64f3ba70117b76c95747c09…9325af` |
+| `v_tilde` | 🔒 Encrypted | `0x1ee661cc1ac41e7dcac756d3820a3937…4263a3` |
+| `v_tilde_aud_r` | 🔒 Encrypted | `0x2efed42c7600c392284f1332ef383026…31d6df` |
+| `v_tilde_aud_s` | 🔒 Encrypted | `0x0f436601d61535fd1c1cd10b075089c6…26922d` |
 
 ## The point
 
