@@ -1,0 +1,32 @@
+---
+title: "Exit codes"
+description: "What tally verify and the secret guard return, so scripts can rely on them."
+---
+
+## `tally verify`
+
+| Code | Meaning | Examples | Source |
+|---:|:---|:---|:---|
+| `0` | Verified. The total printed is the round's total from the declared lanes in the window | A valid bundle | `cli/tally.ts`: `verify` completes without an explicit exit |
+| `1` | Could not verify | A missing argument; no round with that id under that funder; fewer than 5 transfers; a derived verification key that differs from the pinned `vk.zk.bin` (line 336); a network error | `cli/tally.ts`, lines 60 and 458 |
+| `2` | The proof was rejected (`PROOF FAILED`) | The total raised by one; a bundle replayed against a different challenge | `cli/tally.ts`, line 347 |
+| `3` | The round has aged out of the RPC's event window. This is not a proof failure | A round older than about seven days | `cli/tally.ts`, line 161 |
+
+A verification-key mismatch exits with `1`, not `2`: the tool refuses to check the proof at all rather than reporting it as rejected.
+
+Both tampering cases in [`evidence/README.md`](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md) were re-run against `round-003` on 2026-10-05 and exited with `2`.
+
+`tally` run with no command prints the usage and exits `0`; with an unknown command it exits `1`.
+
+## `pnpm check:secrets`
+
+| Code | Meaning |
+|---:|:---|
+| `0` | No tracked file contains a secret it detects |
+| `1` | At least one finding; each is printed with file and line |
+
+See [The secret guard](/docs/security/secret-guard).
+
+## `pnpm demo`
+
+Exits `0` when the round is verified and the donor's total matches the expected total. Exits `1` if any step fails, if the window does not contain exactly 16 transfers, if the proof does not verify, or if the total does not match.

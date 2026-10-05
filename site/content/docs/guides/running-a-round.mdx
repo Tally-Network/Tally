@@ -1,0 +1,203 @@
+---
+title: "Running a round"
+description: "How a funder runs a confidential payout round on Stellar testnet today with pnpm demo, then answers a donor's challenge with tally prove."
+---
+
+A round is one funder paying many recipients from a declared set of sender accounts (lanes) inside a declared ledger window. Today the way to run one is `pnpm demo`, a script that runs a full round on Stellar testnet and verifies it from the donor's side. This page explains what the script does, the files it reads and writes, and how a funder answers a donor's challenge afterwards.
+
+<Callout type="warn">
+Testnet only. The OpenZeppelin confidential-token suite is an unaudited developer preview, v0.9.0 is a branch rather than a tagged release, and nothing in Tally has been audited. Do not use any of this with real value.
+</Callout>
+
+## Before you start
+
+```bash
+git clone --recurse-submodules https://github.com/Tally-Network/Tally
+cd Tally
+git submodule update --init      # OpenZeppelin stellar-contracts v0.9.0 @ df602b6
+pnpm install
+pnpm demo
+```
+
+The script takes several minutes. It creates every account fresh on each run and funds them from the testnet friendbot, so you can run it repeatedly.
+
+## The deployment file
+
+The demo reads [`demo/deployment.testnet.json`](https://github.com/Tally-Network/Tally/blob/main/demo/deployment.testnet.json). It holds public data only: the network, RPC URL and passphrase, the ledger the stack was deployed at, the OpenZeppelin revision, the five contract ids, the auditor's public key and the token's `addr_f`. The auditor secret is never in the repository.
+
+| Field | Current value |
+|:---|:---|
+| `deployedAtLedger` | 5029204 |
+| `openZeppelin` | `stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65` |
+| `contracts.token` | `CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN` |
+| `contracts.registry` | `CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W` |
+| `auditor.id` | 0 |
+
+The full list of contract ids, with explorer links, is on [Contracts](/docs/reference/contracts).
+
+## What `pnpm demo` does
+
+The script is [`demo/run-round.ts`](https://github.com/Tally-Network/Tally/blob/main/demo/run-round.ts). It uses 5 lanes and 16 transfers.
+
+```
+[pre-round]  one transfer BEFORE open_round        ← must be excluded
+[1] open_round(funder, round_id, lanes[])          ← opened_at stamped by the contract
+[2] 16 transfers across 5 lanes                    ← amounts encrypted, addresses public
+[3] close_round(funder, round_id)                  ← closed_at stamped
+[4] DONOR: given only the funder address + round id
+       · resolves lane set and window FROM CHAIN
+       · enumerates transfers from declared lanes
+       · discards anything outside the window
+[5] ONE aggregate proof over 16 events / 5 lanes → donor verifies the total
+```
+
+### Setup: accounts
+
+The script creates one funder account, 5 lane accounts and 17 recipient accounts. Each gets a fresh Stellar keypair, funded by friendbot, and a random confidential key bound to the token contract's `addr_f`. The funder account only declares and closes the round. The lanes send the payments. The 17th recipient exists only to receive the pre-round transfer.
+
+The script also reads auditor key id 0 from the auditor contract on chain, and records the latest ledger as the point from which the donor later scans events.
+
+### Registering
+
+Every lane and every recipient registers a confidential account. The script builds a register witness, proves it locally with the OpenZeppelin `register` circuit, and calls `register(account, 0, data)` on the token, where `0` is the auditor id.
+
+The demo generates confidential keys at random. A real recipient would derive theirs from a wallet signature; see [Registering as a recipient](/docs/guides/registering).
+
+### Deposit and merge
+
+Each lane calls `deposit(lane, lane, 5000)` to move 5000 units of the underlying asset (native XLM through its Stellar Asset Contract) from its public balance into its own confidential receiving balance. It then calls `merge(lane)` to fold the receiving balance into the spendable balance, which is the balance a transfer spends from. Deposits move public SEP-41 funds, so the deposit amount is visible on chain. Transfer amounts after this point are not.
+
+### The pre-round transfer
+
+Before the round exists, lane 0 sends 999 to the 17th recipient. This is the negative case and it runs every time. The donor's total must come out to 3160 and not 4159. If it ever includes the 999, the window has stopped working.
+
+### `open_round`
+
+The funder calls `open_round(funder, round_id, lanes[])` on the round registry with the 5 lane addresses. The contract stamps `opened_at` from the current ledger; the caller cannot supply it. The lane set is written once and has no mutator.
+
+The demo uses a fixed 32-byte round id, `030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc`. Rounds are namespaced by funder, and the funder is a fresh account on each run, so the same id never collides.
+
+### Transfers
+
+Transfer `i` (for `i` from 0 to 15) goes from lane `i mod 5` to recipient `i`, for an amount of `100 + 13·i`. Lane 0 carries 4 transfers and lanes 1 to 4 carry 3 each. The lanes run in parallel. Within a lane, transfers run one after another, because each spend replaces the lane's spendable commitment and the next proof must be built against the new balance.
+
+For each transfer the script builds a transfer witness against the lane's current spendable balance, proves it with the OpenZeppelin `transfer` circuit and calls `confidential_transfer(lane, recipient, data)`. The demo sends one transfer per transaction. A measurement shows four transfers from one sender fit in one transaction through a batching wrapper, but the demo has not been switched to batching; see [Measurements](/docs/measurements#transfers-per-transaction).
+
+The amounts add up to 3160.
+
+### `close_round`
+
+The funder calls `close_round(funder, round_id)`. The contract stamps `closed_at` and rejects any second close. The round's window is now `[opened_at, closed_at]`.
+
+### The manifest
+
+The script writes `demo/last-round.json` so the standalone [`tally`](/docs/reference/cli) CLI can be run against this round:
+
+```json
+{
+  "warning": "TESTNET DEMO ONLY — contains lane spending keys.",
+  "funder": "G…",
+  "round": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc",
+  "registry": "C…",
+  "lanes": { "G…lane address": "0x…lane spending key" }
+}
+```
+
+<Callout type="warn">
+The manifest holds every lane's spending key in plain text. A spending key grants both view and spend. This is acceptable only because the demo runs on testnet; the file is gitignored. A real funder would hold these keys in a signer service.
+</Callout>
+
+### Donor side, inside the demo
+
+The rest of the script plays the donor. Given only the funder address and round id, it:
+
+1. calls `get_round(funder, round_id)` on the registry to read the lane set and window from chain;
+2. fetches every token event since the scan start, and keeps `transfer` events whose sender is a declared lane;
+3. keeps only events whose ledger falls inside `[opened_at, closed_at]`, and stops with an error unless exactly 16 remain;
+4. builds one zero-knowledge aggregate proof with the `aggregate_n16` circuit, verifies it, and decrypts the total with the donor's own key and nonce.
+
+A successful run ends with the donor total matching the expected 3160, 17 transfers from the declared lanes in all, 16 inside the window and 1 excluded. In the demo one process holds both the funder's keys and the donor's key. The standalone CLI separates the two roles; see [Verifying a round](/docs/guides/verifying).
+
+## Lanes
+
+A lane is a sender account declared in the round. Tally uses several lanes because sends from one account have to run in order. Fanning out across accounts lets a funder pay in parallel, and the aggregate circuit takes a sender key per event, so one proof covers every lane in the round.
+
+The registry enforces these rules on the lane set:
+
+| Rule | Enforcement |
+|:---|:---|
+| At least one lane | `EmptyLaneSet` (error 5) |
+| No more than 64 lanes | `TooManyLanes` (error 7), `MAX_LANES = 64` |
+| No lane listed twice | `DuplicateLane` (error 6) |
+| Cannot be changed later | No mutator exists |
+
+A transfer counts toward the round only if its sender is a declared lane and its ledger is inside the window. A transfer from any other account, including another account the funder controls, is outside the proof. See [Rounds and lanes](/docs/concepts/rounds-and-lanes) and the [trust statement](/docs/security/trust-statement).
+
+## Answering a donor with `tally prove`
+
+A donor who wants the total sends you their public disclosure key and a nonce (the `p_r_x`, `p_r_y` and `nu` fields of a challenge file made with `tally challenge`). You answer with a bundle:
+
+```bash
+npx tsx cli/tally.ts prove \
+  --funder G… \
+  --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
+  --keys demo/last-round.json \
+  --challenge challenge.json \
+  --out bundle.json
+```
+
+`prove` does the following:
+
+1. Reads the round from the registry and enumerates its transfers from chain events, the same way `verify` will.
+2. Picks the smallest aggregate circuit that fits: `aggregate_n8`, `aggregate_n16` or `aggregate_n64`. A round of more than 64 transfers is refused.
+3. For each event, looks up the lane's spending key in the `--keys` file, re-derives the ephemeral scalar `r_e` from the lane's viewing key and the event's `σ`, and recovers the amount. It refuses any event it cannot re-derive, which tests that the transfer is disclosable instead of assuming it.
+4. Seals the total to the donor's key and nonce, proves in zero-knowledge, and writes `bundle.json`.
+
+The bundle carries `proof` (base64), `r_disc_x`, `r_disc_y` and `v_tilde_disc`, plus the funder and round for reference. The verifier reads only those first four values. The `--keys` file has the same shape as `demo/last-round.json`: a `lanes` object mapping each lane address to its spending key.
+
+The circuit refuses to prove over fewer than 5 transfers. See [Minimum group size](/docs/concepts/minimum-group-size).
+
+## Publishing an evidence pack
+
+`pnpm evidence:refresh` runs a fresh round, issues a challenge, answers it, and writes the result to the next `evidence/round-NNN` directory. It then updates `evidence/latest.json`, which is what `pnpm verify:evidence` reads. It aborts if any lane spending key appears in the published files.
+
+The published `challenge.json` contains the donor's secret `r_R` on purpose. That is the donor's key, not the funder's. Publishing it lets anyone act as the donor for that demonstration round. A real donor keeps `r_R` private.
+
+A published round stays verifiable only while its ledgers are inside the RPC's event retention window, about 7 days. See [Verifying a round](/docs/guides/verifying#retention).
+
+## Environment overrides
+
+| Variable | Read by | Effect |
+|:---|:---|:---|
+| `TALLY_REGISTRY` | `pnpm demo`, `tally` | Round registry contract id, in place of `contracts.registry` from the deployment file |
+| `TALLY_DEPLOYMENT` | `pnpm demo` | Path to a deployment file, in place of `demo/deployment.testnet.json`. The `tally` CLI takes `--deployment` instead |
+| `TALLY_RPC` | `pnpm demo`, `tally`, `pnpm deploy:testnet`, `pnpm measure` | Soroban RPC URL. Default `https://soroban-testnet.stellar.org` |
+| `TALLY_SECRETS_DIR` | `pnpm deploy:testnet` | Where the auditor secret is written. Default `~/.config/tally` |
+
+## Deploying your own stack
+
+You can deploy a separate copy of the contracts to testnet and run rounds against it.
+
+```bash
+pnpm build:contracts      # builds contracts/ and ct/contracts with `stellar contract build`
+pnpm deploy:testnet       # runs ct/scripts/deploy.ts
+```
+
+You need the `stellar` CLI. The deployer is the CLI identity `tally-deployer`; the script creates it and funds it with friendbot if it does not exist. [`ct/scripts/deploy.ts`](https://github.com/Tally-Network/Tally/blob/main/ct/scripts/deploy.ts) then:
+
+1. Makes sure the native XLM Stellar Asset Contract exists and uses it as the underlying asset.
+2. Deploys the verifier, auditor and confidential token wrappers, and Tally's round registry.
+3. Registers the six OpenZeppelin v0.9.0 verification keys (`register`, `withdraw`, `transfer`, `spender_transfer`, `set_spender`, `clawback`) with the verifier.
+4. Generates one auditor key (id 0) and registers its public point.
+5. Checks that the token's on-chain address-as-field matches the SDK's, and stops if it does not.
+6. Writes `demo/deployment.testnet.json` with public data only, replacing the committed file.
+
+The auditor secret is written to `~/.config/tally/testnet-auditor-<token id>.json` with file mode 0600, or under `TALLY_SECRETS_DIR` if set. The script refuses to write a secret anywhere inside the repository. The demo never needs the secret; it reads the auditor's public key from chain.
+
+<Callout type="info">
+The auditor key here is a single key held by whoever ran the deploy. Split auditor-key custody is part of the planned operator service, which is designed but not built. See [Operator design](/docs/operator/design).
+</Callout>
+
+## What a successful round shows
+
+A verified round shows that the confidential transfers sent from the declared lanes, within the declared window, total the disclosed amount and that none was withheld. It does not show that the funder made no other payments, or that the recipients are independent of the funder. Read the [trust statement](/docs/security/trust-statement) before describing a result to anyone else.

@@ -1,0 +1,10 @@
+{
+  "title": "Reference",
+  "pages": [
+    "contracts",
+    "circuits",
+    "cli",
+    "sdk",
+    "exit-codes"
+  ]
+}

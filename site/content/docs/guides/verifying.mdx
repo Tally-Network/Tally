@@ -1,0 +1,175 @@
+---
+title: "Verifying a round"
+description: "How a donor or auditor checks a round's total with tally challenge and tally verify, holding only their own key and nonce."
+---
+
+This guide is for a donor or auditor who wants to check how much a funder paid out in a round. You never receive a secret from the funder. You issue a challenge, the funder answers with a proof, and you check that proof against data you read from the chain yourself.
+
+You need three things from the funder: their Stellar address, the round id, and (later) their answer to your challenge. The round registry contract id comes from the deployment file unless you pass one.
+
+## The short version
+
+```bash
+npx tsx cli/tally.ts challenge --out challenge.json
+# send p_r_x, p_r_y and nu from challenge.json to the funder; keep secret_r_R
+# the funder runs `tally prove` and sends back bundle.json
+npx tsx cli/tally.ts verify --funder G… --round <hex> --challenge challenge.json --bundle bundle.json
+```
+
+To try verification without a funder, check the published round with `pnpm verify:evidence` (see [below](#check-the-published-round)).
+
+## Step 1: issue a challenge
+
+```bash
+npx tsx cli/tally.ts challenge --out challenge.json
+```
+
+This generates a disclosure keypair `(r_R, P_R)` and a random nonce `ν`, and writes them to `challenge.json` (the default name if you omit `--out`):
+
+| Field | What it is | Share it? |
+|:---|:---|:---|
+| `p_r_x`, `p_r_y` | Your public disclosure key `P_R` | Yes, send to the funder |
+| `nu` | Your nonce `ν` | Yes, send to the funder |
+| `secret_r_R` | Your private disclosure key `r_R` | No. Keep it |
+
+The funder seals the total to `P_R` and binds it to `ν`. Only the holder of `r_R` can open it, and a fresh nonce stops a funder from reusing an old answer.
+
+<Callout type="info">
+You never ask for the funder's viewing key. It would let you recompute every ephemeral scalar the funder ever used and open every individual amount, including amounts already inside recipients' balances. Challenge and response is the only supported model.
+</Callout>
+
+## Step 2: the funder answers
+
+Send `p_r_x`, `p_r_y` and `nu` to the funder. They run `tally prove` with their lane keys and send back a `bundle.json`. See [Running a round](/docs/guides/running-a-round#answering-a-donor-with-tally-prove) for the funder's side.
+
+## Step 3: verify
+
+```bash
+npx tsx cli/tally.ts verify \
+  --funder G… \
+  --round <round id, hex> \
+  --challenge challenge.json \
+  --bundle bundle.json
+```
+
+| Flag | Required | Default | Meaning |
+|:---|:---|:---|:---|
+| `--funder` | yes | | The funder's G-address. Rounds are looked up under this address |
+| `--round` | yes | | Round id as hex; a leading `0x` is accepted |
+| `--challenge` | no | `challenge.json` | Your challenge file, including `secret_r_R` |
+| `--bundle` | no | `bundle.json` | The funder's answer |
+| `--registry` | no | `TALLY_REGISTRY`, then the deployment file | Round registry contract id |
+| `--deployment` | no | `demo/deployment.testnet.json` | Deployment file naming the token and registry |
+| `--rpc` | no | `TALLY_RPC`, then the deployment file | Soroban RPC URL; an archive node keeps events longer |
+| `--source` | no | built-in probe account | A funded account used only as the source of read-only simulations, if the probe account does not exist on the network |
+
+The CLI always uses the testnet network passphrase.
+
+## What `verify` reads from where
+
+`verify` builds every public input of the proof itself. From the funder's bundle it takes exactly three values:
+
+| From the chain | From your challenge | From the funder's bundle |
+|:---|:---|:---|
+| Lane set and window (round registry) | `P_R` | `proof` |
+| Every transfer out of those lanes in that window | `ν` | `R_disc` (`r_disc_x`, `r_disc_y`) |
+| Each sender's and recipient's public viewing key (`PVK_A`, `PVK_B`) | | `v_tilde_disc`, the sealed total |
+| Each event's `R_e`, `σ` and `ṽ` | | |
+| `addr_f` and `n_active` | | |
+
+Nothing else in the bundle is read. If a funder could supply a public input, it could prove a statement about transfers it chose instead of the transfers the chain records. The boundary is enforced in [`cli/tally.ts`](https://github.com/Tally-Network/Tally/blob/main/cli/tally.ts), not left as a convention.
+
+The order of public inputs comes from the circuit's own ABI, not from a hard-coded list. A change to the circuit's signature cannot produce a verifier that checks the right proof against the wrong inputs.
+
+## What `verify` does, in order
+
+1. **Reads the round.** Calls `get_round(funder, round_id)` on the registry. Rounds are namespaced by funder, so another account cannot serve you its round. If the round is still open, `verify` warns that the result is provisional and continues.
+2. **Checks retention.** Asks the RPC for the oldest ledger it still serves. See [Retention](#retention).
+3. **Enumerates transfers.** Collects `transfer` and `spender_transfer` events whose sender is a declared lane and whose ledger is inside `[opened_at, closed_at]`. It stops if it finds a duplicate, because the circuit cannot see duplicates and one event counted twice inflates the total. It also stops if the round has no transfers.
+4. **Applies the floor.** Refuses a round with fewer than 5 transfers (`MIN_ACTIVE = 5`). A total over fewer is not an aggregate. See [Minimum group size](/docs/concepts/minimum-group-size).
+5. **Resolves keys.** Reads `PVK_A` from each event's sender account and `PVK_B` from its recipient account. An unregistered account stops verification.
+6. **Picks the circuit.** Uses the smallest of `aggregate_n8`, `aggregate_n16` and `aggregate_n64` that fits, and pads unused slots by repeating a real event with `active = 0`.
+7. **Checks the verification key.** Derives the circuit's zero-knowledge verification key and compares it byte for byte with the pinned `circuits/aggregate_nN/vk.zk.bin`. On a mismatch it refuses to verify.
+8. **Verifies the proof.**
+9. **Decrypts the total** with your own `r_R` and `ν`.
+
+A successful run prints the total in stroops of the wrapped asset, the number of transfers and lanes, and the ledger range, and states that no individual amount was revealed.
+
+### VK pinning
+
+The pinned `vk.zk.bin` files are committed to the repository and rebuilt in CI, which fails on any difference. They are the off-chain trust anchor: a change to the circuit or to the proving toolchain shows up as a reviewable diff in those files. If the pinned file is missing, `verify` prints a warning and verifies against the locally derived key. See [Circuits](/docs/reference/circuits).
+
+## Retention
+
+Soroban RPC serves only a rolling window of events: about 120,960 ledgers, roughly 7 days, on testnet. `verify` enumerates transfers from chain events on purpose, so once a round's ledgers leave that window the RPC no longer returns them. An empty result would look like a broken proof to anyone who does not know about retention windows, so `verify` checks first.
+
+| State | Condition | What happens |
+|:---|:---|:---|
+| ok | `opened_at` is at least 17,280 ledgers (about a day) above the RPC's oldest ledger | Prints the remaining margin and continues |
+| expiring | `opened_at` is inside the window by fewer than 17,280 ledgers | Warns you to refresh the evidence soon and continues |
+| expired | `opened_at` is below the RPC's oldest ledger | Explains that this is not a proof failure and exits with code 3 |
+
+The expired message suggests three options: point `--rpc` at an archive node with a longer window, ask the publisher to run `pnpm evidence:refresh`, or wait for a persistent event archive. Tally has not built that archive; it is tracked as Milestone U2 in [`docs/SDK-SAFETY-INVARIANTS.md`](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md). If the RPC does not support `getHealth`, the check is skipped. The boundary logic is unit-tested by `pnpm test:retention`.
+
+## Exit codes
+
+| Code | Meaning |
+|---:|:---|
+| `0` | Verified |
+| `1` | Could not verify (missing input, unknown round, empty or under-sized round, duplicate event, VK mismatch, unregistered account, RPC error) |
+| `2` | Proof rejected |
+| `3` | The round has aged out of the RPC's event retention window |
+
+Details and source lines are on [Exit codes](/docs/reference/exit-codes).
+
+## Check the published round
+
+The repository publishes a round anyone can verify, with the donor's key included on purpose so that anyone can act as the donor:
+
+```bash
+pnpm verify:evidence
+```
+
+This reads [`evidence/latest.json`](https://github.com/Tally-Network/Tally/blob/main/evidence/latest.json), which currently points at `round-003` (published 2026-10-05), and runs `tally verify` with that round's funder, round id, challenge and bundle. It needs no Noir toolchain. It exits with the same code as `tally verify`. The expected output:
+
+```
+✓ round found: 5 lanes, window [5029651, 5029660]
+✓ 16 transfers from the declared lanes inside the window
+✓ public inputs reconstructed from chain state only
+✓ verification key matches the pinned artifact (1760 B)
+✓ proof verified (16224 B, zero-knowledge)
+
+TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
+over 16 transfers from 5 declared lanes, ledgers 5029651–5029660
+no individual amount was revealed.
+```
+
+`round-003` is verifiable until ledger 5150624. After that, `verify` exits with code 3 until someone republishes with `pnpm evidence:refresh`. The recipients in this round are freshly created testnet accounts, not people, and testnet XLM has no value.
+
+## Try to break it
+
+The verifier should reject both of these. If either passes, something is wrong.
+
+**Inflate the sealed total by one.** Expect `PROOF FAILED` and exit code 2.
+
+```bash
+python3 -c "import json;b=json.load(open('evidence/round-003/bundle.json'));b['v_tilde_disc']=hex(int(b['v_tilde_disc'],16)+1);json.dump(b,open('/tmp/t.json','w'))"
+npx tsx cli/tally.ts verify --funder GAVEHZKUKR3LFUBQLZUZM2L2G45DCPHSZ6BTDAG6XRXEK3M3CSUATVOF \
+  --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
+  --challenge evidence/round-003/challenge.json --bundle /tmp/t.json
+```
+
+**Replay the bundle against a challenge it was not built for.** Expect `PROOF FAILED` and exit code 2.
+
+```bash
+npx tsx cli/tally.ts challenge --out /tmp/c2.json
+npx tsx cli/tally.ts verify --funder GAVEHZKUKR3LFUBQLZUZM2L2G45DCPHSZ6BTDAG6XRXEK3M3CSUATVOF \
+  --round 030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc \
+  --challenge /tmp/c2.json --bundle evidence/round-003/bundle.json
+```
+
+Passing the wrong funder for a round id is a different failure: the registry has no such round in that funder's namespace, and `verify` exits with code 1.
+
+## What a verified result means
+
+A verified result means the confidential transfers sent from the round's declared lanes, within its declared window, total the disclosed amount and none was withheld. It does not tell you that the funder made no other payments, or that the recipients are independent of the funder. See the [trust statement](/docs/security/trust-statement) and [Completeness](/docs/concepts/completeness).

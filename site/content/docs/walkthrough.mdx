@@ -1,0 +1,121 @@
+---
+title: "Walkthrough: Alice, Bob, Charlie and Dave"
+description: "One payout round from start to finish, with the command or contract call behind each step."
+---
+
+This page follows one round through four people:
+
+| Person | Role | What they hold |
+|:---|:---|:---|
+| **Alice** | Payer | A funder account and several lane accounts, with their spending keys |
+| **Bob** and **Charlie** | Recipients | Their own confidential accounts, keyed from their own wallets |
+| **Dave** | Donor | Nothing from Alice. He makes his own disclosure key and nonce |
+
+Every step maps to code in the repository. `pnpm demo` runs steps 1 to 5 on Stellar testnet with freshly created accounts, and the commands in steps 6 to 8 are the standalone `tally` tool. The published round [`round-003`](/docs/quickstart) is a real run of this flow: 16 transfers across 5 lanes.
+
+## 1. Alice prepares her lanes
+
+A **lane** is an account Alice pays from. She uses several, because sends from one confidential account have to wait for each other: each spend replaces that account's balance commitment. The demo uses 5 lanes.
+
+Each lane is registered as a confidential account on the token contract, then funded:
+
+- `register(account, auditor_id, data)`: the data carries a zero-knowledge proof that the account knows its spending key.
+- `deposit(from, to, amount)`: moves tokens from the public balance into the confidential receiving balance.
+- `merge(account)`: folds the receiving balance into the spendable one.
+
+Source: [`demo/run-round.ts`](https://github.com/Tally-Network/Tally/blob/main/demo/run-round.ts).
+
+## 2. Bob and Charlie register
+
+Bob and Charlie each need a confidential account before they can receive anything. They register from their own wallets: the spending key is derived from a signature their wallet makes over a fixed message, using the derivation OpenZeppelin specifies, and it never leaves their device. Since OpenZeppelin v0.9.0 the registration proof is also bound to the account that submits it.
+
+This means their amounts are private from the public ledger and from Alice. See [Registering as a recipient](/docs/guides/registering).
+
+## 3. Alice opens the round
+
+Before paying anyone, Alice declares the round in the **round registry**:
+
+```text
+open_round(funder, round_id, lanes[])
+```
+
+The contract records the lane set and stamps the opening ledger itself. Alice cannot backdate it, and she cannot change the lane set afterwards. This is what stops her from paying first and choosing the flattering lanes later. See [Rounds and lanes](/docs/concepts/rounds-and-lanes).
+
+In `round-003` the round has 5 lanes and opened at ledger 5029651.
+
+## 4. Alice pays Bob, Charlie and the others
+
+Each payment is a `confidential_transfer(from, to, data)` from one of the declared lanes. The data carries a proof that the sender's balance covers the amount.
+
+What anyone can read on the ledger:
+
+- the sender address and the recipient address, as indexed event topics;
+- 32-byte ciphertexts and commitments where an amount would be.
+
+What nobody else can read: the amount. Only Alice, the recipient, and the auditor key bound to their accounts can open it. The ledger never holds an amount in plaintext.
+
+The demo also sends one transfer **before** the round opens. It must not count, and it is the check that the window works.
+
+## 5. Alice closes the round
+
+```text
+close_round(funder, round_id)
+```
+
+The contract stamps the closing ledger. The round now has a fixed window. In `round-003` it is ledgers 5029651 to 5029660.
+
+## 6. Dave asks for the total
+
+Dave makes a challenge on his own machine:
+
+```bash
+npx tsx cli/tally.ts challenge --out challenge.json
+```
+
+This writes his own disclosure keypair and a fresh nonce. He sends Alice only the public part (`p_r_x`, `p_r_y`) and the nonce `nu`. He keeps `secret_r_R` to himself. Dave never receives any secret of Alice's.
+
+## 7. Alice answers with one proof
+
+```bash
+npx tsx cli/tally.ts prove --funder <Alice's address> --round <round id> \
+  --keys demo/last-round.json --challenge challenge.json --out bundle.json
+```
+
+`prove` reads the round's transfers from the chain, recovers each amount with her lane keys, and produces one zero-knowledge proof that the transfers sum to a total. The total is sealed so that only Dave's key can open it. The bundle holds the proof and three values; it does not hold any amount in the clear. See [The aggregate proof](/docs/concepts/aggregate-proof).
+
+## 8. Dave verifies
+
+```bash
+npx tsx cli/tally.ts verify --funder <Alice's address> --round <round id> \
+  --challenge challenge.json --bundle bundle.json
+```
+
+`verify` does not trust the bundle for anything except the proof and the sealed total. It:
+
+1. reads the lane set and window from the round registry;
+2. lists every transfer from those lanes inside the window, from chain events;
+3. refuses a round with fewer than 5 transfers;
+4. checks the circuit's verification key against the pinned file;
+5. verifies the proof;
+6. opens the total with Dave's own key and nonce.
+
+For `round-003` the result is:
+
+```text
+TOTAL DISBURSED: 3160  (stroops of the wrapped asset)
+over 16 transfers from 5 declared lanes, ledgers 5029651–5029660
+no individual amount was revealed.
+```
+
+## What each person ends up knowing
+
+| Person | Knows | Does not know |
+|:---|:---|:---|
+| Alice | Every amount she sent | Nothing new |
+| Bob, Charlie | Their own amount | Anyone else's amount |
+| Dave | The total from the 5 declared lanes in the window, and that it covers 16 transfers | Any single amount, or who got what |
+| Anyone reading the ledger | Who paid whom, and when | Any amount |
+
+## What Dave is not told
+
+The total covers the declared lanes in the declared window. It does not cover other accounts Alice may run, and it does not show that Bob and Charlie are independent of Alice. The [trust statement](/docs/security/trust-statement) states both limits in full.

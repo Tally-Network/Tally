@@ -1,0 +1,77 @@
+---
+title: "CLI"
+description: "The tally command and the repository's pnpm scripts."
+---
+
+## `tally`
+
+The standalone verification tool, in [`cli/tally.ts`](https://github.com/Tally-Network/Tally/blob/main/cli/tally.ts). Run it with `npx tsx cli/tally.ts <command>` from the repository root.
+
+```text
+tally challenge [--out challenge.json]
+tally prove   --funder <G…> --round <hex> --keys <file> [--challenge f] [--out f]
+tally verify  --funder <G…> --round <hex> [--challenge f] [--bundle f]
+
+common:  --registry <C…>  --deployment <file>
+```
+
+### `challenge` (donor)
+
+Creates the donor's disclosure keypair and a fresh nonce and writes them to `--out` (default `challenge.json`). Give the funder only `p_r_x`, `p_r_y` and `nu`. Keep `secret_r_R`.
+
+### `prove` (funder)
+
+| Flag | Default | Meaning |
+|:---|:---|:---|
+| `--funder` | required | The funder address that declared the round |
+| `--round` | required | The round id, hex |
+| `--keys` | required | A file with the lane spending keys, such as `demo/last-round.json` |
+| `--challenge` | `challenge.json` | The donor's challenge |
+| `--out` | `bundle.json` | Where to write the bundle |
+
+`prove` reads the round and its transfers from the chain, re-derives each transfer's ephemeral scalar from the lane key and the event, and refuses any event it cannot re-derive. It writes a zero-knowledge proof and the sealed total.
+
+### `verify` (donor)
+
+| Flag | Default | Meaning |
+|:---|:---|:---|
+| `--funder` | required | The funder address |
+| `--round` | required | The round id, hex |
+| `--challenge` | `challenge.json` | The donor's own challenge |
+| `--bundle` | `bundle.json` | The funder's answer |
+
+From the bundle, `verify` reads exactly three values: the proof, `r_disc_x/y` and `v_tilde_disc`. Everything else it resolves from the chain or from the donor's own challenge. See [Verifying a round](/docs/guides/verifying).
+
+### Common flags
+
+| Flag | Default | Meaning |
+|:---|:---|:---|
+| `--registry` | `TALLY_REGISTRY`, else the registry in the deployment file | The round registry contract |
+| `--deployment` | `demo/deployment.testnet.json` | The deployment file |
+| `--rpc` | `TALLY_RPC`, else the file's `rpcUrl` | An RPC endpoint; an archive node serves a longer event window |
+| `--source` | a fixed probe account | A funded account used only to shape read-only simulations; nothing is submitted |
+
+`--rpc` and `--source` are read in the code but not listed in the usage text.
+
+Exit codes are on [Exit codes](/docs/reference/exit-codes).
+
+## pnpm scripts
+
+From the root [`package.json`](https://github.com/Tally-Network/Tally/blob/main/package.json):
+
+| Script | What it does | Network |
+|:---|:---|:---|
+| `pnpm demo` | Runs one full round and donor verification | Testnet transactions |
+| `pnpm verify:evidence` | Verifies the round named in `evidence/latest.json` | Testnet reads |
+| `pnpm evidence:refresh` | Runs a fresh round and publishes the next `evidence/round-NNN` | Testnet transactions |
+| `pnpm test` | Secret guard and its negative tests, typecheck, conformance vectors, local proving, retention logic, contract tests | None |
+| `pnpm test:registration` | Non-custodial registration against live testnet | Testnet transactions |
+| `pnpm check:secrets` | The secret guard alone | None |
+| `pnpm test:conformance` | OpenZeppelin v0.9.0 primitive vectors | None |
+| `pnpm test:prove` | Builds, proves and verifies a register and a transfer locally | None |
+| `pnpm build:circuits` | Rebuilds the aggregate circuits and re-pins their keys (nargo 1.0.0-beta.11) | None |
+| `pnpm build:contracts` | Builds the round registry and the v0.9.0 contracts (`stellar contract build`) | None |
+| `pnpm deploy:testnet` | Deploys a fresh stack; writes the auditor secret to `~/.config/tally` only | Testnet transactions |
+| `pnpm measure` | Re-measures on-chain costs into `ct/measurements.testnet.json` | Testnet transactions |
+| `pnpm bench:aggregate` | Local proving benchmark for the aggregate circuits | None |
+| `pnpm site:facts` | Rebuilds the site's facts file from repository files and testnet RPC | Testnet reads |

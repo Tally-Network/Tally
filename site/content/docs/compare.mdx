@@ -1,0 +1,53 @@
+---
+title: "How Tally compares"
+description: "Other privacy and compliance work on Stellar, what each covers, and where Tally differs."
+---
+
+This page compares Tally with other projects that touch privacy, disclosure or compliance on Stellar. It is based on [`docs/research/OVERLAP.md`](https://github.com/Tally-Network/Tally/blob/main/docs/research/OVERLAP.md), checked on 2026-10-05 from code, project pages and SCF submissions. Funding figures are award amounts from SCF pages; payment status is rarely public.
+
+**How to read the table.** "Own" means the project runs its own privacy protocol rather than OpenZeppelin Confidential Tokens (OZ CT) or Nethermind's Stellar Private Payments (SPP). "Built" means shipped in code or on a live page. "Planned" means stated but not shipped.
+
+## The closest work
+
+| Project | What it is | Privacy system | What it covers | Status | Relation to Tally |
+|:---|:---|:---|:---|:---|:---|
+| **Remi** (SCF #44, $133.7k) | Remittance settlement company building a confidential settlement layer | OZ CT (its own wrappers of an earlier OpenZeppelin revision) | Auditor and compliance dashboard, compliance API with screening hooks, and per-transfer selective disclosure, all planned; allowlist and blocklist policy contracts in its repository | Testnet contracts | The closest funded overlap on the same standard. Remi serves its own deployment and plans payouts through Anchor Platform. Tally aims to serve other issuers, with split auditor custody and aggregate proofs |
+| **Arcane** (SCF #42, $150k) | "Private Compliant Layer" with a compliance portal and case management | Own shielded pool | Scoped disclosure by role, application and time window, with every action logged (built in its proof of concept); record export (planned) | Testnet proof of concept; no public Stellar code | The same operator functions on a different privacy system |
+| **ZKELLA** (SCF #45, $127.8k) | Shielded token with viewing keys and sanctions checks | Own | Holder-exported viewing keys; sanctions non-membership proofs (planned); an auditor API in the design | Testnet proof of concept; active | Its own stack; no aggregate disclosure |
+| **Moonlight** (SCF #37, The AHA Company) | Privacy channels run by "privacy providers" such as banks and wallets | Own | An audit flow in which the provider discloses its own records; CSV audit export (planned) | Testnet | The operator role exists, inside Moonlight only |
+| **Haven** (SCF #45, $97k) | Privacy-first consumer neobank | Not chosen yet | Plans to adopt Stellar's confidential protocols at mainnet | Pre-launch on Stellar | Adjacent: a possible user of an operator, not a competitor |
+
+## First-party work
+
+| Party | What it provides | Relation to Tally |
+|:---|:---|:---|
+| **OpenZeppelin** | The Confidential Tokens specification, reference contracts, and a reference demo with an auditor console, single-transfer disclosures and allow/block policies. Aggregate, auditor-side and balance disclosures are specified, not shipped | Supplies the tools. SDF's notes describe OpenZeppelin as "a tooling provider, not an operator" |
+| **Nethermind SPP** | A privacy-pool protocol with association-set trees, a global view key and note-disclosure receipts | Supplies the tools and leaves the association-set operator role to whoever deploys a pool |
+| **SDF** | A demonstration game (`who-ate-gerald`) in which an auditor key answers one question per player per day; no confidential-token work in the Disbursement Platform | SDF is asking for an operator, not building one, as far as the public record shows |
+
+## Others
+
+| Project | What it is | Relation |
+|:---|:---|:---|
+| Safeguard-Inc (no funding found) | Policy engine and audit-record layer for OZ CT, with allowlist, denylist, sanctions and jurisdiction checks | Overlaps the list and audit-log functions; no decryption |
+| Galmanus spp-compliance-layer (hackathon) | Identity-gated admission into SPP's allowlist | The SPP allowlist slice only |
+| Hypertron (no SCF award found) | Business private payments with "selective disclosure and audit workflows" | Its own stack; the audit claim is on its website only |
+| Merkle Science (SCF #41, $138k) | Risk scoring and transaction monitoring on classic Stellar | A data source an operator might use |
+| Pocket Wallet, the São Paulo confidential-token SDK, Velum, Green Road | Wallets, clients and demos on OZ CT | Adjacent; Green Road (Trustless Work) is a possible user |
+| Obscura | Confidential payroll demo, "Salaries private. Totals provable." | Overlaps the payout use case, not the operator role; idle since 2026-07-04 |
+| LumenShade (SCF #37), Fairblock (SCF #40) | Earlier privacy projects with disclosure plans | Stalled |
+
+## What no one has claimed
+
+As of 2026-10-05, in the sources checked:
+
+- Split custody of the auditor key for either privacy system.
+- An operator serving other issuers across both OZ CT and SPP.
+- Scoped audit requests enforced cryptographically, with a public log.
+- Aggregate, per-period and per-counterparty disclosure proofs. OpenZeppelin specifies them but has not shipped them, and no other public implementation was found. Tally's multi-sender payout aggregate is built; its per-period and per-counterparty proofs are designed, not built.
+- Tax export from confidential history.
+- One subject registry projected into both systems' lists.
+
+Compliance for confidential one-to-many payouts on OZ CT is partly claimed: Remi plans payouts with an auditor dashboard.
+
+Tally's own operator functions are designed, not built. See [Operator design](/docs/operator/design).

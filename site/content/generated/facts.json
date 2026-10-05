@@ -1,0 +1,286 @@
+{
+  "generatedAt": "2026-10-05T05:51:53.473Z",
+  "network": "testnet",
+  "openZeppelin": "stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65",
+  "contracts": {
+    "token": "CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN",
+    "verifier": "CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL",
+    "auditor": "CDMJCKJGYWFGZCNNZMQAUMDJCRWQMFZEG24FYENE4AQRJ2P3HKC5AMW7",
+    "underlying": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    "registry": "CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W"
+  },
+  "deployedAtLedger": 5029204,
+  "measurements": {
+    "measuredAt": "2026-10-05T03:23:11.562Z",
+    "protocolVersion": 29,
+    "latestLedger": 5029400,
+    "limits": {
+      "txMaxInstructions": 400000000,
+      "txMaxSizeBytes": 132096,
+      "txMaxDiskReadEntries": 200,
+      "txMaxWriteLedgerEntries": 200,
+      "txMaxWriteBytes": 132096,
+      "txMemoryLimit": 41943040
+    },
+    "register": {
+      "ok": true,
+      "instructions": 88344016,
+      "diskReadBytes": 0,
+      "writeBytes": 568,
+      "readOnlyEntries": 7,
+      "readWriteEntries": 1,
+      "minResourceFee": "550806",
+      "txSizeBytes": 30464
+    },
+    "confidentialTransfer": {
+      "ok": true,
+      "instructions": 91193854,
+      "diskReadBytes": 0,
+      "writeBytes": 1136,
+      "readOnlyEntries": 7,
+      "readWriteEntries": 2,
+      "minResourceFee": "1311887",
+      "txSizeBytes": 31876
+    },
+    "batching": {
+      "benchContract": "CB6U7QX2OR3ADD3NW6NSZQWNADIC3LFJKM3MN3NND4VPPDWTPQDDA3VV",
+      "rows": [
+        {
+          "k": 1,
+          "ok": true,
+          "instructions": 91550838,
+          "diskReadBytes": 0,
+          "writeBytes": 1136,
+          "readOnlyEntries": 9,
+          "readWriteEntries": 2,
+          "minResourceFee": "1313146",
+          "txSizeBytes": 32084,
+          "withinSizeLimit": true
+        },
+        {
+          "k": 2,
+          "ok": true,
+          "instructions": 182067642,
+          "diskReadBytes": 0,
+          "writeBytes": 1704,
+          "readOnlyEntries": 9,
+          "readWriteEntries": 3,
+          "minResourceFee": "2608520",
+          "txSizeBytes": 63264,
+          "withinSizeLimit": true
+        },
+        {
+          "k": 3,
+          "ok": true,
+          "instructions": 272645811,
+          "diskReadBytes": 0,
+          "writeBytes": 2272,
+          "readOnlyEntries": 9,
+          "readWriteEntries": 4,
+          "minResourceFee": "3903935",
+          "txSizeBytes": 94444,
+          "withinSizeLimit": true
+        },
+        {
+          "k": 4,
+          "ok": true,
+          "instructions": 363272171,
+          "diskReadBytes": 0,
+          "writeBytes": 2840,
+          "readOnlyEntries": 9,
+          "readWriteEntries": 5,
+          "minResourceFee": "5199399",
+          "txSizeBytes": 125624,
+          "withinSizeLimit": true
+        },
+        {
+          "k": 5,
+          "ok": false,
+          "error": "HostError: Error(Budget, ExceededLimit)",
+          "withinSizeLimit": false
+        }
+      ],
+      "largestThatFits": 4,
+      "submittedTx": "fe362834f8ddf8cb16cde66e71d64fc75dd7103a4968141bca4bd2faeab59384"
+    },
+    "aggregate": {
+      "benchVerifier": "CACEIWIWMRIC4XQJKO4BYUWGBSV5DTMI36JPLARUCUNLV6Q6VWO54UQJ",
+      "slot": "Withdraw (1), measurement-only verifier",
+      "rows": [
+        {
+          "n": 8,
+          "publicInputs": 80,
+          "verified": true,
+          "ok": true,
+          "instructions": 91214362,
+          "diskReadBytes": 0,
+          "writeBytes": 0,
+          "readOnlyEntries": 2,
+          "readWriteEntries": 0,
+          "minResourceFee": "157308",
+          "txSizeBytes": 17452
+        },
+        {
+          "n": 16,
+          "publicInputs": 152,
+          "verified": true,
+          "ok": true,
+          "instructions": 100835059,
+          "diskReadBytes": 0,
+          "writeBytes": 0,
+          "readOnlyEntries": 2,
+          "readWriteEntries": 0,
+          "minResourceFee": "175096",
+          "txSizeBytes": 19756
+        },
+        {
+          "n": 64,
+          "publicInputs": 584,
+          "verified": true,
+          "ok": true,
+          "instructions": 150810864,
+          "diskReadBytes": 0,
+          "writeBytes": 0,
+          "readOnlyEntries": 2,
+          "readWriteEntries": 0,
+          "minResourceFee": "276382",
+          "txSizeBytes": 33580
+        }
+      ]
+    }
+  },
+  "round": {
+    "dir": "round-003",
+    "published": "2026-10-05",
+    "round_id": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc",
+    "funder": "GAVEHZKUKR3LFUBQLZUZM2L2G45DCPHSZ6BTDAG6XRXEK3M3CSUATVOF",
+    "registry": "CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W",
+    "network": "Stellar testnet",
+    "published_at_ledger": 5029664,
+    "retention_window_ledgers": 120960,
+    "verifiable_until_ledger": 5150624,
+    "note": "Soroban RPC retains a rolling window of events. Past verifiable_until_ledger this round is no longer verifiable from RPC alone — `tally verify` detects that and says so rather than reporting an empty transfer set. Re-run `pnpm evidence:refresh` to republish.",
+    "chain": {
+      "openedAt": 5029651,
+      "closedAt": 5029660,
+      "lanes": 5,
+      "transfers": [
+        {
+          "from": "GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO",
+          "to": "GDLBCDWLGA2IKDUWRO52KJ5BAJIEX5BSNIBX2MI2G7UFZLGWTMQYP7W3",
+          "ledger": 5029653,
+          "txHash": "0ae081b7673f0f5bb533d4ff995dab8da630178f21b7cc6016a0eac88530787f",
+          "vTilde": "1afd054cf60856dabf28633cc9726eba6bb3a9f2a4bb02f7ce392aec0f40c791"
+        },
+        {
+          "from": "GBOAR2CW5GIXT7NXO5KY4AEE4AAIJ54UFZOVRXIMBGVIOZQ7KZVVGL6Q",
+          "to": "GDTABP7UT75M2GXX3JM2RXBFOABAM6UW3YL7LHVM655WOAQ2LD23L7VT",
+          "ledger": 5029654,
+          "txHash": "0387a7e79654141fba33b95d40c0adf0858a8b82daa308dc68ee440fa70acb5a",
+          "vTilde": "1e552a949f6b15819a7b9fc686d324fecf88b2e9af8667ad0bae80702704ea0b"
+        },
+        {
+          "from": "GA763SRGXC7BIVZKLW7DZMJREPZOZJ7JS5IKZCO3DB4MY5QIJQRESVZ3",
+          "to": "GCSZTYBICVCEAJOHPUO2R7HHELDEO6M33KYUI2A2NDPYK2LHL5HCLTXG",
+          "ledger": 5029654,
+          "txHash": "592d1f6de8625730bb623532a3e65959dcf95176daef5ede4a4a9ba63cc1c728",
+          "vTilde": "1d45ea58f0417e1b1e99a1828847930ef42516757dfa2cd0499cf79591f946f8"
+        },
+        {
+          "from": "GBKR4CCDXALBCK6DAAPSCPN2D72THHAXDY7G6FG4J23PGEKT7S46IA76",
+          "to": "GDJG5ZASGBTZ77VCZWXC3NQUPJS2AOWFPPQCNPHT74IN7MYECLQFOD7G",
+          "ledger": 5029654,
+          "txHash": "1d23cc0bdac1867f7cc5b46803852f6f33befc170b053c94666aa4a0edfe3f97",
+          "vTilde": "11cb003fdb0cdcc359004b9222fb6cca291b76b4eb252a95a2e425407bb894bd"
+        },
+        {
+          "from": "GDK7GRMR4TU3AKSJN34W7M3ITQCTNU3MUOS6UXF7WCKZUADUU4IGP4A2",
+          "to": "GDHN6NSVAPWFIEAAMUZRA36BSZTOVCHA6RDSZ6DYH3HZOYZAXRCUHLQW",
+          "ledger": 5029654,
+          "txHash": "0ea4f6747233ff126e8451c90ab7f04b3f8d66b556ac3878b6129f8f7e42308e",
+          "vTilde": "08edac4f3068ffa13081b3781e08b002f9e08003455fe2d17eb1030e9789233a"
+        },
+        {
+          "from": "GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO",
+          "to": "GBEEZ2IHANXQZ2CXFB2REM6QP45G3NV42C362KLXX2DGVEYAW7QC6HTL",
+          "ledger": 5029655,
+          "txHash": "f1309225ba35ccf119f77948996dee56289c63aa0c973f9d7c41f472027695f8",
+          "vTilde": "250897875298a0be1ddae3b395d5083bbf242dd8ee50e0555c024de38e379040"
+        },
+        {
+          "from": "GBOAR2CW5GIXT7NXO5KY4AEE4AAIJ54UFZOVRXIMBGVIOZQ7KZVVGL6Q",
+          "to": "GAE2WI43P2IDI2FLXBSAR4VTIF4F655RZ3WZ3ATTMVEL5PY5DJICAGLZ",
+          "ledger": 5029656,
+          "txHash": "35e70ed41ccd9aae3f30e30d4f0eaa70a69807ebee56ea2b0ac885bc4c7e3cf2",
+          "vTilde": "1e21aa32deb0499ba0b208d3de27eaf66b86f2225a41c38f7c67136bd705c0a2"
+        },
+        {
+          "from": "GA763SRGXC7BIVZKLW7DZMJREPZOZJ7JS5IKZCO3DB4MY5QIJQRESVZ3",
+          "to": "GC4VMQ4VB3CGDZQWCHPVRVYCMF35O7X2BNYFIRJA3RDZTXURVUSBAHBD",
+          "ledger": 5029656,
+          "txHash": "01c5362b8881ffd2346a48282da4a4e298ea659848bac065e2fd6154175aa1a7",
+          "vTilde": "0a0ac3d11733c27f45b24331c5b4d352546d5e182e227bc78789c166cd26b686"
+        },
+        {
+          "from": "GDK7GRMR4TU3AKSJN34W7M3ITQCTNU3MUOS6UXF7WCKZUADUU4IGP4A2",
+          "to": "GBML3UGGGW52TSMVIAU5IUH2OPNY2RNT4W2QZ2RWOIRBDU5DXD56MMGI",
+          "ledger": 5029656,
+          "txHash": "b44bbe3e9c37aeb0a3ca2b78a66d72348a023b0f639f4bc527204c7c7ffe1f11",
+          "vTilde": "07d7844f410db866e1094c751b5c54c43c84a231240fdf1c077334dc5c620e5c"
+        },
+        {
+          "from": "GBKR4CCDXALBCK6DAAPSCPN2D72THHAXDY7G6FG4J23PGEKT7S46IA76",
+          "to": "GD4GBAIQ3MXMU6CJIN2AS3PUJOBC4BLFKIWI5WHDW5BQSWTD4TGUNK73",
+          "ledger": 5029656,
+          "txHash": "9f01f9ca37985c30d86c746598d8cfbce9dda185f5265931e5a97952519160e4",
+          "vTilde": "268655bd4955bad6c3ed265129ccc66ba01d00fdaf6f79fa2a8cbd61df0b0fb5"
+        },
+        {
+          "from": "GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO",
+          "to": "GDOK7IYCKRYYJATE4MUXEUPTO5WEMYZ5GICP6N5TQ7P5UTWMJ5KP3Y5O",
+          "ledger": 5029657,
+          "txHash": "0bb0d5ef5005cab07c30130fbf819d4f75d2ceaf0e0b642b745ef581d71b8c1f",
+          "vTilde": "235eb81afeb679ce5848f9b84b180c8f333cba6c32220b9bd1249845e517e46c"
+        },
+        {
+          "from": "GDK7GRMR4TU3AKSJN34W7M3ITQCTNU3MUOS6UXF7WCKZUADUU4IGP4A2",
+          "to": "GASO6YYPEZVF3N7COZF3JLU25QRLYCQDU63PAKRSTASMJA2XS7BF3ISP",
+          "ledger": 5029658,
+          "txHash": "01a1de6239354679ee2992cb6c293fc9eee5bb40363550c879bf9dabdc22b883",
+          "vTilde": "0a6af9db6d1278eb2762674ec53838007a635b9e3205485a6dae2726191f2f71"
+        },
+        {
+          "from": "GBOAR2CW5GIXT7NXO5KY4AEE4AAIJ54UFZOVRXIMBGVIOZQ7KZVVGL6Q",
+          "to": "GCNRN445E2VVPW742SRSLMIEM3SIVPWWEJPPSXTLZWLPVJVIMDIX2OW4",
+          "ledger": 5029658,
+          "txHash": "f38afbe58b59b11e79a0b8c3347a08b4750b2b0b29d5b0236738168614e07115",
+          "vTilde": "1577439ce3e23b7bfe7120c67564b07f2ec487aa98ffac604f95742cf618a627"
+        },
+        {
+          "from": "GA763SRGXC7BIVZKLW7DZMJREPZOZJ7JS5IKZCO3DB4MY5QIJQRESVZ3",
+          "to": "GBOHZ3MN23QZRKLKY46PDFBTRNBUFEVYKL7FF3MNDWWZUZL2HTL5GYPS",
+          "ledger": 5029658,
+          "txHash": "31650214ffe86c984d7fe20b0892bbf605aea01dcb31fa111a4412de493c4c48",
+          "vTilde": "0c876ab04e2fa8d0b2a9764ab1e93d8c968016390f89e8cb074de0fdbec57d8f"
+        },
+        {
+          "from": "GBKR4CCDXALBCK6DAAPSCPN2D72THHAXDY7G6FG4J23PGEKT7S46IA76",
+          "to": "GBYXUZ4MBZ4QNOFD43DTTVDARHN5WCQIOCV2HKS3TMBNBX7X4FRVS7WN",
+          "ledger": 5029658,
+          "txHash": "502836649cae307549ca360bb4a802c9c6abee92d58538370a255cf0b9c79645",
+          "vTilde": "08428b9a0aafd34054c22c83d3c2c25183eaa946864e959bc2c8ead814ac32c4"
+        },
+        {
+          "from": "GBSKR6XD2R5AGK4Y53ZB5F4QBI7R7L3YIB5HAWRNYYDUW45GRZUMDYIO",
+          "to": "GBFK32NZH5XSPDHZZOAAV3W72ARJIF6TPIDTZDH4E65V3RCZWUE22CMV",
+          "ledger": 5029659,
+          "txHash": "6577a54a588b452f5eab1b5be8cd58086faf7469cf9d69958439d736eccc0162",
+          "vTilde": "11ca485332753cfb4269d1b084272e074a551dcb072758fe6d4021a058cc918a"
+        }
+      ],
+      "readAt": "2026-10-05T05:51:53.473Z",
+      "readFrom": "https://soroban-testnet.stellar.org"
+    }
+  },
+  "submodule": "https://github.com/OpenZeppelin/stellar-contracts"
+}

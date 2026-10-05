@@ -1,0 +1,44 @@
+---
+title: "Changelog"
+description: "What changed, by date, from the repository's history."
+---
+
+<Callout type="info">
+On 2026-10-05 the repository's history was rewritten to remove a retired demo key, so every commit from 2026-08-21 onward has a new id. [`docs/HISTORY-REWRITE.md`](https://github.com/Tally-Network/Tally/blob/main/docs/HISTORY-REWRITE.md) maps old ids to new ones.
+</Callout>
+
+## 2026-10-05
+
+- **Operator design.** Documents only: split auditor-key custody, scoped audit requests, disclosure outputs, allow and deny lists, threat model, open questions, scope ledger. Research on demand, specifications and overlap.
+- **Published round refreshed from a clean clone.** `round-003` on the new deployment; both tampering cases exit with code 2; explorer evidence regenerated.
+- **Re-measured under protocol 29.** A transfer is 22.8 % of the 400M cap; four transfers fit in one transaction; on-chain aggregate verification fits but stays off-chain. Every changed claim was corrected.
+- **Secret guard and CI.** The build fails on any tracked secret, including the retired demo key.
+- **Ported to OpenZeppelin stellar-contracts v0.9.0 and redeployed.**
+  - The client was ported to v0.9.0 and passes the upstream test vectors.
+  - The circuits were recompiled and their keys re-pinned.
+  - The round registry moved to soroban-sdk 28.
+  - The new auditor key is kept out of the repository.
+- **History rewrite.** The demo auditor key committed on 2026-08-21 was removed from history.
+
+## 2026-08-23
+
+- The landing page was deployed to GitHub Pages; evidence refreshed.
+
+## 2026-08-22
+
+- **Published evidence.** A round any party can verify, with retention-expiry detection and a refresh command.
+- **Non-custodial registration.** A registration core that follows the specification, tested against live testnet.
+- **Standalone `tally verify`.**
+
+## 2026-08-21
+
+- **Initial build.**
+  - The repository was created (MIT).
+  - The multi-sender aggregate disclosure circuits were added.
+  - The round registry contract was added.
+  - A reproducible demo round was added, with donor verification.
+  - The first landing page was published.
+- **Corrections.**
+  - Disclosure proofs were switched to zero-knowledge mode.
+  - Measurements were redone.
+  - An address claim was retracted.

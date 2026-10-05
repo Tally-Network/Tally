@@ -22,7 +22,8 @@
     "measure": "tsx ct/scripts/measure.ts",
     "verify:evidence": "tsx cli/verify-evidence.ts",
     "evidence:refresh": "tsx cli/refresh-evidence.ts",
-    "bench:aggregate": "tsx ct/scripts/bench-aggregate.ts"
+    "bench:aggregate": "tsx ct/scripts/bench-aggregate.ts",
+    "site:facts": "tsx site/scripts/gen-facts.mts"
   },
   "dependencies": {
     "@aztec/bb.js": "0.87.0",

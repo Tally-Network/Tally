@@ -1,0 +1,21 @@
+---
+title: "Open questions"
+description: "Questions for SDF's privacy team that the operator design depends on."
+---
+
+<Callout type="warn" title="Designed, not built">
+These questions belong to the planned operator service. Nobody has been contacted about them yet. Source: [`docs/OPERATOR-DESIGN.md`](https://github.com/Tally-Network/Tally/blob/main/docs/OPERATOR-DESIGN.md), section 9.
+</Callout>
+
+1. **Operator role.** Is a third-party compliance operator serving several issuers ("shared deployments") what SDF wants funded, or should each issuer run its own? Would SDF introduce issuers or anchors who need one?
+2. **Custody guidance.** The 2026-08-06 notes suggest Utila or Fireblocks. Does either support scalar multiplication on Grumpkin (OpenZeppelin) or Baby JubJub (SPP)? If not, does SDF accept threshold decryption with an attested-enclave proving step as "real key management"?
+3. **Proving with a shared key.** Would OpenZeppelin consider a clawback or auditor-side disclosure circuit that proves over a threshold-produced shared point, instead of taking the key as a private input? Is SDF aware of a collaborative UltraHonk prover?
+4. **Versioned auditor registry.** OpenZeppelin calls a registry with activation ledgers "an optional production target". Will one ship, or should operators index `AuditorRotated` events?
+5. **Proof of possession.** Would OpenZeppelin add proof of possession to `register_key`, or should the operator publish it off-chain?
+6. **Mainnet.** What are the conditions and expected timing for Confidential Tokens on mainnet? What is the status of SPP's audit and trusted-setup ceremony? The mainnet stage depends on both.
+7. **Canonical branch.** OpenZeppelin's `main` and `v0.9.0` branches differ (`main` lacks clawback and the documentation split). Which will mainnet use?
+8. **SPP compliance gaps.** Are deposit-time screening and an emergency exit planned? Without an exit, who bears funds trapped after a delisting?
+9. **Lists.** Would SDF or OpenZeppelin prefer one shared policy registry across issuers, run by a neutral operator, and what governance would it expect?
+10. **Archives.** OpenZeppelin asks deployments to run or contract at least two event archives. Does SDF plan to run one, so operators can cross-check?
+11. **Jurisdiction.** Which jurisdiction and use case would SDF most like to see demonstrated first?
+12. **Overlap.** How does SDF see this alongside Remi's funded auditor and compliance plans on the same standard?

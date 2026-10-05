@@ -1,0 +1,98 @@
+---
+title: "Threat model"
+description: "What an attacker could try against a confidential payout round as built today, what stops each attempt, and the threat table for the planned operator service."
+---
+
+This page has two parts.
+
+1. **The payout flow as built today.** This runs on Stellar testnet. Each row names an attack and the mechanism in the current code that stops it, or says plainly that nothing stops it.
+2. **The planned operator service.** This is a design and has not been built. Its threat table is reproduced from [docs/OPERATOR-DESIGN.md §7](https://github.com/Tally-Network/Tally/blob/main/docs/OPERATOR-DESIGN.md#7-threat-model).
+
+## Part 1: the payout flow as built today
+
+### Who is involved
+
+| Party | Holds | Wants to learn or prove |
+|:---|:---|:---|
+| **Funder** | The lane accounts' spending and viewing keys | Proves the round total to a donor without revealing any single amount |
+| **Recipient** | Their own confidential account | Receives an amount the public ledger does not show |
+| **Donor** (or auditor) | Their own disclosure keypair `(r_R, P_R)` and a fresh nonce `ν` | Learns the round total and checks that nothing was left out |
+| **Observer** | Public chain data | Anything they can read from the ledger |
+
+The funder is the party the donor does not trust. Most of the attacks below are attempts by the funder to make the disclosed total look different from what the chain records.
+
+### What the verifier takes from the funder
+
+`tally verify` takes exactly three values from the funder's bundle: the proof, `r_disc`, and the sealed total `v_tilde_disc`. It works out everything else itself, from chain state or from the donor's own challenge ([evidence README](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md#what-you-are-actually-checking)).
+
+| From the chain | From the donor's own challenge | From the funder |
+|:---|:---|:---|
+| Lane set and window (round registry) | `P_R`, `ν` | `proof` |
+| Every transfer out of those lanes in that window | | `r_disc_x`, `r_disc_y` |
+| Each sender's and recipient's public viewing key | | `v_tilde_disc` |
+| `addr_f`, `n_active` | | |
+
+This boundary is the reason most of the attacks below fail. A funder who could supply a public input could prove a statement about a set of transfers it chose.
+
+### Attacks and what stops them
+
+| # | Attack | What the attacker tries | What stops it | Source |
+|:--|:---|:---|:---|:---|
+| A1 | **Withholding transfers** | The funder proves a total over only some of the transfers sent from the declared lanes | `confidential_transfer` always emits a `Transfer` event with `from` and `to` topic-indexed. The verifier lists the round's transfers from those events itself. If one is withheld, the count from chain does not match the proof and verification fails | [TRUST-STATEMENT](https://github.com/Tally-Network/Tally/blob/main/docs/TRUST-STATEMENT.md#why-it-is-worded-this-way); [evidence README](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md#what-you-are-actually-checking) |
+| A2 | **Cherry-picking lanes** | The funder runs the round, then declares only the lanes that make the total look good | `open_round` stamps its ledger from the contract, not from the caller. The lane set is immutable once written. The verifier reads the lane set and window from the registry | [TRUST-STATEMENT](https://github.com/Tally-Network/Tally/blob/main/docs/TRUST-STATEMENT.md#why-it-is-worded-this-way) |
+| A3 | **Inflating the total** | The funder edits the sealed total in the bundle | Raising `v_tilde_disc` by one makes verification fail with exit code 2. The published evidence includes this as a test anyone can run | [evidence README, "Try breaking it"](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md#try-breaking-it) |
+| A4 | **Counting one transfer twice** | The funder references the same event in two slots of the aggregate, which inflates the total | The circuit cannot see duplicates, so the verifier rejects duplicate event references | [SDK-SAFETY-INVARIANTS §I2](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i2--minimum-anonymity-set-for-aggregates) |
+| A5 | **Supplying keys from the bundle** | The funder supplies sender or recipient public viewing keys of its choosing | The verifier resolves each `PVK_A` from the event's `from` and each `PVK_B` from its `to`, never from the bundle | [SDK-SAFETY-INVARIANTS §I2](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i2--minimum-anonymity-set-for-aggregates) |
+| A6 | **Replaying a bundle** | The funder reuses a valid bundle from an earlier challenge | The donor issues a fresh nonce `ν` for each challenge. A bundle replayed against a challenge it was not built for fails with exit code 2. This is also a published test | [evidence README, "Try breaking it"](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md#try-breaking-it) |
+| A7 | **Small aggregates** | Someone produces an "aggregate" over one or two transfers, which reveals the individual amounts | The circuit asserts `n_active >= MIN_ACTIVE` (default 5), so an undersized aggregate cannot be proved. `n_active` is a public input, so the donor sees the exact set size and can apply a stricter floor. The circuit family starts at `n = 8` | [SDK-SAFETY-INVARIANTS §I2](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i2--minimum-anonymity-set-for-aggregates) |
+| A8 | **Stale evidence** | A reviewer checks a round after its events have left the RPC window, gets an empty transfer set, and concludes the proof failed | `verify` checks the RPC's `oldestLedger` through `getHealth` before listing transfers. If the round has aged out, it says so and exits 3, distinct from 2 (proof rejected) and 1 (could not verify). Published evidence states the ledger after which it stops being verifiable | [SDK-SAFETY-INVARIANTS §I4](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i4--durable-verification-depends-on-an-event-archive-we-have-not-built); [evidence README](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md) |
+| A9 | **Undisclosable transfers** | A transfer is sent with a random ephemeral scalar `r_e`, so it can never be included in a proof. Nothing on chain shows this | Invariant I1 requires every transfer Tally originates to derive `r_e` as `poseidon_with_domain(δ_eph, [vk, σ_E])`, requires the transfer path to expose no override, and requires the auditor CLI to test disclosability per event instead of assuming it. **Gap:** the ported SDK's transfer witness builder still accepts an optional `rE` override. It defaults to the derived value | [SDK-SAFETY-INVARIANTS §I1](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i1--deterministic-ephemeral-scalar-r_e); [ct/sdk/src/witness/transfer.ts](https://github.com/Tally-Network/Tally/blob/main/ct/sdk/src/witness/transfer.ts) |
+| A10 | **Version drift** | Circuits, contracts and SDK are built against different OpenZeppelin revisions, so keys or verification keys silently disagree | All three are pinned to OpenZeppelin v0.9.0 (`df602b6`). CI rebuilds the circuits and fails if the pinned verification keys change. `verify` checks the verification key against the pinned artifact | [SDK-SAFETY-INVARIANTS §I3](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md#i3--pinned-upstream-revision-build-invariant); [ci.yml](https://github.com/Tally-Network/Tally/blob/main/.github/workflows/ci.yml); [evidence README](https://github.com/Tally-Network/Tally/blob/main/evidence/README.md#the-two-minute-path) |
+| A11 | **Over-disclosure to the donor** | The donor asks for the funder's viewing key to check the total | The viewing key is never shared. It would let the holder recompute every ephemeral scalar the funder ever used and open every amount retroactively. The donor generates their own keypair and receives a proof sealed to it that reveals only the aggregate | [README, "How the proof works"](https://github.com/Tally-Network/Tally/blob/main/README.md#how-the-proof-works) |
+
+### What nothing stops today
+
+These are outside the guarantee. The [trust statement](/docs/security/trust-statement) says so in its second sentence.
+
+| Attack | Why it is not stopped |
+|:---|:---|
+| **Paying from undeclared accounts** | The guarantee covers the declared lane accounts only. Transfers from other accounts the funder controls are outside the proof and cannot be detected from it |
+| **Self-dealing** | A funder can pay accounts it controls and prove a valid total. The proof establishes what amounts moved, not who controls the receiving accounts. Recipient identity is future work ([roadmap](/docs/roadmap#later-verified-recipient-identity)) |
+| **Differencing across aggregates** | Repeated aggregates over overlapping sets of transfers could be subtracted from each other. The operator design lists this as a residual risk that needs request-history checks, which are not designed yet ([OPERATOR-DESIGN §7, T13](https://github.com/Tally-Network/Tally/blob/main/docs/OPERATOR-DESIGN.md#7-threat-model)) |
+| **Historical verification** | After about 7 days the RPC no longer serves the round's events. No durable archive exists. See [Known limits](/docs/security/known-limits) |
+
+### What an observer sees
+
+Amounts are encrypted on chain. Addresses stay visible: every confidential transfer publishes its sender and recipient. An observer can see that a lane paid a recipient. They cannot read how much. The aggregate proof is verified off-chain by the donor, so nothing on chain records that a disclosure happened ([MEASUREMENTS.md](https://github.com/Tally-Network/Tally/blob/main/MEASUREMENTS.md#aggregate-disclosure-proofs-verified-on-chain-capacity-only)).
+
+## Part 2: the planned operator service
+
+<Callout type="warn">
+The operator service is **designed, not built**. Nothing in this table exists in code. It is reproduced from [docs/OPERATOR-DESIGN.md §7](https://github.com/Tally-Network/Tally/blob/main/docs/OPERATOR-DESIGN.md#7-threat-model). See [Operator design](/docs/operator/design) for the components it refers to.
+</Callout>
+
+The design's rule is that no single party, Tally included, can decrypt any amount, prove a clawback, or change a list on its own. *t* is the number of custodians needed to act (2 of 3 in the chosen design).
+
+| # | Component | Abuse or failure | Impact | Mitigation | Residual risk |
+|:--|:---|:---|:---|:---|:---|
+| T1 | Key shares | *t* custodians collude | Full decryption for every account bound to that `auditor_id` | Independent custodians, one of whom must be neither tenant nor Tally; signed custody agreements; transparency log of every contribution | Collusion of *t* cannot be detected cryptographically; deterrence is contractual only |
+| T2 | Key shares | One share stolen | None by itself | Shares held in separate HSMs; proactive re-sharing invalidates stolen shares | A thief who collects *t* shares across epochs before a refresh |
+| T3 | Distributed key generation | Biased or backdoored key; key at or above the field modulus `r` | Unusable or weak key | Verifiable DKG transcript published; range check; proof of possession published | None listed |
+| T4 | Auditor registry | Admin registers a key nobody holds (no proof of possession on chain) | Auditing silently blinded | Tally publishes the proof of possession; verifiers and tenants check it before trusting an `auditor_id` | Holders who never check |
+| T5 | TEE proving step | TEE compromise or side channel during key reconstruction | `k` exposed | Reconstruction only for logged, approved requests; attestation published; short sessions; TEEs from different vendors | Hardware-level attacks. This is the design's weakest point |
+| T6 | Request workflow | Over-broad scope; forged legal basis | Excess disclosure | Each custodian checks scope independently; tenant scope policy; requester identity verification; requests logged and, by default, the subject is notified | Approvers who rubber-stamp |
+| T7 | Request workflow | Requester smuggles in out-of-scope events | Excess disclosure | Custodians resolve events themselves from at least two archives and never accept `R_e` from the requester | Archive collusion (see T10) |
+| T8 | Contributions | A custodian returns a wrong partial result | Wrong amounts | DLEQ proof with each contribution; the combiner checks against the on-chain commitment | None listed |
+| T9 | Standing openings | The opening store leaks | Current balances of all bound accounts | Openings additively secret-shared; never held in the clear by one party | None listed |
+| T10 | Archives | An archive omits or forges events | Incomplete scope or verification | At least two independent archives; every opening checked against on-chain commitments; RPC cross-check within the retention window | All archives colluding to omit |
+| T11 | Disclosure verifier | The verifier takes inputs from the bundle | Forged totals | The verifier resolves every input from chain. This rule already exists and is enforced in `cli/tally.ts` | None listed |
+| T12 | Holder disclosures | A holder omits inbound events | Under-reported inflows | Inbound totals labelled holder-asserted; completeness only through auditor-attested totals | None listed |
+| T13 | Aggregate privacy | A small aggregate reveals individual amounts | Per-recipient disclosure | In-circuit `MIN_ACTIVE`; `n_active` public | Repeated aggregates over overlapping sets (differencing). Needs request-history checks, not designed yet |
+| T14 | OpenZeppelin lists | Policy signer key theft | Arbitrary freezes and unfreezes | 2-of-3 multisig; logged; stricter rules for loosening than for tightening | Theft of a quorum |
+| T15 | SPP lists | A blocklist update invalidates proofs in flight | User transactions fail | Published batch schedule; user notification | Emergency updates still break proofs |
+| T16 | SPP lists | The allowlist cannot remove entries | A removed subject is still a member | Blocklist insertion, disclosed to the tenant | On pools without a blocklist, removal is impossible |
+| T17 | SPP Global View Key | The view-key quorum is compromised | Every future note readable | Same custody as T1 and T2 | No rotation; the only remedy is a new pool and user migration |
+| T18 | Clawback | Admin and auditor collude | Seizure without due process | Separate signers; clawback requires a logged request through the same workflow | Tenant governance |
+| T19 | Operator outage | Tally is unavailable | Requests stall; lists frozen | Custodians can decrypt without Tally (Tally is one of three); list contracts remain readable | List updates pause |
+| T20 | Upstream change | OpenZeppelin or SPP changes its cryptography (as v0.9.0 did) | Silent mismatch; failed decryption | Pinned revisions; conformance vectors in CI; coordinated uplift | Upstream timing |
+| T21 | Regulation | The operator is compelled to act outside policy | Disclosure beyond the tenant's policy | Tally holds one share only, so compelling Tally alone cannot reach *t* | Compulsion of *t* custodians in one jurisdiction; custodians spread across jurisdictions |

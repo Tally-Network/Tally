@@ -1,0 +1,212 @@
+---
+title: "Contracts"
+description: "The round registry, the OpenZeppelin v0.9.0 token, verifier and auditor wrappers, the measurement-only contracts, and the current testnet contract ids."
+---
+
+Tally deploys two groups of Soroban contracts:
+
+- **Tally's own round registry** in [`contracts/round-registry`](https://github.com/Tally-Network/Tally/blob/main/contracts/README.md), built with soroban-sdk 28.
+- **Thin wrappers around OpenZeppelin stellar-contracts v0.9.0** (`df602b6`) in [`ct/contracts`](https://github.com/Tally-Network/Tally/tree/main/ct/contracts): the confidential token, the verifier and the auditor registry, built with soroban-sdk 27.0.2 to match the version the vendored OpenZeppelin tree pins. The same directory holds `bench-batch`, a measurement-only contract.
+
+All of them run on Stellar testnet only.
+
+## Current testnet deployment
+
+From [`demo/deployment.testnet.json`](https://github.com/Tally-Network/Tally/blob/main/demo/deployment.testnet.json), deployed 2026-10-05 at ledger 5029204 against `stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65`.
+
+| Role | Contract id |
+|:---|:---|
+| Confidential token | [`CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN`](https://stellar.expert/explorer/testnet/contract/CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN) |
+| Verifier | [`CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL`](https://stellar.expert/explorer/testnet/contract/CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL) |
+| Auditor registry | [`CDMJCKJGYWFGZCNNZMQAUMDJCRWQMFZEG24FYENE4AQRJ2P3HKC5AMW7`](https://stellar.expert/explorer/testnet/contract/CDMJCKJGYWFGZCNNZMQAUMDJCRWQMFZEG24FYENE4AQRJ2P3HKC5AMW7) |
+| Underlying asset (native XLM Stellar Asset Contract) | [`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
+| Round registry | [`CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W`](https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W) |
+
+Auditor key id 0 is registered with public point:
+
+```
+x = 0x1fba511e82a3447a5a9b1d932fe51144a40b813284d8da8ab209afc7db10facc
+y = 0x22b432a1fd14d70cbb46dabd3c5302dc3ca9b81e445c29fb6035b9d0171f3a50
+```
+
+The token's address-as-field value is `0x1309464167a95f0a2ff6b4db85a5fbc2d1c607e785597e1b28b592572fa9bf05`.
+
+### Measurement-only contracts
+
+From [`ct/measurements.testnet.json`](https://github.com/Tally-Network/Tally/blob/main/ct/measurements.testnet.json). These are not part of the payout flow and never hold funds.
+
+| Role | Contract id |
+|:---|:---|
+| `bench-batch` (several transfers in one transaction) | [`CB6U7QX2OR3ADD3NW6NSZQWNADIC3LFJKM3MN3NND4VPPDWTPQDDA3VV`](https://stellar.expert/explorer/testnet/contract/CB6U7QX2OR3ADD3NW6NSZQWNADIC3LFJKM3MN3NND4VPPDWTPQDDA3VV) |
+| Separate verifier holding the aggregate VKs, for on-chain cost measurement | [`CACEIWIWMRIC4XQJKO4BYUWGBSV5DTMI36JPLARUCUNLV6Q6VWO54UQJ`](https://stellar.expert/explorer/testnet/contract/CACEIWIWMRIC4XQJKO4BYUWGBSV5DTMI36JPLARUCUNLV6Q6VWO54UQJ) |
+
+### Retired deployments
+
+The August 2026 round registry `CCKWYTHG…R3ES` (soroban-sdk 26) and token `CCDZ52D7…JYHD` are retired and no longer used.
+
+## Round registry
+
+The round registry records which sender accounts count for a round (the lane set) and over what ledger window. It records nothing else. Source: [`contracts/round-registry/src/lib.rs`](https://github.com/Tally-Network/Tally/blob/main/contracts/round-registry/src/lib.rs).
+
+It does not record individual transfers. `Transfer.from` and `Transfer.to` are topic-indexed, and the token emits the event on every `confidential_transfer`, so a donor enumerates a round's transfers directly from chain events. Recording transfers in the registry would let a funder simply leave one out.
+
+### Functions
+
+```
+open_round(funder, round_id, lanes[])  -> Round    // stamps opened_at from the ledger
+close_round(funder, round_id)          -> Round    // stamps closed_at
+get_round(funder, round_id)            -> Round
+is_lane(funder, round_id, who)         -> bool
+```
+
+| Function | Auth | Behaviour |
+|:---|:---|:---|
+| `open_round` | `funder` | Checks the lane set, rejects a `round_id` this funder already used, stores the round with `opened_at` set to the current ledger, and emits `RoundOpened` |
+| `close_round` | `funder` | Looks the round up under the caller's own namespace, rejects a second close, sets `closed_at` to the current ledger, and emits `RoundClosed` |
+| `get_round` | none | Returns the stored round. This is the donor's source of truth for the lane set and window |
+| `is_lane` | none | Whether `who` is a declared lane of that round |
+
+`round_id` is `BytesN<32>`. A `Round` is:
+
+```rust
+pub struct Round {
+    pub funder: Address,          // the account that declared the round; the only one that may close it
+    pub lanes: Vec<Address>,      // immutable
+    pub opened_at: u32,           // stamped by the contract
+    pub closed_at: Option<u32>,   // stamped by the contract; None while open
+}
+```
+
+### Events
+
+| Event | Topics | Data |
+|:---|:---|:---|
+| `RoundOpened` | `funder`, `round_id` | `lanes`, `opened_at` |
+| `RoundClosed` | `funder`, `round_id` | `opened_at`, `closed_at` |
+
+### Errors
+
+| Code | Name | When |
+|---:|:---|:---|
+| 1 | `RoundAlreadyExists` | `open_round` with a `round_id` this funder already declared |
+| 2 | `RoundNotFound` | No round under that funder and id (also what a foreign caller gets from `close_round`) |
+| 3 | `RoundAlreadyClosed` | A second `close_round` |
+| 5 | `EmptyLaneSet` | `open_round` with no lanes |
+| 6 | `DuplicateLane` | The same lane listed twice |
+| 7 | `TooManyLanes` | More than `MAX_LANES` (64) lanes |
+
+Code 4 was `NotRoundFunder`. It was removed when rounds became namespaced by funder: a foreign caller now resolves its own empty namespace and gets `RoundNotFound`.
+
+The `tally` CLI maps error 2 to "no round with that id is declared by that funder" and error 1 to "that round id is already declared by this funder".
+
+### Constraints
+
+A declaration cannot be backdated, extended or revised after the fact. Otherwise a funder could run the round, then declare only the lanes that look good.
+
+| Constraint | Enforcement |
+|:---|:---|
+| `opened_at` is the true ledger | Stamped from `e.ledger().sequence()`. It is not a parameter, so a caller cannot supply or backdate it |
+| Lane set is immutable | Written once; no mutator exists |
+| A round is declared once | `open_round` rejects a `round_id` already used by that funder |
+| A round id cannot be squatted | Rounds are namespaced by funder. Under a global namespace anyone could occupy an announced id for one transaction fee |
+| A round closes once, by its funder | `close_round` resolves the caller's own namespace and rejects a second close |
+| Lanes distinct and non-empty | Rejected at declaration; a duplicate would let one transfer be counted twice |
+
+Because both ends of the window are stamped by the contract and the lane set is immutable, a donor can apply one rule: reject any event outside `[opened_at, closed_at]` or from a sender not in `lanes`.
+
+The registry cannot observe the token, so it cannot stop a funder sending from an account it never declared. That limit is stated in the [trust statement](/docs/security/trust-statement).
+
+### Tests
+
+16 tests in [`contracts/round-registry/src/test.rs`](https://github.com/Tally-Network/Tally/blob/main/contracts/round-registry/src/test.rs), 10 of them negative: each enforced constraint has a test showing it rejects the violation.
+
+| Negative tests | Positive tests |
+|:---|:---|
+| `rejects_redeclaring_a_round` | `opened_at_is_the_true_ledger_and_not_caller_supplied` |
+| `a_squatter_cannot_lock_a_funder_out_of_a_round_id` | `window_is_stamped_at_both_ends` |
+| `same_funder_still_cannot_redeclare` | `declares_and_reads_back_the_lane_set` |
+| `rejects_duplicate_lanes` | `is_lane_discriminates_declared_from_undeclared` |
+| `rejects_empty_lane_set` | `rounds_are_independent` |
+| `rejects_lane_set_over_the_cap` | `max_lanes_exactly_is_accepted` |
+| `rejects_closing_twice` | |
+| `rejects_closing_a_round_that_was_never_opened` | |
+| `a_foreign_account_cannot_close_someone_elses_round` | |
+| `rejects_reading_an_unknown_round` | |
+
+```bash
+cd contracts && cargo test -p tally_round_registry
+stellar contract build          # -> target/wasm32v1-none/release/tally_round_registry.wasm
+```
+
+`pnpm test:contracts` runs the same tests from the repository root.
+
+## OpenZeppelin v0.9.0 wrappers
+
+The confidential-token logic lives in OpenZeppelin's `stellar-tokens` package, vendored as the git submodule `vendor/stellar-contracts`. Tally's wrappers in `ct/contracts` add a constructor and little else. Provenance is in [`ct/NOTICE.md`](https://github.com/Tally-Network/Tally/blob/main/ct/NOTICE.md). Build them with `stellar contract build`, not plain `cargo build`, because `stellar-tokens` enables soroban-sdk's `experimental_spec_shaking_v2` feature.
+
+### Token (`ct/contracts/token`)
+
+Wraps OpenZeppelin's `ConfidentialToken` with `NoHooks` (no extension behaviour). Taken from `brozorec/stellar-confidential-token-demo` at `9500ed7` with an updated doc comment.
+
+`__constructor(underlying_asset, verifier, auditor)` binds the underlying SEP-41 asset, the verifier and the auditor registry, and freezes the contract's address-as-field value, which every account's viewing key is bound to.
+
+Entry points come from the OpenZeppelin trait:
+
+| Entry point | Proof | Used by Tally |
+|:---|:---|:---|
+| `register(account, auditor_id, data)` | register | yes |
+| `deposit(from, to, amount)` | none; the amount is public | yes |
+| `merge(account)` | none | yes |
+| `confidential_transfer(from, to, data)` | transfer | yes |
+| `confidential_balance(account)` | read | yes (`verify` reads viewing keys) |
+| `withdraw(from, to, amount, data)` | withdraw | no |
+| `confidential_transfer_from(spender, from, to, data)` | spender transfer | no; `verify` still counts its events if the sender is a lane |
+| `set_spender`, `revoke_spender`, `is_spender`, `get_spender_delegation` | various | no |
+
+A transfer emits an event with topics `["transfer", from, to]` and data that holds ciphertexts (`r_e_point`, `v_tilde`, `sigma`, `b_tilde` and the auditor ciphertexts), not the amount.
+
+<Callout type="warn">
+The token's own doc comment says it plainly: the UltraHonk verifier backend and the circuits the verification keys come from are unaudited. Do not deploy anywhere handling real value.
+</Callout>
+
+### Verifier (`ct/contracts/verifier`)
+
+Copied verbatim from OpenZeppelin `examples/confidential/verifier` at v0.9.0, with a `#![no_std]` header added. It stores one UltraHonk verification key per circuit type and exposes `verify_proof`, which the token calls on every state-changing operation. The backend is the UltraHonk verifier from `NethermindEth/rs-soroban-ultrahonk`.
+
+`__constructor(admin, manager)`. `register_verification_key` and `update_verification_key` require the `manager` role. OpenZeppelin treats key updates as a break-glass operation, because a wrong key makes the circuit accept forged proofs.
+
+| Circuit type | Value |
+|:---|---:|
+| `Register` | 0 |
+| `Withdraw` | 1 |
+| `Transfer` | 2 |
+| `SpenderTransfer` | 3 |
+| `SetSpender` | 4 |
+| `Clawback` | 100 |
+
+`pnpm deploy:testnet` registers all six v0.9.0 keys, copied byte for byte from the vendored OpenZeppelin tree.
+
+### Auditor registry (`ct/contracts/auditor`)
+
+Copied verbatim from OpenZeppelin `examples/confidential/auditor` at v0.9.0, with a `#![no_std]` header added. It holds Grumpkin auditor public keys indexed by `auditor_id`. `__constructor(admin, manager)`; `register_key` and `rotate_key` require the `manager` role.
+
+The current deployment registers one auditor key, id 0, whose secret was written outside the repository at deploy time. Split auditor-key custody is part of the [operator service](/docs/operator/design), which is designed but not built.
+
+## `bench-batch` (measurement only)
+
+A Stellar transaction can carry only one `InvokeHostFunctionOp`, so batching needs a contract that makes the calls itself. [`ct/contracts/bench-batch`](https://github.com/Tally-Network/Tally/blob/main/ct/contracts/bench-batch/src/lib.rs) has one function:
+
+```rust
+pub fn transfer_many(e: Env, token: Address, from: Address, to: Vec<Address>, data: Vec<Bytes>)
+```
+
+It calls `token.confidential_transfer(from, to[i], data[i])` for each `i`. Each proof must be built against the balance the previous transfer leaves. It authorises the root with `from.require_auth_for_args([])`, which keeps the proofs from being copied into the root authorisation entry a second time. An earlier version used `require_auth()` and pushed the k = 3 envelope to 140,968 B, over the size limit.
+
+Four transfers from one sender fit in one transaction this way; see [Measurements](/docs/measurements#transfers-per-transaction). The payout flow does not use this contract.
+
+## Building
+
+```bash
+pnpm build:contracts    # stellar contract build in contracts/ and in ct/contracts/
+pnpm test:contracts     # cargo test for the round registry
+```

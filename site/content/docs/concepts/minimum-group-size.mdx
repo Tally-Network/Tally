@@ -1,0 +1,62 @@
+---
+title: "Minimum group size"
+description: "Why a total over too few payments reveals the payments, and how Tally enforces a floor of five inside the circuit and shows the donor the true count."
+---
+
+A total hides individual amounts only when it adds up several of them. Tally refuses to produce a total over fewer than **5** transfers, and it enforces that refusal inside the zero-knowledge circuit.
+
+## Why small totals leak
+
+| Transfers in the total | What the donor learns |
+|---:|:---|
+| 1 | The amount itself. The "total" is the payment |
+| 2 | Either amount, given the other. One subtraction |
+| 5 | A sum over five. Meaningful concealment begins |
+| 16 | Comfortable for a payout round |
+
+A proof over one transfer is still a valid proof. It verifies, and nothing in the proof, the chain or the verifier's output would announce that privacy has dropped to zero. That is why the floor cannot be left to the calling code.
+
+Small groups can appear without anyone intending it. In August 2026 an early design split 10 recipients across 10 lanes, with one proof per lane. That would have produced ten one-payment "totals", which is the same as publishing every amount. Tally's [aggregate proof](/docs/concepts/aggregate-proof) now covers all lanes of a round in one proof, so the group is the whole round.
+
+## How the floor is enforced
+
+| Layer | What it does |
+|:---|:---|
+| **Circuit** | Asserts `n_active ≥ MIN_ACTIVE`. Bypassing Tally's code does not bypass the floor: a total over too few transfers cannot be proved at all |
+| **Public input** | `n_active` is a public input bound into the proof. The donor reads the exact number of transfers the total covers, and can apply a stricter floor of their own |
+| **Circuit generator** | A circuit whose capacity is below the floor could never prove anything, so the generator refuses to emit one. This is why the family starts at `n = 8` |
+| **Verifier** | `tally verify` refuses a round with fewer than 5 transfers before it checks any proof, and exits with code `1` |
+
+The default `MIN_ACTIVE` is 5. Inside the circuit, the check is written as a range check on `n_active - MIN_ACTIVE`. A subtraction that goes below zero wraps to a very large field value, which fails the check.
+
+## The circuit family: 8, 16 and 64
+
+Tally ships three circuit sizes. Each one can carry up to that many transfers, and unused slots are padded with `active = 0`.
+
+| Circuit | Holds | Public inputs | Proof size |
+|:---|:---|---:|---:|
+| `tally_aggregate_n8` | 5 to 8 transfers | 80 | 16,224 B |
+| `tally_aggregate_n16` | up to 16 transfers | 152 | 16,224 B |
+| `tally_aggregate_n64` | up to 64 transfers | 584 | 16,224 B |
+
+The verifier picks the smallest circuit that fits the round. Whatever the circuit size, `n_active` tells the donor the real count, so padding never makes a small round look large.
+
+## Changing the floor
+
+`MIN_ACTIVE` and the set of sizes are environment overrides on the circuit generator:
+
+```bash
+MIN_ACTIVE=8 SIZES="16 32" bash circuits/scripts/generate.sh
+```
+
+The circuit source says never to set the floor below 2, and to prefer 5 or more for payout rounds. A different floor produces a different circuit and different verification keys, so a verifier pinned to the committed keys would refuse the new proofs until it pins the new keys. The `tally verify` command currently checks a floor of 5.
+
+## What the floor does not cover
+
+The floor applies to one total at a time. If someone receives several totals over overlapping sets of transfers, they may be able to subtract one from another and isolate smaller groups. Tally's operator design lists this as a residual risk (T13) that needs checks across request history. Those checks are not designed yet.
+
+## Further reading
+
+- [Safety invariant I2](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md)
+- [`circuits/README.md`](https://github.com/Tally-Network/Tally/blob/main/circuits/README.md) and [`circuits/_template.nr`](https://github.com/Tally-Network/Tally/blob/main/circuits/_template.nr)
+- [Circuits reference](/docs/reference/circuits)

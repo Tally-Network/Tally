@@ -1,0 +1,145 @@
+---
+title: "Registering as a recipient"
+description: "How a recipient registers a confidential account from their own wallet, with the key derived on their device from a SEP-53 signature."
+---
+
+Before an account can receive a confidential transfer, it has to register a confidential account with the token. Registration publishes two public keys: a spending public key and a public viewing key. The secret behind them is a scalar `sk` that only the recipient should hold.
+
+Tally's registration code derives `sk` from a signature made by the recipient's own wallet, on the recipient's device. Nobody else, including whoever runs the payout, learns the key. The code is [`registration/core.ts`](https://github.com/Tally-Network/Tally/blob/main/registration/core.ts).
+
+<Callout type="warn">
+There is no browser page. Only the headless core and its live-testnet test exist. A wallet UI (connect button, Freighter integration, layout) has not been built; it would be a thin layer around `core.ts`.
+</Callout>
+
+## Why derive the key from the wallet
+
+If the payout platform generated recipients' keys for them, amounts would be private from the public ledger but not from the platform. The [trust statement](/docs/security/trust-statement) does not describe that product, so registration is non-custodial.
+
+The code is split along one line. A broken connect button fails in front of the user. A wrong key derivation does not: it registers an account that looks fine and that the recipient's key cannot reach. The derivation is the part that is tested.
+
+## Key derivation
+
+Tally follows the OpenZeppelin v0.9.0 key-derivation specification (`docs/sdk/key-derivation.md`, "Derivation"). The specification says implementations must not substitute a different KDF, because the same wallet must derive the same account in every client.
+
+```
+msg  = "openzeppelin/confidential-token/v1/sk" \n <token contract> \n <account>
+root = Ed25519-Sign(sk_ed, SHA-256("Stellar Signed Message:\n" || msg))
+sk   = RS(HKDF-SHA-512(IKM=root, salt=<domain>, info=be32(addr_f)‖be32(acct_f)‖le4(j)))
+```
+
+Step by step:
+
+1. **Build the message.** The domain string `openzeppelin/confidential-token/v1/sk`, the token contract's strkey and the account's strkey, separated by newlines. Strkeys are used instead of field elements so a wallet that shows SEP-53 messages as text displays addresses the user can check.
+2. **Sign it under SEP-53.** The wallet prepends `Stellar Signed Message:\n`, hashes with SHA-256 and signs with ed25519. The 64-byte signature is the root.
+3. **Expand the root.** HKDF-SHA-512 with the root as input key material, the domain string as salt, and as info the token's `addr_f` and the account's `acct_f` (each as a 32-byte big-endian field element) followed by a 4-byte little-endian counter `j`.
+4. **Rejection-sample.** Take 32 bytes, clear the top two bits, and accept the value if it is a valid non-zero scalar and its viewing key is non-zero. Otherwise increment `j`. The code gives up after 256 attempts.
+
+The resulting `sk` is bound to both the token deployment (`addr_f`) and the registering address (`acct_f`).
+
+<Callout type="info">
+This differs from the reference demo app, which derives `sk = SHA-512(signature) mod r` over a message of its own. That app predates the specification. Keys from the two schemes are not interchangeable.
+</Callout>
+
+## The mandatory checks
+
+`deriveFromWallet(signer, tokenContract)` performs every check the specification marks as mandatory for signer roots. Each one guards against a failure that would otherwise succeed quietly.
+
+| Check | What goes wrong without it |
+|:---|:---|
+| Verify the signature against the expected address | A wallet with a different account selected returns a well-formed signature over the same message. Registration succeeds, and the account is unreachable from the key the user thinks controls it. |
+| Sign twice and compare | RFC 8032 ed25519 is deterministic. Threshold and MPC signers randomise the nonce, so they could never reproduce the key. Registration is refused instead of stranding funds. |
+| Record which signer enrolled | `sk` binds to the address, not to the signer, and the enrolling signer cannot be recovered from chain state. The result carries `enrolledSigner`. |
+| Report the form | The result's `form` is `"signer-root"` or `"raw-root"`, so a UI never offers a recovery path the account cannot satisfy. |
+
+If the first check fails, the error tells the user to check that their wallet has the intended account selected. If the second fails, the error explains that the signer is not deterministic and suggests a raw-root account with an explicit backup.
+
+## Raw-root fallback
+
+SEP-53 support across wallets is uneven, and a contract address (a smart account) has no ed25519 signer of its own. For these cases `deriveFromRawRoot(root, tokenContract, account)` derives `sk` from a 32-byte random root using the same HKDF step.
+
+A raw root cannot be reproduced from anything the user already holds. The caller must show it for backup at creation and must not present recovery as available. `deriveFromRawRoot` only derives; showing the backup is the caller's job.
+
+## The `acct_f` binding
+
+Since OpenZeppelin v0.9.0, the `register` circuit has `acct_f`, the field encoding of the registering address, as a public input (OpenZeppelin #775). The contract computes `acct_f` itself from the calling address. A proof made for one address therefore fails for any other, so a registration published on chain cannot be replayed by another caller to create a duplicate-key account.
+
+`registerWitness(keys, account)` and `registerPayload(keys, account, proof)` take the address that will call `register` for this reason.
+
+## API
+
+| Function | Purpose |
+|:---|:---|
+| `derivationMessage(tokenContract, account)` | The exact message the wallet signs |
+| `derivationDigest(tokenContract, account)` | `SHA-256(prefix ‖ message)`, what the ed25519 key signs |
+| `skFromRoot(root, tokenContract, account)` | HKDF expansion and rejection sampling |
+| `deriveFromWallet(signer, tokenContract)` | Derivation with all mandatory checks |
+| `deriveFromRawRoot(root, tokenContract, account)` | Raw-root fallback; `root` must be 32 bytes |
+| `registerWitness(keys, account)` | Register-circuit witness, to pass to a prover |
+| `registerPayload(keys, account, proof)` | The `data` argument for the token's `register` call |
+
+A wallet is anything that implements `MessageSigner`:
+
+```ts
+interface MessageSigner {
+  address: string;
+  // Sign `message` under SEP-53 and return the 64-byte signature.
+  // Takes the message, not the digest: wallets apply the prefix and SHA-256 themselves.
+  signMessage(message: string): Promise<Uint8Array>;
+  // Check that a signature really came from `address`.
+  verify(message: string, signature: Uint8Array): Promise<boolean>;
+}
+```
+
+A registration then looks like this, following [`registration/test-core.ts`](https://github.com/Tally-Network/Tally/blob/main/registration/test-core.ts):
+
+```ts
+import { Address, xdr } from "@stellar/stellar-sdk";
+import { deriveFromWallet, registerWitness } from "./registration/core.js";
+import { encodeRegisterData } from "./ct/sdk/src/chain/payload.js";
+import { CircuitProver } from "./ct/sdk/src/proving/prover.js";
+import { loadCircuit } from "./ct/sdk/src/proving/artifacts.js";
+
+const { keys } = await deriveFromWallet(wallet, TOKEN);       // all checks run here
+const witness = registerWitness(keys, wallet.address);
+const prover = new CircuitProver(loadCircuit("register"));
+const { proof } = await prover.prove(witness.inputs);          // proved on the device
+await prover.destroy();
+
+await client.invoke(TOKEN, "register", [
+  new Address(wallet.address).toScVal(),
+  xdr.ScVal.scvU32(0),                                         // auditor id
+  encodeRegisterData(witness, proof),
+], txSigner);
+```
+
+## Required disclosure
+
+The OpenZeppelin v0.9.0 specification requires a raw root to be shown for backup at creation, and `sk` export to be offered as a backup for signer roots. A wallet UI built on `core.ts` should show this before anything is signed:
+
+> Your confidential account is only as private as the key that signs for this address. Anyone who obtains that key can both view and spend. Registration is single-use, so the key cannot be rotated in place — recovering from a compromise means registering a new address and moving the funds.
+
+The wording is Tally's; the obligations behind it are OpenZeppelin's.
+
+## What the test proves
+
+```bash
+pnpm test:registration
+```
+
+This runs [`registration/test-core.ts`](https://github.com/Tally-Network/Tally/blob/main/registration/test-core.ts) against live testnet. It creates accounts with friendbot and submits a real `register` transaction. A Stellar keypair stands in for the wallet and does exactly what a SEP-53 wallet does: prefix, SHA-256, ed25519. The test makes 9 checks:
+
+| # | Check |
+|---:|:---|
+| 1 | Same wallet and same deployment give the same key |
+| 2 | A different address gives a different key (`acct_f` binding) |
+| 3 | A different deployment gives a different key (`addr_f` binding) |
+| 4 | A signature that does not verify against the address is rejected |
+| 5 | A non-deterministic (MPC or threshold) signer is rejected |
+| 6 | The raw-root fallback derives and reports its form |
+| 7 | The register proof is generated client-side |
+| 8 | The account registers on testnet |
+| 9 | The viewing key read back from chain matches the key derived from the wallet signature |
+
+The last recorded run, against the OpenZeppelin v0.9.0 deployment of 2026-10-05, generated the proof client-side in 882 ms and passed all checks.
+
+What the test does not cover is the browser plumbing: a connect button, Freighter's API and page layout. None of that exists yet.

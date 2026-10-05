@@ -1,0 +1,124 @@
+---
+title: "Confidential tokens on Stellar"
+description: "What OpenZeppelin Confidential Tokens give Tally: private balances and amounts, public addresses, the key hierarchy, the auditor key and the transfer event."
+---
+
+Tally does not implement its own private token. It builds on the OpenZeppelin Confidential Token, a Soroban contract that is part of Stellar's Confidential Tokens developer preview. This page covers the parts of that design Tally relies on.
+
+<Callout type="warn">
+The confidential-token suite is an unaudited **developer preview**. Tally pins OpenZeppelin stellar-contracts **v0.9.0** (`df602b6`), which is a branch, not a tagged release. Tally runs on testnet only.
+</Callout>
+
+## What is hidden and what is public
+
+The confidential token wraps any SEP-41 token. Users deposit ordinary tokens into the contract. From then on, their balances and transfer amounts are hidden, and the network still checks every operation with a zero-knowledge proof.
+
+| Hidden | Public |
+|:---|:---|
+| How much an account holds | The sender address of every transfer |
+| How much moves in a transfer | The recipient address of every transfer |
+| | Deposit and withdrawal amounts, because they cross between the confidential contract and the ordinary token |
+
+OpenZeppelin's documentation calls this **confidentiality, not anonymity**. An observer can see that address A sent something to address B. The observer cannot see how much.
+
+Tally depends on both halves of this:
+- the hidden amounts are what keep each recipient's payment private;
+- the public sender address is what lets a donor list every payment out of a declared account. See [completeness](/docs/concepts/completeness).
+
+## Two balances and a merge
+
+Each confidential account has two balances:
+
+- a **spendable balance**, which only the owner can change;
+- a **receiving balance**, where incoming deposits and transfers land.
+
+The owner moves received funds into the spendable balance with a **merge**. A merge needs no proof.
+
+Each spend replaces the sender's spendable-balance commitment, and the next spend has to be proven against the new one. So sends from a single account happen one after another. Tally works around this with several sending accounts per round; see [rounds and lanes](/docs/concepts/rounds-and-lanes).
+
+## Registration
+
+An account must register with the token contract before it can hold a confidential balance. Registration is a transaction carrying a zero-knowledge proof that the account's keys are correctly derived and linked. It is single-use: it reverts if the account is already registered.
+
+At registration the account also chooses an auditor (`auditor_id`). That choice is fixed for the life of the account.
+
+Tally's [non-custodial registration](/docs/guides/registering) derives the keys from a signature made by the user's own wallet, following OpenZeppelin's key-derivation specification. It is tested headless against live testnet. There is no browser page.
+
+## Keys
+
+Every key derives from one secret, the spending key.
+
+| Key | Definition | What it allows |
+|:---|:---|:---|
+| Spending key `sk` | A secret scalar | Authorising transfers, withdrawals, spender delegations and merges |
+| Spending public key `Y` | `Y = sk·H` | Stored on-chain at registration |
+| Viewing key `vk` | `vk = Poseidon(δ_vk, sk, addr_f)` | Reading balances and amounts without spending authority. It is bound to one token contract through `addr_f` |
+| Public viewing key `PVK` | `PVK = vk·H` | Stored on-chain at registration. Senders use the recipient's `PVK` to encrypt the amount so the recipient can read it |
+
+A viewing key cannot move funds and cannot be used to recover the spending key.
+
+<Callout type="warn">
+In Tally, the funder's viewing key is **never shared** with a donor. It would let the holder recompute every ephemeral scalar the funder ever used, which opens every individual amount retroactively. Donors use the [challenge–response](/docs/concepts/aggregate-proof) instead.
+</Callout>
+
+## How a transfer hides its amount
+
+When a sender pays a recipient, the sender's wallet:
+
+1. picks a random salt `σ`;
+2. derives an ephemeral scalar `r_e` from its own viewing key and `σ`, and publishes `R_e = r_e·H`;
+3. combines `r_e` with the recipient's `PVK` (an elliptic-curve Diffie–Hellman exchange) to get a shared secret;
+4. publishes the amount masked with that secret, `ṽ`.
+
+The recipient repeats the exchange from their side and unmasks the amount. Nobody else can.
+
+Because `r_e` is derived from the sender's viewing key and the public salt, the sender can recompute it later without storing it. Tally relies on that: it is how a funder can prove a total over transfers made earlier. Tally's transfer path therefore never accepts a caller-supplied `r_e`. See [safety invariant I1](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md).
+
+## The transfer event
+
+Every confidential transfer emits a `Transfer` event. Delegated sends emit a `SpenderTransfer` event. The `Transfer` event carries:
+
+| Field | Content |
+|:---|:---|
+| `from`, `to` | Sender and recipient addresses, in the clear |
+| `R_e`, `σ` | Ephemeral public key and salt, used to rebuild the shared secret |
+| `ṽ` | The amount, masked for the recipient |
+| `b̃` | The sender's new balance, masked for the sender |
+| `ṽ_aud,r`, `r̃_aud,r` | Ciphertexts for the recipient's auditor |
+| `ṽ_aud,s`, `b̃_aud,s`, `r̃_aud,s` | Ciphertexts for the sender's auditor |
+
+There is no plaintext amount field. The sender and recipient are topic-indexed, so anyone can query every transfer out of a given account.
+
+## The auditor key
+
+The OpenZeppelin design has a built-in auditor role. Each account names an auditor at registration. Every transfer then encrypts:
+
+- the amount to the **recipient's auditor**;
+- the amount and the sender's new balance to the **sender's auditor**.
+
+The zero-knowledge proof of each transfer enforces these ciphertexts, so they cannot be left out or malformed.
+
+The auditor keys live in a separate **auditor contract**, indexed by `auditor_id`. One auditor contract can serve several tokens. The reference contract keeps one current key per `auditor_id`, and rotating the key overwrites it in place.
+
+An auditor's key is one secret scalar. Whoever holds it can decrypt the amounts of every account bound to that auditor. In Tally's testnet deployment, the auditor secret is written only to the deployer's machine (`~/.config/tally/`) and never to the repository. Holding that key in split custody, so no single party can decrypt alone, is the main job of the planned [operator service](/docs/operator/design). It is designed and has not been built.
+
+## Tally's testnet deployment
+
+Deployed 2026-10-05 on Stellar testnet against OpenZeppelin v0.9.0:
+
+| Contract | Address |
+|:---|:---|
+| Confidential token | `CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN` |
+| Proof verifier | `CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL` |
+| Auditor | `CDMJCKJGYWFGZCNNZMQAUMDJCRWQMFZEG24FYENE4AQRJ2P3HKC5AMW7` |
+| Underlying token | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
+| Round registry (Tally's own) | `CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W` |
+
+The source of truth is [`demo/deployment.testnet.json`](https://github.com/Tally-Network/Tally/blob/main/demo/deployment.testnet.json). On-chain proofs are checked by the Nethermind UltraHonk verifier.
+
+Tally's client code for these contracts is in [`ct/sdk`](https://github.com/Tally-Network/Tally/tree/main/ct/sdk). It is Tally's own port of the reference demo's SDK to v0.9.0. It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements (`pnpm test:conformance`). It is not published as a package and has not been audited.
+
+## Further reading
+
+- OpenZeppelin docs, v0.9.0: [`overview.md`](https://github.com/OpenZeppelin/stellar-contracts/blob/df602b613fbc4ae1e98ff62ba3caef671a370f65/packages/tokens/src/confidential/docs/overview.md), [`protocol/keys-and-commitments.md`](https://github.com/OpenZeppelin/stellar-contracts/blob/df602b613fbc4ae1e98ff62ba3caef671a370f65/packages/tokens/src/confidential/docs/protocol/keys-and-commitments.md), [`protocol/auditing.md`](https://github.com/OpenZeppelin/stellar-contracts/blob/df602b613fbc4ae1e98ff62ba3caef671a370f65/packages/tokens/src/confidential/docs/protocol/auditing.md), [`protocol/interface.md`](https://github.com/OpenZeppelin/stellar-contracts/blob/df602b613fbc4ae1e98ff62ba3caef671a370f65/packages/tokens/src/confidential/docs/protocol/interface.md).
+- [SDK reference](/docs/reference/sdk) for Tally's port.

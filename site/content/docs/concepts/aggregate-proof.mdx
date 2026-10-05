@@ -1,0 +1,126 @@
+---
+title: "The aggregate proof"
+description: "One zero-knowledge proof of a round's total over many transfers from several sender accounts, answered to a donor's own challenge and verified off-chain."
+---
+
+At the end of a round, the funder produces **one zero-knowledge proof** that the round's transfers add up to a total. The proof reveals the total to one chosen donor and reveals no individual amount. This page explains what the proof states, how the donor's challenge works, and why it is checked off-chain.
+
+## What the proof states
+
+In plain words, the funder proves this statement: "I hold the spending keys for these sender accounts, and these transfers from them, as recorded on-chain, add up to exactly this total." The total is sealed so only the holder of the donor's key can read it, and the proof is bound to the donor's nonce.
+
+More precisely, for each transfer `i` in the round the circuit checks that:
+
+- the funder knows the spending key `sk_i` whose public viewing key matches the sender's `PVK_A,i` on-chain;
+- the funder knows the ephemeral scalar `r_e,i` behind the event's published `R_e,i`;
+- unmasking the event's published amount `ṽ_i` with the shared secret for the recipient's `PVK_B,i` gives an amount `v_i`;
+- `v_i` is in range (below 2^127).
+
+It then checks that the sum of the `v_i` equals the sealed total, and that the number of transfers counted equals the public `n_active`, which must be at least the [minimum group size](/docs/concepts/minimum-group-size).
+
+The circuit is written in Noir and proved with UltraHonk. It is generated from [`circuits/_template.nr`](https://github.com/Tally-Network/Tally/blob/main/circuits/_template.nr) into three sizes: 8, 16 and 64 transfers.
+
+## One proof across several sender accounts
+
+OpenZeppelin's aggregate disclosure specification fixes one sender account per proof: the sender's `PVK_A` is a common input. Tally extends it in two ways:
+
+| | OpenZeppelin, as written | Tally |
+|:---|:---|:---|
+| Recipient key `PVK_B` | Not in the per-event list | Per event, because each payment goes to a different recipient |
+| Sender key `PVK_A` and `sk` | Common to all events, so one sender account per proof | Per event, so one proof spans every lane in the round |
+| `n_active` | Not present | A public input, so the donor sees how many transfers the total covers |
+| Minimum group size | Not present | Enforced inside the circuit |
+
+Making the sender key per-event is what lets a round use [several lanes](/docs/concepts/rounds-and-lanes) without leaking per-lane subtotals. The missing `PVK_B` was reported upstream as [OpenZeppelin/stellar-contracts#849](https://github.com/OpenZeppelin/stellar-contracts/issues/849), which was closed and fixed upstream on 2026-09-10.
+
+## Challenge and response
+
+The donor never receives a secret from the funder. The exchange runs the other way.
+
+```
+Donor                                        Funder
+-----                                        ------
+generate own keypair (r_R, P_R)
+generate fresh nonce ν
+keep r_R secret
+                 ── P_R, ν ──────────────▶
+                                             find the round's transfers on-chain
+                                             re-derive each r_e from lane keys
+                                             prove; seal total to P_R, bind to ν
+                 ◀── proof, R_disc, ṽ_disc ──
+rebuild every other input from chain
+verify the proof
+decrypt the total with r_R
+```
+
+The sealing works like this. The funder picks a fresh secret `r_disc` and publishes `R_disc = r_disc·H`. It computes a shared point `S_disc = r_disc·P_R` and publishes the sealed total:
+
+```
+ṽ_disc = V_total + Poseidon2(δ_disc_bind, S_disc.x, ν)        δ_disc_bind = 15
+```
+
+The donor computes the same point from its own side, `S_disc = r_R·R_disc`, and subtracts the mask. Only the holder of `r_R` can do this.
+
+Because the nonce `ν` is a public input to the proof, a bundle made for one challenge fails against any other. Replaying `round-003`'s bundle against a fresh challenge gives `PROOF FAILED` and exit code `2`.
+
+The funder's viewing key is never part of this. Sharing it would let the holder recompute every ephemeral scalar the funder ever used and open every individual amount, including past ones. Challenge–response is the only model Tally supports.
+
+## What the donor takes from the funder
+
+The verifier builds every public input itself, from chain state and from its own challenge. From the funder's bundle it reads exactly three values:
+
+| From the chain | From the donor's own challenge | From the funder |
+|:---|:---|:---|
+| Lane set and window (round registry) | `P_R`, `ν` | `proof` |
+| Every transfer out of those lanes in that window | | `r_disc_x`, `r_disc_y` |
+| Each sender's and recipient's public viewing key | | `v_tilde_disc` |
+| `addr_f`, `n_active` | | |
+
+If the funder could supply a public input, it could prove a statement about a set of transfers it chose. The verifier in [`cli/tally.ts`](https://github.com/Tally-Network/Tally/blob/main/cli/tally.ts) enforces this boundary in code. It also takes the order of public inputs from the circuit's own ABI rather than a hard-coded list, so a change to the circuit cannot silently pair the right proof with the wrong inputs.
+
+Two more checks run before the proof is accepted:
+
+- duplicate events are rejected, because the circuit cannot see them and one event counted twice would inflate the total;
+- the verification key derived from the committed circuit must match the pinned `vk.zk.bin`.
+
+## Size and cost
+
+Public inputs grow with the circuit size as **9n + 8**: nine per transfer slot, plus eight common values (`addr_f`, `n_active`, and the six disclosure-channel values `p_r_x`, `p_r_y`, `ν`, `r_disc_x`, `r_disc_y`, `ṽ_disc`).
+
+The **proof size is constant at 16,224 B** whatever the circuit size. A 64-transfer round proves in the same number of bytes as an 8-transfer round.
+
+Re-measured 2026-10-05 on OpenZeppelin v0.9.0, with `bb.js` 0.87.0 in zero-knowledge mode on an Apple M4 Pro, witnesses spread across 5 sender accounts:
+
+| n | ACIR opcodes | Prove | Verify | Proof size | Public inputs |
+|---:|---:|---:|---:|---:|---:|
+| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |
+| 16 | 636 | 1,891 ms | 581 ms | 16,224 B | 152 |
+| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |
+
+Cost grows by about 38 ACIR opcodes and about 85 ms per transfer, over a fixed base.
+
+A round with fewer transfers than the circuit size is padded. Padding slots repeat a real event's public data with `active = 0`, so they add no constraint and nothing to the sum. The verifier picks the smallest circuit that fits: up to 8 transfers use `n = 8`, up to 16 use `n = 16`, and up to 64 use `n = 64`. A round of more than 64 transfers cannot be proved with the current circuits.
+
+## Why the proof is verified off-chain
+
+The donor checks the proof on their own machine. The proof's verification key never goes on-chain.
+
+Tally measured on-chain verification of the aggregate circuits (in their non-zero-knowledge form) on testnet: `n = 16` uses 25.2 % of the 400,000,000-instruction limit and `n = 64` uses 37.7 %. All three sizes would fit. Tally keeps verification off-chain for two privacy reasons:
+
+- **Verifying on-chain would publish that a disclosure happened**, and to whom and when.
+- **It would force a proof that is not zero-knowledge.** The on-chain verifier implements only the non-zero-knowledge flavour. A non-zero-knowledge proof is succinct but does not hide its witness, and the point of this proof is that it reveals only the total.
+
+Zero-knowledge costs 1,632 B over the non-zero-knowledge size (14,592 B) and about 50 ms. The transfer proofs that go on-chain stay non-zero-knowledge, because the on-chain verifier requires it.
+
+## The funder needs no stored secrets per transfer
+
+Each transfer's ephemeral scalar is derived from the lane's viewing key and the event's public salt: `r_e = Poseidon(δ_eph, vk, σ)`. At proving time, `tally prove` re-derives `r_e` for every event and refuses any event it cannot re-derive. A funder needs only its lane keys to prove a total over any past round that is still readable from chain.
+
+This only works if every transfer used the deterministic derivation. A transfer made with a random `r_e` looks identical on-chain and can never be included in a proof. Tally's transfer path has no way to pass in an `r_e`. See [safety invariant I1](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md).
+
+## Further reading
+
+- [Circuits reference](/docs/reference/circuits)
+- [CLI reference](/docs/reference/cli)
+- [`circuits/README.md`](https://github.com/Tally-Network/Tally/blob/main/circuits/README.md) and [`MEASUREMENTS.md`](https://github.com/Tally-Network/Tally/blob/main/MEASUREMENTS.md)
+- OpenZeppelin docs, v0.9.0: `docs/selective-disclosure/circuits/aggregate.md` and `docs/selective-disclosure/protocol.md`

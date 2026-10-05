@@ -1,0 +1,138 @@
+---
+title: "Operator design"
+description: "Split auditor-key custody, scoped audit requests, disclosure outputs and allow/deny lists. Designed, not built."
+---
+
+<Callout type="warn" title="Designed, not built">
+Nothing on this page runs. It summarises the design in [`docs/OPERATOR-DESIGN.md`](https://github.com/Tally-Network/Tally/blob/main/docs/OPERATOR-DESIGN.md), written on 2026-10-05.
+</Callout>
+
+## What the operator is
+
+OpenZeppelin Confidential Tokens and Nethermind's Stellar Private Payments (SPP) both define compliance roles and leave them to whoever deploys them. The operator would run those roles for issuers and pool operators:
+
+- auditor-key custody;
+- scoped audit requests;
+- selective-disclosure outputs, including tax export;
+- allow and deny lists.
+
+Confidential one-to-many payouts remain the first use case.
+
+## Where the demand comes from
+
+The written record is narrower than some earlier research said. SDF's 2026-08-06 developer meeting notes, written by Kaan Kacar, contain:
+
+- in his own voice: "Nobody is building that platform for you. Hint.";
+- his paraphrase of Alessandro Voto, SDF's privacy product manager: "go **be the operator** — sanction lists, allow/deny lists, compliance hooks".
+
+The notes also carry design guidance that this design follows: the auditor key "should sit unused inside an MPC or TEE custody setup … and only answer scoped requests when a regulator compels one".
+
+Other asks quoted elsewhere came from video captions that could not be checked. There is no statement from SDF, OpenZeppelin or Nethermind that they will not build this themselves. Sources: [`docs/research/DEMAND-QUOTES.md`](https://github.com/Tally-Network/Tally/blob/main/docs/research/DEMAND-QUOTES.md).
+
+## Who takes part
+
+| Party | Trusted for | Not trusted for |
+|:---|:---|:---|
+| Holder | Their own keys and disclosures | Completeness: a holder can leave things out |
+| Issuer or pool operator | Deciding whether to freeze, claw back or list | Decrypting alone, or proving a clawback alone |
+| Requester (regulator, auditor, tax authority, or the holder) | Holding its own disclosure key | Receiving more than the approved scope |
+| Custodians (issuer, Tally, an independent party) | Their own key share and their own scope check | Acting below the threshold |
+| Tally | The request workflow, archive, list projections, log and one key share | Decrypting alone or holding a quorum |
+
+The design rule: no single party, Tally included, can decrypt an amount, prove a clawback or change a list on its own.
+
+## Auditor-key custody
+
+The protocols fix several things:
+
+- On OpenZeppelin Confidential Tokens, the auditor key is one Grumpkin scalar per `auditor_id`. The registry accepts any valid point with no proof of possession, and rotation overwrites the key in place.
+- On SPP, the view key is one Baby JubJub scalar that cannot be rotated and must exist before the pool is deployed.
+- Decryption is linear in the key in both systems.
+
+### Options compared
+
+| Option | Who can decrypt alone | Verdict |
+|:---|:---|:---|
+| Tally holds the key in an HSM | Tally | Rejected: breaks the design rule |
+| The issuer holds its own key; Tally supplies software | The issuer | Supported as a mode, but it is tooling, not an operator |
+| **Threshold custody, two-of-three, with threshold decryption** | Nobody below the threshold | **Chosen** for routine decryption |
+| A commercial MPC custody product | Nobody below the vendor's threshold | Only if it supports these curves; unverified and unlikely; an open question |
+| A trusted execution environment holding the key | The enclave, if broken | Used only for a short proving step |
+
+### The chosen design
+
+- **Custodians.** The issuer's compliance function, Tally, and an independent custodian chosen by the issuer.
+- **Separation.** The issuer's freeze and clawback signers must not hold a quorum of shares.
+- **Key generation.** The key is generated jointly, and a proof of possession is published, because the registry checks none.
+- **Who opens a result.** The requester combines the partial results. Custodians encrypt their contributions to the requester's key, so only the party entitled to a result sees it.
+- **Share upkeep.** Shares are refreshed without changing the public key. Every historical key version is kept.
+
+**The weakest point.** Clawback and auditor-side disclosure proofs need the whole key inside one proof. The design reassembles the key briefly inside an attested enclave, only for a logged, approved request, and publishes the attestation. Two alternatives, a collaborative prover or a circuit change, are open questions for SDF and OpenZeppelin.
+
+Standing balance openings are as sensitive as the key, so they are held secret-shared among the same custodians.
+
+## Scoped audit requests
+
+A request names:
+
+- the issuer and contract;
+- the requester and its disclosure key;
+- a legal basis;
+- the subjects (accounts or note keys);
+- a ledger range;
+- the data wanted;
+- the output type;
+- an expiry;
+- a notification rule.
+
+| Requester | Approvals before any custodian contributes |
+|:---|:---|
+| A holder, about their own accounts | Their own signature; no custodian decryption needed |
+| The issuer's compliance function | Issuer signature plus the independent custodian's scope check |
+| A regulator or court | Issuer signature (or documented compulsion), plus the independent custodian's and Tally's scope checks |
+| Anyone else | Refused |
+
+Scope is enforced cryptographically:
+
+- Custodians compute their part only for events they resolve themselves from at least two archives.
+- They never accept event data from the requester.
+- Each contribution is bound to the request and the event.
+
+Every request, approval, refusal, contribution and enclave session is written to a hash-chained log. Custodians countersign the log daily, and its head is anchored on Stellar daily.
+
+## Disclosure outputs
+
+| Output | Produced by | Complete? | State |
+|:---|:---|:---|:---|
+| Aggregate total of a payout round | Payer | Yes, for the declared lanes and window | **Built** |
+| Per-period total, outbound | Holder | Yes, outbound transfers are enumerable | Circuit built; verifier mode missing |
+| Per-counterparty total | Holder | Yes for outbound | Missing: new circuit |
+| Inbound totals | Recipient | No: a holder can omit inbound events | Missing |
+| Auditor-attested totals | Custodians plus the enclave step | Yes | Missing |
+| Tax export | Holder, locally | Outbound complete; inbound holder-asserted unless auditor-attested | Missing |
+
+The tax export is a verifiable transaction statement. It does no fiat valuation, no jurisdiction-specific tax calculation and no filing.
+
+## Allow and deny lists
+
+The two systems use different list models:
+
+- **OpenZeppelin:** a yes/no policy call keyed by Stellar address. OpenZeppelin v0.9.0 ships no implementation.
+- **SPP:** Merkle trees keyed by note public keys. The allowlist cannot delete, and the blocklist root must match exactly at proof time.
+
+The design keeps one off-chain subject registry and projects it into each system:
+
+- **OpenZeppelin projection:** a policy contract serving many tokens, signed two-of-three.
+- **SPP projection:** Tally runs the pool's association-set contracts. Removal from an allowlist becomes a blocklist entry. Blocklist updates are batched on a published schedule, with an emergency path for sanctions hits.
+
+## What exists and what is missing
+
+| Area | Today | Missing |
+|:---|:---|:---|
+| Client for the token | `ct/sdk`, v0.9.0, conformance vectors pass | Auditor client |
+| Disclosure circuits | Aggregate n = 8, 16, 64 | Per-counterparty, inbound and auditor-side aggregates |
+| Verifier | `tally verify` | Per-period mode; historical auditor-key lookup |
+| Key custody | None | Joint key generation, threshold decryption, refresh, enclave proving step |
+| Requests, log, lists, archive, tax export | None | All of it |
+
+The full threat table is on [Threat model](/docs/security/threat-model#part-2-the-planned-operator-service). The questions this design leaves open are on [Open questions](/docs/operator/open-questions).

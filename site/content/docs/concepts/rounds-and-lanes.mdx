@@ -1,0 +1,96 @@
+---
+title: "Rounds and lanes"
+description: "How the round registry fixes which accounts count and over which ledgers, and why a round pays from several lane accounts."
+---
+
+A **round** is one payout: a funder pays a set of recipients and later proves the total. A **lane** is one of the funder's sending accounts in that round. The **round registry** is a small Soroban contract that records, before any payment is made, which lanes count and over which ledgers.
+
+## Why the registry exists
+
+A total only means something if the donor knows which payments it is supposed to cover. If the funder chose that set after the fact, the funder could leave out awkward payments, or declare only the accounts that look good. The registry removes that choice. It fixes two things on-chain:
+
+- the **lane set**: the sender accounts whose transfers count;
+- the **window**: the range of ledgers over which they count.
+
+It does not record the transfers themselves. A donor finds those from chain events, because every confidential transfer publishes its sender address. A per-transfer record would also reintroduce the problem it appears to solve: the funder could simply not record one. See [completeness](/docs/concepts/completeness).
+
+## The contract interface
+
+```
+open_round(funder, round_id, lanes[])  -> Round    // stamps opened_at from the ledger
+close_round(funder, round_id)          -> Round    // stamps closed_at
+get_round(funder, round_id)            -> Round
+is_lane(funder, round_id, who)         -> bool
+```
+
+A `Round` holds the funder address, the list of lanes, `opened_at`, and `closed_at` (empty while the round is open). A `round_id` is 32 bytes.
+
+| Call | Who calls it | What it does |
+|:---|:---|:---|
+| `open_round` | The funder, who must authorise it | Checks the lane list, stores the round, stamps `opened_at` with the current ledger, emits `RoundOpened` |
+| `close_round` | The funder, who must authorise it | Stamps `closed_at` with the current ledger, emits `RoundClosed`. A second close is rejected |
+| `get_round` | Anyone, usually the donor's verifier | Returns the declared round. The donor's lane set and window come from here, never from the funder's bundle |
+| `is_lane` | Anyone | Whether an address is a declared lane of that round |
+
+Deployed on testnet (soroban-sdk 28.0.0, 2026-10-05): [`CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W`](https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W). The earlier August deployment `CCKWYTHG…R3ES` is retired.
+
+## What the contract enforces
+
+The rule that matters is that a declaration cannot be backdated, extended or revised after the fact.
+
+| Constraint | How it is enforced |
+|:---|:---|
+| `opened_at` is the real ledger | Taken from `e.ledger().sequence()`. It is not a parameter, so a caller cannot supply or backdate it |
+| The lane set cannot change | Written once in `open_round`. The contract has no function that edits it |
+| A round is declared once | `open_round` rejects a `round_id` the same funder has already used |
+| Nobody can take a funder's round id | Rounds are stored per funder. Another account that uses the same id only fills its own namespace |
+| A round closes once, by its funder | `close_round` looks only in the caller's own namespace and rejects a second close |
+| Lanes are distinct and the list is not empty | Rejected at declaration. A duplicated lane would let one transfer be counted twice |
+| At most 64 lanes | Rejected at declaration (`MAX_LANES = 64`) |
+
+Because both ends of the window are stamped by the contract and the lane set is fixed, the donor's rule is sound even against a funder who controls every other input. The rule: reject any transfer outside `[opened_at, closed_at]`, or from a sender that is not a declared lane.
+
+### Errors
+
+| Code | Name | Raised when |
+|---:|:---|:---|
+| 1 | `RoundAlreadyExists` | The funder has already declared this `round_id` |
+| 2 | `RoundNotFound` | No round with this id exists under this funder |
+| 3 | `RoundAlreadyClosed` | `close_round` is called a second time |
+| 5 | `EmptyLaneSet` | The lane list is empty |
+| 6 | `DuplicateLane` | The same address appears twice in the lane list |
+| 7 | `TooManyLanes` | More than 64 lanes |
+
+Code 4 was `NotRoundFunder`. It was removed when rounds became namespaced by funder, because a foreign caller now gets `RoundNotFound`.
+
+The contract has 16 tests, 10 of them negative: each enforced constraint has a test showing it rejects the violation.
+
+### What it cannot do
+
+The registry cannot see the token contract. It cannot stop a funder from paying from an account it never declared. Those payments are outside the round, and the total says nothing about them. The [trust statement](/docs/security/trust-statement) says so in its second sentence.
+
+## Why a round uses several lanes
+
+Each confidential transfer replaces the sender's spendable-balance commitment, and the next transfer's proof must be built against the new one. So transfers from one account happen strictly one after another.
+
+Paying from several lane accounts lets the payments run side by side. The demo pays 16 recipients from 5 lanes, with no lane carrying more than 4 transfers.
+
+Several lanes would normally create a privacy problem. A separate proof per lane would reveal each lane's subtotal, and with only a few transfers per lane that approaches revealing each payment. Tally's [aggregate proof](/docs/concepts/aggregate-proof) avoids this: one proof covers every lane in the round, so only the round total is revealed. Adding lanes changes speed and has no privacy cost.
+
+The registry caps a round at 64 lanes. The contract's own comment gives two reasons. Past a handful of lanes, more lanes buy nothing, because proof generation is the ceiling. And an unbounded list would make the cost of `is_lane` unbounded.
+
+### Batching within a lane
+
+A Stellar transaction carries only one contract invocation, so batching needs a contract that makes several transfer calls itself. Tally measured this with a measurement-only wrapper. Up to **4 confidential transfers from one sender** fit in one transaction (90.8 % of the instruction limit, 95.1 % of the size limit), and a 4-transfer batch was submitted on testnet. With 16 transfers over 5 lanes, that would mean 5 transfer transactions instead of 16.
+
+The demo does not use batching yet. It still sends one transfer per transaction. See [measurements](/docs/measurements).
+
+## A round's life, in order
+
+1. The funder creates and registers its lane accounts and deposits into them. Deposit amounts are public.
+2. The funder calls `open_round` with the lane list. The contract stamps `opened_at`.
+3. The lanes pay recipients with `confidential_transfer`. Amounts are hidden; addresses are public.
+4. The funder calls `close_round`. The contract stamps `closed_at`.
+5. A donor asks for the total. The verifier reads the round with `get_round` and lists the transfers itself.
+
+The [walkthrough](/docs/walkthrough) goes through each step with the real commands, and the [contracts reference](/docs/reference/contracts) lists the full interface. Source: [`contracts/round-registry/src/lib.rs`](https://github.com/Tally-Network/Tally/blob/main/contracts/round-registry/src/lib.rs).

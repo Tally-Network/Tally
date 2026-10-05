@@ -1,0 +1,61 @@
+---
+title: "Trust statement"
+description: "The two sentences that define what a Tally aggregate proof assures, why they are worded the way they are, and the rules every piece of public copy follows."
+---
+
+Tally states its guarantee in two sentences. They are copied below verbatim from [docs/TRUST-STATEMENT.md](https://github.com/Tally-Network/Tally/blob/main/docs/TRUST-STATEMENT.md). Nothing else in Tally's public material, this site included, may state the guarantee more strongly.
+
+> **The donor is assured that** the confidential transfers sent from the lane accounts Tally declared on-chain before the round opened, within that round's declared ledger window, total exactly the disclosed amount and that none has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.
+>
+> **This does not assure** that the funder made no other payments, nor that the recipients are independent of the funder: the guarantee is scoped to transfers from the accounts declared before the round, **not to the funder's total spend**, and it establishes what amounts moved, not who ultimately controls the accounts that received them.
+
+The first sentence is the whole positive claim. The second sentence names the two things a reader might assume and must not.
+
+## Why it is worded this way
+
+### The scope is a declared set of accounts
+
+The guarantee covers the lane accounts the funder declared in the round registry. It makes no claim about the funder as a whole. A funder can operate confidential accounts that Tally never declared. Transfers from those accounts are outside the proof, and the proof cannot detect them.
+
+### Public deposits do not make lanes discoverable
+
+An earlier draft said the guarantee was "bounded by deposits being public". That overstated it, and the phrase was removed.
+
+Public deposits let a donor audit money flowing out of a pool the donor already knows about. They do not reveal that some unrelated address is a lane. A lane funded out of band, from a source with no visible link to the declared pool, does not show up as a lane at all. Deposit transparency constrains a declared pool. It does not make the account set discover itself.
+
+### Completeness inside the declared set does not need the funder's cooperation
+
+In the OpenZeppelin confidential token, `Transfer.from` and `Transfer.to` are topic-indexed, and `confidential_transfer` always emits the event. No code path moves confidential value without publishing the sender.
+
+The donor therefore lists the round's transfers from chain state directly. If the funder withholds a transfer, it shows up as a mismatch between the chain's set and the proof's set. It does not show up as a smaller total. See [Completeness](/docs/concepts/completeness).
+
+### The window stops retroactive cherry-picking
+
+`open_round` takes its ledger number from the contract, not from the caller, and the lane set cannot change once written. Without both rules, a funder could run the round first and afterwards declare only the lanes that make it look good. That is the same cherry-picking, one level up. See [Rounds and lanes](/docs/concepts/rounds-and-lanes).
+
+### Recipient independence is a separate, unsolved problem
+
+A funder can pay accounts it controls and count them, which inflates the apparent disbursement. No primitive that hides amounts can settle this. It needs recipient attestation, which is outside the current scope. The second sentence says so instead of leaving it implied. The [roadmap](/docs/roadmap#later-verified-recipient-identity) describes the identity layer that would address it.
+
+## Rules for public copy
+
+These rules come from [docs/TRUST-STATEMENT.md](https://github.com/Tally-Network/Tally/blob/main/docs/TRUST-STATEMENT.md#rules-for-public-copy) and apply to the landing page, this documentation, the README, grant submissions and pitch material.
+
+1. **Both sentences ship verbatim wherever they appear.** Nobody shortens, splits, softens or paraphrases them for readability. Two sentences is a length people read. A third sentence turns them into a list of caveats nobody finishes.
+2. **A headline above them makes no claim.** A headline may name the problem or the category. It may not assert a guarantee. Anything that asserts belongs in sentence 1 or nowhere.
+3. **Always give the scope.** Never write "provably disbursed X" on its own.
+4. **Never imply the total covers the funder's whole programme.**
+5. **Never claim recipient identity or independence is verified.** Until the identity layer ships, sentence 2 is the whole story.
+6. **If a claim cannot be traced to sentence 1, it does not ship.**
+
+| Do not write | Write instead |
+|:---|:---|
+| "Provably disbursed X" | "Provably disbursed X from the declared lanes in round R" |
+| "Every payment the funder made is accounted for" | Nothing. The guarantee does not cover this |
+| "X went to N independent recipients" | Nothing. Recipient independence is not verified |
+
+## Related pages
+
+- [Threat model](/docs/security/threat-model): what an attacker can try against a round, and what stops each attempt.
+- [Known limits](/docs/security/known-limits): everything Tally does not do yet.
+- [Verifying a round](/docs/guides/verifying): how a donor checks the claim in sentence 1.

@@ -1,0 +1,51 @@
+---
+title: "Roadmap"
+description: "What works now, what comes next on testnet, and what follows SDF approving Confidential Tokens for mainnet."
+---
+
+There are no dates on this page. The last stage depends on a decision outside the project. Sources: [`docs/SCOPE-LEDGER.md`](https://github.com/Tally-Network/Tally/blob/main/docs/SCOPE-LEDGER.md) and [`docs/DEMONSTRATION-STATUS.md`](https://github.com/Tally-Network/Tally/blob/main/docs/DEMONSTRATION-STATUS.md).
+
+## Working now, on testnet
+
+- Multi-sender aggregate disclosure circuits for 8, 16 and 64 transfers: zero-knowledge, with the minimum group size enforced in the circuit.
+- The round registry contract (16 tests, 10 of them negative).
+- The client ported to OpenZeppelin v0.9.0, passing the upstream test vectors.
+- A testnet deployment whose auditor secret is kept out of the repository.
+- An end-to-end round, donor-verified, with `pnpm demo`.
+- The standalone `tally challenge`, `prove` and `verify` tool.
+- A published round, verifiable from a clean clone, with two tampering cases rejected.
+- Headless non-custodial registration, tested on live testnet.
+- Measurements under protocol 29, including four transfers in one transaction.
+- The secret guard and CI.
+
+## Next, on testnet
+
+In the order the scope ledger lists them:
+
+1. **Auditor client and archive.** Decrypting every event type, standing openings checked against the chain, an event archive that meets OpenZeppelin's indexer specification, and per-period verification.
+2. **Split custody.** Joint key generation over Grumpkin, threshold decryption with proofs of correct partial results, a published proof of possession, share refresh, a secret-shared store of balance openings, and the custodian service.
+3. **Requests, lists and outputs.**
+   - The scoped audit-request workflow and the public log.
+   - The OpenZeppelin policy contract and the subject registry.
+   - SPP list operation and SPP view-key custody.
+   - Per-counterparty and inbound disclosure circuits, and the tax-export statement.
+   - An operator console, and a pilot with one issuer.
+
+All of this is designed, not built. See [Operator design](/docs/operator/design).
+
+## After SDF approves Confidential Tokens for mainnet
+
+None of this starts before that approval:
+
+- Auditor-side aggregate proofs through an attested enclave.
+- Hardware-backed share storage.
+- Moving to the OpenZeppelin release that reaches mainnet.
+- Mainnet deployment of contracts, archives and custodian nodes, and a second independent archive.
+- Payout batching (up to four transfers per transaction) in the library.
+- Fixes from an external security audit.
+- Operational runbooks.
+- A mainnet pilot.
+
+## Later: verified recipient identity
+
+The proof shows what amounts moved, not who controls the accounts that received them. A payer could pay accounts it controls. Closing that gap needs recipient attestation: binding each recipient to a verified identity, so a donor learns "this sum went to N distinct verified recipients". It is out of scope for the current work because it changes the [trust statement](/docs/security/trust-statement).

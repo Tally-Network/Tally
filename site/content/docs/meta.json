@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "index",
+    "quickstart",
+    "---Learn---",
+    "concepts",
+    "walkthrough",
+    "use-cases",
+    "---Use it---",
+    "guides",
+    "reference",
+    "measurements",
+    "---Trust---",
+    "security",
+    "operator",
+    "compare",
+    "---Project---",
+    "roadmap",
+    "faq",
+    "changelog",
+    "licence"
+  ]
+}

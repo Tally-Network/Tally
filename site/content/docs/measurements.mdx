@@ -1,0 +1,86 @@
+---
+title: "Measurements"
+description: "On-chain costs and limits on Stellar testnet, re-measured on 2026-10-05, with method."
+---
+
+Re-measured on **2026-10-05** on Stellar testnet, protocol 29 (ledger 5,029,400), against OpenZeppelin stellar-contracts v0.9.0 (`df602b6`). Source: [`MEASUREMENTS.md`](https://github.com/Tally-Network/Tally/blob/main/MEASUREMENTS.md); raw data: [`ct/measurements.testnet.json`](https://github.com/Tally-Network/Tally/blob/main/ct/measurements.testnet.json).
+
+## Method
+
+Every on-chain figure comes from `simulateTransaction`: the resources the RPC returns, the minimum resource fee, and the size of the assembled transaction. Limits are read live with `stellar network settings`. Simulation figures include whatever margin the RPC applies; that margin was not measured separately. Where a transaction was submitted, its hash is given.
+
+Re-run with:
+
+```bash
+pnpm measure            # on-chain costs (needs a deployment and the tally-deployer identity)
+pnpm bench:aggregate    # local proving times for the aggregate circuits
+```
+
+## Network limits
+
+| Limit | Value |
+|:---|---:|
+| Instructions per transaction | 400,000,000 |
+| Transaction size | 132,096 B |
+| Disk-read entries per transaction | 200 |
+| Write entries per transaction | 200 |
+| Write bytes per transaction | 132,096 B |
+| Memory per transaction | 41,943,040 B |
+
+## Single operations
+
+| Operation | CPU instructions | Share of 400M | Tx size | Write B | RO / RW entries | Min resource fee (stroops) |
+|:---|---:|---:|---:|---:|:---:|---:|
+| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |
+| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |
+
+## Proof generation
+
+Local, Apple M4 Pro, Node 24.20.0, bb.js 0.87.0. "Warm" is the second proof after the backend is initialised.
+
+| Circuit | First proof | Warm proof | Proof size |
+|:---|---:|---:|---:|
+| `register` (6 public inputs) | 1,199 ms | 696 ms | 14,592 B |
+| `transfer` (25 public inputs) | 2,005 ms | 1,321 ms | 14,592 B |
+| `tally_aggregate_n16`, zero-knowledge (`pnpm demo`) | 2,260 ms | — | 16,224 B |
+
+## Transfers per transaction
+
+A Stellar transaction carries one contract call, so batching needs a contract that makes the calls itself. [`ct/contracts/bench-batch`](https://github.com/Tally-Network/Tally/blob/main/ct/contracts/bench-batch/src/lib.rs) is a measurement-only wrapper that calls `confidential_transfer` k times for one sender.
+
+| k | CPU instructions | Share of 400M | Tx size | Share of 132,096 B | Fits? |
+|---:|---:|---:|---:|---:|:---:|
+| 1 | 91,550,838 | 22.9 % | 32,084 B | 24.3 % | yes |
+| 2 | 182,067,642 | 45.5 % | 63,264 B | 47.9 % | yes |
+| 3 | 272,645,811 | 68.2 % | 94,444 B | 71.5 % | yes |
+| **4** | **363,272,171** | **90.8 %** | **125,624 B** | **95.1 %** | **yes, submitted** |
+| 5 | over budget | — | — | — | no |
+
+Four transfers from one sender landed in one transaction: [`fe362834…b59384`](https://stellar.expert/explorer/testnet/tx/fe362834f8ddf8cb16cde66e71d64fc75dd7103a4968141bca4bd2faeab59384), ledger 5,029,434, through bench contract `CB6U7QX2OR3ADD3NW6NSZQWNADIC3LFJKM3MN3NND4VPPDWTPQDDA3VV`. Instructions and transaction size bind together at four.
+
+How the wrapper authorises matters. Authorising the batch with `require_auth()` copies every proof into the root authorisation entry, which pushed the envelope over the size limit at k = 3. Authorising with empty arguments (`require_auth_for_args([])`) avoids the copy.
+
+The demo still sends one transfer per transaction.
+
+## Aggregate proofs verified on-chain (capacity only)
+
+Tally verifies aggregate proofs off-chain. These figures only answer whether on-chain verification would fit. They were taken on a separate measurement-only verifier, `CACEIWIWMRIC4XQJKO4BYUWGBSV5DTMI36JPLARUCUNLV6Q6VWO54UQJ`, with non-zk proofs, because the on-chain verifier implements only the non-zk flavour.
+
+| n | Public inputs | CPU instructions | Share of 400M | Tx size | Verified |
+|---:|---:|---:|---:|---:|:---:|
+| 8 | 80 | 91,214,362 | 22.8 % | 17,452 B | true |
+| 16 | 152 | 100,835,059 | 25.2 % | 19,756 B | true |
+| 64 | 584 | 150,810,864 | 37.7 % | 33,580 B | true |
+
+All three fit. Verification stays off-chain anyway: putting it on-chain would publish that a disclosure happened, to whom and when, and would force a proof mode that is not witness-hiding.
+
+## Corrected figures
+
+| Previously published (August 2026, 100M cap) | Now |
+|:---|:---|
+| `confidential_transfer` about 93,000,000 instructions, 93 % of the cap | 91,193,854, 22.8 % of a 400M cap |
+| One transfer per transaction; batching impossible | 4 per transaction from one sender, demonstrated |
+| Transaction size is not the constraint | It is when batching: 95.1 % at k = 4 |
+| Aggregate n = 16 verifies on-chain with 17,126 instructions to spare | 25.2 % of the cap; still verified off-chain, for privacy |
+| `register` 87,995,074 instructions, 88.0 % | 88,344,016, 22.1 % |
+| Transfer proof about 1.26 s steady state | 1.32 s warm on different hardware; not a regression claim |

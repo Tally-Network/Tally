@@ -1,0 +1,73 @@
+---
+title: "Completeness"
+description: "Why a funder cannot leave a payment from the declared lanes inside the window out of the total, and what the guarantee does not cover."
+---
+
+A total is only useful if the funder cannot quietly leave payments out of it. This page explains why, for the lanes declared in the round registry and within the round's ledger window, no payment can be left out. It also explains where that guarantee stops.
+
+## The guarantee, as stated
+
+> **The donor is assured that** the confidential transfers sent from the lane accounts Tally declared on-chain before the round opened, within that round's declared ledger window, total exactly the disclosed amount and that none has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.
+>
+> **This does not assure** that the funder made no other payments, nor that the recipients are independent of the funder: the guarantee is scoped to transfers from the accounts declared before the round, **not to the funder's total spend**, and it establishes what amounts moved, not who ultimately controls the accounts that received them.
+
+## Why nothing inside the declared lanes and window can be left out
+
+Three facts work together.
+
+### 1. Every transfer publishes its sender
+
+In the OpenZeppelin confidential token, the `Transfer` event's `from` and `to` fields are topic-indexed, so anyone can query the chain for every transfer out of a given account. Emission is unconditional inside `confidential_transfer`: there is no code path that moves confidential value without publishing the sender's address. Amounts are hidden; addresses never are.
+
+### 2. The lane set and window are fixed before the round
+
+The [round registry](/docs/concepts/rounds-and-lanes) stamps `opened_at` and `closed_at` from the ledger itself, and the lane set cannot be changed once written. The funder cannot run the round first and then declare only the accounts that look good.
+
+### 3. The donor builds the transfer set, and a gap shows as a mismatch
+
+The donor's verifier does not ask the funder which transfers belong to the round. Given only the funder's address and the round id, it:
+
+1. reads the lane set and window from the registry with `get_round`;
+2. lists every `Transfer` **and** `SpenderTransfer` event whose `from` is a declared lane, inside `[opened_at, closed_at]`;
+3. rejects duplicate events;
+4. reads each sender's and recipient's public viewing key from chain;
+5. builds the proof's public inputs from that list, including `n_active`, the count;
+6. checks the proof against those inputs.
+
+The proof must cover exactly the list the chain records. If the funder left a transfer out of the proof, the inputs the donor rebuilt would not match the proof, and verification would fail. A withheld transfer surfaces as a set mismatch. It cannot surface as a quietly smaller total.
+
+`SpenderTransfer` is included because a delegated send is still a send from the lane.
+
+### The demo tests this on every run
+
+`pnpm demo` sends 999 from lane 0 **before** `open_round`. The donor's verifier finds 17 transfers from the declared lanes in all, keeps the 16 inside the window, and excludes the pre-round one. The total must come out as 3160 and not 4159. A demo where every transfer sat inside the window could not tell a working window from one that returns everything.
+
+## What the guarantee does not cover
+
+### Accounts the funder did not declare
+
+The registry cannot see the token. A funder can operate confidential accounts that were never declared as lanes. Transfers from those accounts are outside the proof, and nothing in the proof reveals them. The guarantee covers the declared lanes, and it does not cover the funder's total spending.
+
+Public deposits do not close this gap. An earlier draft of the trust statement said the limit was "bounded by deposits being public". Tally removed that wording because it overstated the case. Deposit amounts are public, but a lane funded from a source with no visible link to the declared accounts is not visible as a lane at all.
+
+### Who controls the recipient accounts
+
+The proof establishes what amounts moved out of the declared lanes. It does not establish who controls the accounts that received them. A funder could pay accounts it controls and count them in the total. No amount-hiding primitive can settle this. It needs verified recipient identity, which is on the [roadmap](/docs/roadmap) as future work and outside version 1.
+
+### Rounds that are still open
+
+If `closed_at` is not yet set, the window can still grow. `tally verify` warns that the result is provisional in that case.
+
+### Rounds older than about seven days
+
+The verifier lists transfers from RPC events, and Soroban RPC keeps about seven days of them. After that, the round cannot be checked from RPC, and `tally verify` exits with code `3` and says why. Durable verification needs an event archive that Tally has not built. See [known limits](/docs/security/known-limits).
+
+## How to state the result
+
+When you describe a verified round, keep the scope. Write "provably disbursed X from the declared lanes in round R". Do not write "provably disbursed X" on its own, and do not imply the total covers the funder's whole programme.
+
+## Further reading
+
+- [Trust statement](/docs/security/trust-statement)
+- [Threat model](/docs/security/threat-model)
+- [`docs/TRUST-STATEMENT.md`](https://github.com/Tally-Network/Tally/blob/main/docs/TRUST-STATEMENT.md) and [`contracts/README.md`](https://github.com/Tally-Network/Tally/blob/main/contracts/README.md)

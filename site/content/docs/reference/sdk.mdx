@@ -1,0 +1,65 @@
+---
+title: "The ct/sdk client"
+description: "Tally's TypeScript client for OpenZeppelin Confidential Tokens v0.9.0."
+---
+
+[`ct/sdk`](https://github.com/Tally-Network/Tally/tree/main/ct/sdk) is the client code Tally uses to build proofs, encode payloads, read events and track balances. It is a port of the reference demo's client (`brozorec/stellar-confidential-token-demo` at `9500ed7`) to OpenZeppelin stellar-contracts v0.9.0. It contains only the modules Tally uses.
+
+<Callout type="warn">
+It is not published as a package and it has not been audited. Import it from the repository.
+</Callout>
+
+## Modules
+
+| Path | Contents |
+|:---|:---|
+| `src/crypto/constants.ts` | Field moduli, the generators `G` and `H`, the Poseidon2 IV, the `DOMAIN` tag table and `CIRCUIT_TYPE` |
+| `src/crypto/field.ts` | Field arithmetic and byte conversions: `frAdd`, `frSub`, `fpAdd`, `toBytes32BE`, `fromBytesBE`, `toHex32`, `randomScalar` |
+| `src/crypto/grumpkin.ts` | The Grumpkin curve: `scalarMul`, `commit`, `ecdh`, `pointCoords`, `pointToBytes`, `pointFromBytes` |
+| `src/crypto/poseidon2.ts` | `poseidonWithDomain`, `spongeSqueeze2`, `spongeSqueeze3`, key and randomness derivations, encryption helpers |
+| `src/crypto/keys.ts` | `deriveKeys(sk, addrF)`, `generateKeys(addrF)` and key serialisation |
+| `src/crypto/address.ts` | `addressToField(strkey)` |
+| `src/witness/register.ts` | `buildRegisterWitness(keys, account)` |
+| `src/witness/transfer.ts` | `buildTransferWitness(params)` |
+| `src/chain/payload.ts` | `encodeRegisterData`, `encodeTransferData` |
+| `src/chain/client.ts` | `ChainClient` (simulate, invoke, read accounts and auditor keys) and `keypairSigner` |
+| `src/chain/events.ts` | `fetchEvents` and the event parser |
+| `src/state/` | `StateEngine`, which rebuilds an account's spendable and receiving openings from events |
+| `src/proving/` | `CircuitProver` (noir_js plus bb.js, keccak transcript) and `loadCircuit` |
+
+## What changed for v0.9.0
+
+From [`ct/NOTICE.md`](https://github.com/Tally-Network/Tally/blob/main/ct/NOTICE.md):
+
+- Domain tags renumbered to the v0.9.0 table: 13 is the ECDH tag, 14 the ephemeral scalar, 15 the aggregate disclosure, 16 the single-event disclosure, 17 the allowance escrow.
+- `ecdh` returns `Poseidon2(13, S.x, S.y)` instead of the x-coordinate alone.
+- The sender-auditor channel uses a three-lane sponge; the third lane escrows the new spendable blinding.
+- `buildRegisterWitness` binds the registering account (`acct_f`).
+- Payload and event field names follow v0.9.0 (`r_e_point`, `c_transfer`, `v_tilde_aud_r`, `r_tilde_aud_s` and others).
+- The withdraw path was removed; Tally does not withdraw.
+
+`buildTransferWitness` always derives the ephemeral scalar from the sender's viewing key and the salt. It has no parameter to supply one, so a sender can always re-derive it later to build a disclosure ([SDK safety invariants](https://github.com/Tally-Network/Tally/blob/main/docs/SDK-SAFETY-INVARIANTS.md), §I1).
+
+## Signatures
+
+```ts
+deriveKeys(sk: bigint, addrF: bigint): KeyPair
+addressToField(strkey: string): bigint
+buildRegisterWitness(keys: KeyPair, account: string): RegisterWitness
+buildTransferWitness(p: {
+  keys: KeyPair; v: bigint; r: bigint; amount: bigint;
+  pvkB: Point; kAudR: Point; kAudS: Point; sigma?: bigint;
+}): TransferWitness
+encodeRegisterData(w: RegisterWitness, proof: Uint8Array): xdr.ScVal
+encodeTransferData(w: TransferWitness, proof: Uint8Array): xdr.ScVal
+new CircuitProver(circuit).prove(inputs): Promise<{ proof: Uint8Array; publicInputs: string[] }>
+```
+
+## Conformance
+
+[`ct/sdk/test/conformance.ts`](https://github.com/Tally-Network/Tally/blob/main/ct/sdk/test/conformance.ts) runs every primitive vector OpenZeppelin publishes in `circuits/lib/testdata` at v0.9.0. The client reproduces all 19 vectors for the primitives it implements. One vector (`encrypt_esc_allow_r_auditor`) is for a spender-only primitive Tally does not use, and is skipped.
+
+```bash
+pnpm test:conformance     # conformance: 19 passed, 0 failed, 1 skipped
+pnpm test:prove           # register and transfer proofs, verified locally
+```

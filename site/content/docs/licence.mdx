@@ -1,0 +1,38 @@
+---
+title: "Licence and upstream notices"
+description: "Tally's licence, the upstream code it includes, and its main dependencies."
+---
+
+## Tally
+
+Tally is released under the MIT licence. See [`LICENSE`](https://github.com/Tally-Network/Tally/blob/main/LICENSE) (copyright 2026 Jagadeesh B).
+
+## Upstream code in this repository
+
+From [`ct/NOTICE.md`](https://github.com/Tally-Network/Tally/blob/main/ct/NOTICE.md):
+
+| Path | Origin | Licence | Changes |
+|:---|:---|:---|:---|
+| `ct/sdk/src/**` | `brozorec/stellar-confidential-token-demo` at `9500ed7`, `packages/sdk/src` (only the modules Tally uses) | MIT, as declared in that repository's `package.json`; the repository has no LICENSE file | Ported to OpenZeppelin v0.9.0 |
+| `ct/sdk/circuits/*.json` | Compiled from `vendor/stellar-contracts` v0.9.0 with nargo 1.0.0-beta.11 | MIT (OpenZeppelin) | None |
+| `ct/sdk/circuits/vks/*.vk.bin` | Copied from OpenZeppelin's committed keys at v0.9.0 | MIT (OpenZeppelin) | None |
+| `ct/contracts/verifier`, `ct/contracts/auditor` | OpenZeppelin's `examples/confidential` contracts at v0.9.0 | MIT | A `#![no_std]` header added |
+| `ct/contracts/token` | The reference demo's token contract at `9500ed7` | MIT | Doc comment updated |
+
+## Submodule
+
+`vendor/stellar-contracts` is OpenZeppelin's stellar-contracts at the v0.9.0 branch head (`df602b6`), under the MIT licence, copyright 2024 OpenZeppelin.
+
+## Main dependencies
+
+Licences as declared in each package's `package.json`:
+
+| Package | Licence |
+|:---|:---|
+| `@aztec/bb.js` | MIT |
+| `@noble/curves`, `@noble/hashes` | MIT |
+| `@noir-lang/noir_js` | MIT OR Apache-2.0 |
+| `@stellar/stellar-sdk` | Apache-2.0 |
+| `@zkpassport/poseidon2` | MIT |
+
+The site is built on an Aceternity UI Pro template (Agenforce) and Fumadocs.

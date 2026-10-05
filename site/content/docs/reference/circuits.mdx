@@ -1,0 +1,86 @@
+---
+title: "Circuits"
+description: "The aggregate disclosure circuits Tally ships, and the OpenZeppelin circuits used on-chain."
+---
+
+Two groups of circuits are involved.
+
+| Group | Where | Verified | Proof mode |
+|:---|:---|:---|:---|
+| Tally's aggregate disclosure circuits, `tally_aggregate_n{8,16,64}` | [`circuits/`](https://github.com/Tally-Network/Tally/tree/main/circuits) | Off-chain, by the donor | Zero-knowledge (`keccakZK`) |
+| OpenZeppelin v0.9.0 `register`, `transfer`, `withdraw` | `vendor/stellar-contracts`, compiled into [`ct/sdk/circuits`](https://github.com/Tally-Network/Tally/tree/main/ct/sdk/circuits) | On-chain, by the verifier contract | Non-zk (`keccak`); the on-chain verifier implements only the non-zk flavour |
+
+## The aggregate disclosure circuit
+
+`tally_aggregate_nN` proves to one disclosure recipient that a set of on-chain confidential transfers, sent by accounts the prover controls, sums to exactly a total, without revealing any individual amount. The circuits are generated from [`circuits/_template.nr`](https://github.com/Tally-Network/Tally/blob/main/circuits/_template.nr) for N = 8, 16 and 64.
+
+### Inputs
+
+| Kind | Inputs |
+|:---|:---|
+| Private, per event | `sk` (the sending lane's spending key), `r_e` (the ephemeral scalar), `v_tx` (the amount) |
+| Private, once | `r_disc` |
+| Public, common | `addr_f` (the token contract as a field), `n_active` |
+| Public, per event | `active`, `pvk_a_x/y` (sender), `pvk_b_x/y` (recipient), `r_e_x/y`, `sigma`, `v_tilde` |
+| Public, disclosure channel | `p_r_x/y` (the donor's key), `nu` (the donor's nonce), `r_disc_x/y`, `v_tilde_disc` (the sealed total) |
+
+There are `9n + 8` public inputs.
+
+### What it checks, per active event
+
+- `active` is 0 or 1.
+- The spending key derives the sender's public viewing key, binding the event to its sender.
+- `r_e` matches the event's published ephemeral point, so only the party that made the transfer can satisfy it.
+- The recipient key is on the curve and not the identity.
+- Recomputing the encrypted amount from `r_e`, the recipient key and `sigma` gives the event's published ciphertext. This recovers the amount from the sender side.
+- The amount fits in 127 bits.
+
+Then, once: the sum of active amounts is sealed to the donor's key and nonce, `n_active` equals the number of active slots, and `n_active ≥ MIN_ACTIVE`.
+
+### Differences from OpenZeppelin's aggregate
+
+The upstream aggregate disclosure is written for one sender account. Tally extends it in two ways, both raised as [OpenZeppelin/stellar-contracts#849](https://github.com/OpenZeppelin/stellar-contracts/issues/849) (fixed upstream on 2026-09-10):
+
+| | Upstream | Tally |
+|:---|:---|:---|
+| Recipient key | Not per event | Per event: each outbound transfer has its own recipient |
+| Sender key and spending key | Common: one sender account | Per event: one proof spans every lane in a round |
+| `n_active` | Not present | Public input |
+| Minimum group size | Not present | Enforced in the circuit |
+
+### Measured
+
+From [`circuits/README.md`](https://github.com/Tally-Network/Tally/blob/main/circuits/README.md), re-measured 2026-10-05 on v0.9.0 (`nargo info`; `pnpm bench:aggregate` on an Apple M4 Pro, second run after warm-up):
+
+| n | ACIR opcodes | Prove | Verify | Proof size | Public inputs |
+|---:|---:|---:|---:|---:|---:|
+| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |
+| 16 | 636 | 1,891 ms | 581 ms | 16,224 B | 152 |
+| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |
+
+Proof size is the same for every n. The demo's own n = 16 proof took 2,361 ms in the run that published `round-003`; timings vary between runs.
+
+### Build and pinning
+
+```bash
+pnpm build:circuits     # needs nargo 1.0.0-beta.11
+```
+
+This regenerates `aggregate_n*/src/main.nr` from the template, compiles each circuit, copies the result to `aggregate_n*/circuit.json`, and re-pins `aggregate_n*/vk.zk.bin`. Both files are committed, so verifying a round needs no Noir toolchain. `tally verify` refuses to verify if the key it derives differs from `vk.zk.bin`, and CI rebuilds both and fails on any difference.
+
+Do not edit `aggregate_n*/src/main.nr` by hand; edit `_template.nr`. `MIN_ACTIVE` (default 5) and the set of sizes can be overridden when generating:
+
+```bash
+MIN_ACTIVE=8 SIZES="16 32" bash circuits/scripts/generate.sh
+```
+
+## The on-chain circuits
+
+The token contract verifies an UltraHonk proof on every state change. Tally uses OpenZeppelin's v0.9.0 circuits unchanged, compiled with nargo 1.0.0-beta.11. The verification keys registered on-chain are OpenZeppelin's committed `.vk.bin` files; the matching `.vk.json` files were reproduced byte-for-byte with nargo 1.0.0-beta.11 and bb 0.87.0 (see [`ct/NOTICE.md`](https://github.com/Tally-Network/Tally/blob/main/ct/NOTICE.md)).
+
+| Circuit | Public inputs | Proof size |
+|:---|---:|---:|
+| `register` | 6 | 14,592 B |
+| `transfer` | 25 | 14,592 B |
+
+Source: `pnpm test:prove` ([`ct/sdk/test/prove.ts`](https://github.com/Tally-Network/Tally/blob/main/ct/sdk/test/prove.ts)).

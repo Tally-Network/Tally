@@ -1,0 +1,72 @@
+---
+title: "Introduction"
+description: "What Tally is, who it is for, the problem it addresses, and what works today on Stellar testnet compared with what is only designed."
+---
+
+Tally is the disclosure and audit service for Stellar's privacy tokens. It covers three things:
+
+- confidential payouts to many recipients;
+- totals that an outside party can verify;
+- auditor access that no single party controls.
+
+Confidential one-to-many payouts are the first use case, and they already work on Stellar testnet. The operator service (split auditor-key custody, scoped audit requests, tax export) is designed and has not been built.
+
+<Callout type="warn">
+**Testnet only. No users, no integrations.** Tally builds on the OpenZeppelin Confidential Tokens developer preview at v0.9.0, which is unaudited and is a branch, not a tagged release. Nothing in Tally has been audited. Do not use it with real value.
+</Callout>
+
+## The problem
+
+On a public ledger, every payment amount is visible to everyone, forever. For grant programmes, bounty platforms, public-goods funding and aid disbursement, that exposes recipients and can make vulnerable people targets.
+
+Paying off-chain hides the amounts, but it also gives up the auditability that made on-chain funding attractive. A donor can no longer check that the money was paid out.
+
+Tally keeps both properties. Individual amounts stay private, and the total can be proven to a donor or auditor who asks for it.
+
+## How it works, in one paragraph
+
+Stellar's [Confidential Tokens](/docs/concepts/confidential-tokens) hide balances and transfer amounts while leaving sender and recipient addresses public. A payer declares a payout round on-chain before paying: the set of sending accounts, called [lanes](/docs/concepts/rounds-and-lanes), and a ledger window that the contract stamps itself. After the round, a donor sends the payer a challenge made from the donor's own key. The payer answers with one [zero-knowledge proof](/docs/concepts/aggregate-proof) of the total, sealed so only that donor can read it. The donor rebuilds the list of payments from chain data, so the payer cannot choose which payments the total covers.
+
+## Who it is for
+
+| Reader | What Tally gives them today |
+|:---|:---|
+| A funder paying many recipients (a grant programme, bounty platform or aid programme) | Confidential payouts from declared accounts, and a way to prove the round's total without revealing any single amount |
+| A donor, board member or auditor checking a funder | A command-line tool that verifies the total using only the funder's address, the round id and the donor's own key |
+| A recipient | A private amount, and a way to register a confidential account from their own wallet signature (headless code only; there is no browser page) |
+| An issuer or pool operator that needs an auditor | Nothing yet. The [operator service](/docs/operator/design) that would hold auditor keys in split custody is a design |
+
+The [use cases page](/docs/use-cases) goes through specific situations.
+
+## What the proof assures
+
+Tally's guarantee is stated in two sentences, and nothing in these docs states it more strongly:
+
+> **The donor is assured that** the confidential transfers sent from the lane accounts Tally declared on-chain before the round opened, within that round's declared ledger window, total exactly the disclosed amount and that none has been withheld — because every confidential transfer publishes its sender address on-chain whether or not the funder chooses to disclose it, so an omitted transfer is visible as one the proof fails to cover.
+>
+> **This does not assure** that the funder made no other payments, nor that the recipients are independent of the funder: the guarantee is scoped to transfers from the accounts declared before the round, **not to the funder's total spend**, and it establishes what amounts moved, not who ultimately controls the accounts that received them.
+
+[Completeness](/docs/concepts/completeness) explains why this holds for the declared lanes and window, and where it stops. The [trust statement page](/docs/security/trust-statement) explains the wording.
+
+## What works today and what is designed only
+
+| Capability | Status | Where |
+|:---|:---|:---|
+| A funder pays 16 recipients across 5 lanes in one round on testnet | Works | `pnpm demo` ([quickstart](/docs/quickstart)) |
+| A donor verifies the round total with only their own key and nonce | Works | `tally challenge` / `prove` / `verify` ([walkthrough](/docs/walkthrough)) |
+| A published round that anyone can re-verify | Works while the round is inside the RPC's ~7-day event window | `pnpm verify:evidence` |
+| Round registry contract that fixes lanes and window | Works, deployed on testnet | [`contracts/round-registry`](https://github.com/Tally-Network/Tally/blob/main/contracts/round-registry/src/lib.rs) |
+| Aggregate proof circuits for 8, 16 and 64 transfers, with a minimum group size of 5 | Works | [`circuits/`](https://github.com/Tally-Network/Tally/blob/main/circuits/README.md) |
+| Non-custodial registration from a wallet signature | Works headless only, tested on live testnet; no wallet UI | [`registration/`](https://github.com/Tally-Network/Tally/blob/main/registration/README.md) |
+| Four confidential transfers from one sender in one transaction | Measured on testnet; the demo still sends one per transaction | [Measurements](/docs/measurements) |
+| Verifying a round older than ~7 days | Not built; needs an event archive | [Known limits](/docs/security/known-limits) |
+| An independent party verifying a published round and reporting back | Not done | |
+| A round with real, independent recipients holding their own keys | Not built | |
+| Split auditor-key custody, scoped audit requests, tax export, allow/deny lists | Designed, not built | [Operator design](/docs/operator/design) |
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart): verify the published round and run the demo from a clean clone.
+- [Walkthrough](/docs/walkthrough): one round told as a story, with the real command for each step.
+- [Concepts](/docs/concepts/confidential-tokens): the building blocks, one page each.
+- [Known limits](/docs/security/known-limits): what Tally does not do.

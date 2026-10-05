@@ -1,0 +1,10 @@
+{
+  "title": "Concepts",
+  "pages": [
+    "confidential-tokens",
+    "rounds-and-lanes",
+    "aggregate-proof",
+    "minimum-group-size",
+    "completeness"
+  ]
+}
