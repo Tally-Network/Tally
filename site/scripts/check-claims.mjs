@@ -72,8 +72,14 @@ for (const t of c.transfers) if (!/^[0-9a-f]{64}$/.test(t.vTilde) || !/^[0-9a-f]
 
 /* ------------------------------------------------------------ 2. claims */
 
+// Values that change with every published round. A claim that quotes one of them
+// would pass today and fail on the next scheduled refresh.
+const roundSpecific = [run.openedAt, run.closedAt, facts.round.verifiable_until_ledger, facts.round.funder, latest.dir].map(String);
+
 const checkSources = (where, sources) => {
   for (const s of sources) {
+    const quoted = roundSpecific.find(v => (s.contains ?? "").includes(v));
+    if (quoted) fail(`${where}: source quote contains "${quoted}", which changes with every round; quote a field name or put the file under evidence/{latest}`);
     // {latest} is the published round's directory, so claims follow each refresh.
     const p = repo(s.file.replace("{latest}", latest.dir));
     if (!existsSync(p)) { fail(`${where}: source ${s.file} does not exist`); continue; }

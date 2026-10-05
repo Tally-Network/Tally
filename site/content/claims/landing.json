@@ -370,7 +370,7 @@
           "sources": [
             {
               "file": "evidence/README.md",
-              "contains": "over 16 transfers from 5 declared lanes, ledgers 5032842–5032851"
+              "contains": "over 16 transfers from 5 declared lanes, ledgers "
             }
           ]
         },
