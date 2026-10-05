@@ -1,7 +1,7 @@
 # Site content
 
 The website at https://tally.0xo.in (landing page, `/docs` and `/verify`) is
-built from a private repository, `Tally-Network/tally-site`, because it uses
+built from a private repository, `Jagadeeshftw/tally-site`, because it uses
 licensed template code that may not be redistributed. Everything the site
 states lives here, in public:
 
