@@ -19,6 +19,9 @@ for d in "$ROOT"/circuits/aggregate_n*/; do
   # Committed so a clean clone can verify a round without installing nargo.
   # CI rebuilds and fails on any difference.
   cp "$d/target/tally_${name}.json" "$d/circuit.json"
+  # nargo records absolute source paths in file_map; store them relative to
+  # the repository so the artifact is identical on every machine.
+  node -e 'const fs=require("fs"),[f,r]=process.argv.slice(1),j=JSON.parse(fs.readFileSync(f,"utf8"));for(const v of Object.values(j.file_map))if(v.path.startsWith(r+"/"))v.path=v.path.slice(r.length+1);fs.writeFileSync(f,JSON.stringify(j))' "$d/circuit.json" "$ROOT"
   echo "compiled $name"
 done
 (cd "$ROOT" && npx tsx circuits/scripts/pin-vks.ts)
