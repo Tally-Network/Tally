@@ -1,5 +1,7 @@
 # Phase 1 — Week-1 Measurements (testnet)
 
+> **Superseded in part (2026-10-05).** These measurements were taken on 2026-08-21 against OpenZeppelin `539968f` under a **100,000,000**-instruction cap. Current figures, under a 400,000,000 cap and OpenZeppelin v0.9.0, are in [MEASUREMENTS.md](MEASUREMENTS.md). Specifically superseded: the per-transfer cost (now 91.2M, 22.8 %), "maximum N per transaction = 1" (now 4, demonstrated), the on-chain aggregate verification shares (n = 16 now 25.2 %, n = 64 now 37.7 %), and the reproduction steps in §8 (the `feat/confidential-verifier-ultrahonk` branch no longer exists; use `pnpm deploy:testnet` and `pnpm measure`). The rest is kept as the historical record.
+
 **Date:** 21 August 2026
 **Network:** Stellar testnet (Protocol 27)
 **Status:** Complete. **Do not commit the batch architecture — the result invalidates it.**

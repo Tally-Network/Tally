@@ -362,36 +362,34 @@
     </div>
 
     <div class="col stack" style="margin-top:14px;">
-      <h3>One transfer costs 93% of a transaction</h3>
-      <p>Before any of the above, we measured what a single confidential transfer costs on Soroban.</p>
+      <h3>Four transfers fit in one transaction</h3>
+      <p>Re-measured on 5 October 2026 on testnet (protocol 29, OpenZeppelin v0.9.0), under today's 400,000,000-instruction cap.</p>
     </div>
     <div class="grid3">
-      <div class="cell"><span class="k">CPU instructions</span><span class="v">92,973,307</span><span class="n">of a 100,000,000 per-transaction cap</span></div>
-      <div class="cell"><span class="k">Share of the cap</span><span class="v">93.0%</span><span class="n">transaction size sits at 24%</span></div>
-      <div class="cell"><span class="k">Transfers per transaction</span><span class="v">1</span><span class="n">two would need 186% of the budget</span></div>
+      <div class="cell"><span class="k">CPU per transfer</span><span class="v">91,193,854</span><span class="n">22.8% of the per-transaction cap</span></div>
+      <div class="cell"><span class="k">Transfers per transaction</span><span class="v">4</span><span class="n">one sender, through a batching wrapper; landed on testnet</span></div>
+      <div class="cell"><span class="k">At four</span><span class="v">90.8% · 95.1%</span><span class="n">of the instruction cap and the size cap</span></div>
     </div>
     <div class="col stack">
-      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>Batching is not possible today.</b> Instructions bind, not bytes — a fact that is invisible until measured, and one we got wrong ourselves before measuring: our first estimate assumed transaction size was the limit and put 7–8 transfers in a transaction. So one-to-many is a fan-out across lanes rather than a loop inside one call. <a href="https://github.com/stellar/stellar-protocol/blob/master/limits/slp-0004.md">SLP-0004</a> raises exactly the cap that binds, 4×, which would take this from 1 to 4 with no change on our side.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);">A transaction can carry only one contract call, so batching needs a contract that makes the calls itself. At four transfers, instructions and transaction size bind together; a fifth runs out of budget. Our August measurement, under the earlier 100,000,000 cap, found exactly one transfer per transaction. That figure is superseded, and so is the claim that batching was impossible. The demo still sends one transfer per transaction. Method and hashes: <a href="https://github.com/Tally-Network/Tally/blob/main/MEASUREMENTS.md">MEASUREMENTS.md</a>.</p>
     </div>
 
     <div class="col stack" style="margin-top:14px;">
-      <h3>Why the donor verifies off chain — a measured boundary, not a convenience</h3>
-      <p>We registered the aggregate verification keys on Soroban and measured what verifying a round would actually cost against the 100,000,000-instruction per-transaction cap. (Measured with non-zk proofs, since that is all the on-chain verifier accepts — the cost is driven by public-input count, not proving mode.)</p>
+      <h3>Why the donor verifies off chain</h3>
+      <p>We registered the aggregate verification keys on a separate measurement-only verifier and measured what verifying a round on chain would cost. (Measured with non-zk proofs, the only kind the on-chain verifier accepts.)</p>
     </div>
     <div class="data-wrap">
       <table class="data">
-        <thead><tr><th>Round size</th><th class="num">Public inputs</th><th class="num">CPU instructions</th><th class="num">Share of cap</th><th>Fits?</th></tr></thead>
+        <thead><tr><th>Round size</th><th class="num">Public inputs</th><th class="num">CPU instructions</th><th class="num">Share of 400M cap</th><th>Fits?</th></tr></thead>
         <tbody>
-          <tr><td>n = 8</td><td class="num">80</td><td class="num">90,833,858</td><td class="num">90.8%</td><td class="warn">barely</td></tr>
-          <tr><td>n = 16</td><td class="num">152</td><td class="num">99,982,874</td><td class="num warn">100.0%</td><td class="warn">17,126 instructions spare</td></tr>
-          <tr><td>n = 64</td><td class="num">584</td><td class="num">147,278,890</td><td class="num warn">147.3%</td><td class="warn">no</td></tr>
+          <tr><td>n = 8</td><td class="num">80</td><td class="num">91,214,362</td><td class="num">22.8%</td><td>yes</td></tr>
+          <tr><td>n = 16</td><td class="num">152</td><td class="num">100,835,059</td><td class="num">25.2%</td><td>yes</td></tr>
+          <tr><td>n = 64</td><td class="num">584</td><td class="num">150,810,864</td><td class="num">37.7%</td><td>yes</td></tr>
         </tbody>
       </table>
     </div>
     <div class="col stack">
-      <p style="font-size:0.95rem;color:var(--ink-soft);">All three verify correctly on chain — this is a capacity result, not a correctness one. At our demo size the margin is <span class="mono">17,126</span> instructions out of a hundred million, and that is the bare verification call before any surrounding contract logic. Fitting the three points gives a cost model for on-chain UltraHonk verification on Soroban:</p>
-      <p class="mono" style="font-size:0.95rem;color:var(--accent);">instructions ≈ 81,000,000 + ~120,000 per public input</p>
-      <p style="font-size:0.95rem;color:var(--ink-soft);">We have not found either figure published anywhere else. Off-chain verification is also the right design regardless: putting a disclosure on chain would publish its existence, its recipient and its timing.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);">All three verify on chain, and all now fit. In August, under the 100M cap, n = 16 sat at 100.0% and n = 64 did not fit. Verification stays off chain anyway, for privacy rather than capacity: putting a disclosure on chain would publish its existence, its recipient and its timing, and would force a proof mode that is not witness-hiding.</p>
     </div>
   </div>
 </section>
@@ -528,8 +526,8 @@ pnpm verify:evidence
     <div class="col stack">
       <h3>Contributed upstream</h3>
       <ul style="font-size:0.95rem;color:var(--ink-soft);">
-        <li>Aggregate disclosure input table omits a per-event field — <a href="https://github.com/OpenZeppelin/stellar-contracts/issues/849">OpenZeppelin/stellar-contracts#849</a></li>
-        <li>Disclosure circuits' domain tag collides on rebuild against the branch tip — <a href="https://github.com/brozorec/stellar-confidential-token-demo/issues/5">stellar-confidential-token-demo#5</a></li>
+        <li>Aggregate disclosure input table omits a per-event field — <a href="https://github.com/OpenZeppelin/stellar-contracts/issues/849">OpenZeppelin/stellar-contracts#849</a> (fixed upstream, 10 September 2026)</li>
+        <li>Reference demo's disclosure domain tag collides with the ECDH tag — <a href="https://github.com/brozorec/stellar-confidential-token-demo/issues/5">stellar-confidential-token-demo#5</a> (OpenZeppelin v0.9.0's normative table now separates them)</li>
       </ul>
     </div>
   </div>
@@ -541,21 +539,21 @@ pnpm verify:evidence
     <div class="col stack">
       <p class="eyebrow">Status</p>
       <h2>Testnet. Here is exactly what is built and what is not.</h2>
-      <p>The confidential-token suite Tally builds on is an unaudited developer preview on an unmerged branch. Nothing here should touch real value yet, and we would rather say so than let a reviewer discover it.</p>
+      <p>The confidential-token suite Tally builds on is an unaudited developer preview; Tally pins OpenZeppelin's v0.9.0 branch, which is not a tagged release. Nothing here should touch real value yet. Tally has no users and no integrations.</p>
     </div>
     <div style="max-width:80ch;">
-      <div class="status-row"><span class="mark yes">BUILT</span><span>Multi-sender aggregate disclosure circuits, <span class="mono">n ∈ {8, 16, 64}</span></span></div>
+      <div class="status-row"><span class="mark yes">BUILT</span><span>Multi-sender aggregate disclosure circuits, <span class="mono">n ∈ {8, 16, 64}</span>, rebuilt on OpenZeppelin v0.9.0</span></div>
       <div class="status-row"><span class="mark yes">BUILT</span><span>Round registry contract, deployed to testnet — 16 tests, 10 of them negative</span></div>
       <div class="status-row"><span class="mark yes">BUILT</span><span>End-to-end round, donor-verified, reproducible with one command</span></div>
-      <div class="status-row"><span class="mark part">PARTIAL</span><span>Explorer evidence: the property holds and transactions are linked above; a captured explorer view is not yet published</span></div>
+      <div class="status-row"><span class="mark yes">BUILT</span><span>Client SDK ported to v0.9.0, passing OpenZeppelin's published test vectors for every primitive it uses (not a published package)</span></div>
       <div class="status-row"><span class="mark yes">READY</span><span>A published round an <b>independent party</b> can verify with one command — waiting on an outside person to run it and report their output</span></div>
       <div class="status-row"><span class="mark no">NOT YET</span><span>A round with <b>real independent contributors</b> registering non-custodially, so not even we can decrypt their amounts</span></div>
-      <div class="status-row"><span class="mark no">NOT YET</span><span>A distributable SDK package — the demo currently runs against a vendored reference client</span></div>
-      <div class="status-row"><span class="mark no">NOT YET</span><span>Integration with <a href="https://grainlify.com">Grainlify</a>. Grainlify has <b>never made a payout on any chain</b>; its payout path is currently wired for Aptos, and whether a settlement lands on Stellar is its decision, not ours. We claim no adoption</span></div>
-      <div class="status-row"><span class="mark no">NOT YET</span><span>Mainnet. Gated on the upstream suite's audit, which is outside our control</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>Any integration or user. We claim no adoption</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>The compliance and selective-disclosure operator (auditor-key custody, scoped audits, list management): design only</span></div>
+      <div class="status-row"><span class="mark no">NOT YET</span><span>Mainnet. Gated on the upstream suite's audit and release, which are outside our control</span></div>
     </div>
     <div class="col stack">
-      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>Real people, real wallets, real keys, real verification — nominal value.</b> The round runs on Stellar testnet, where the asset has no monetary worth; what is real is that independent contributors hold their own keys, that no platform can decrypt their amounts, and that anyone can verify the total.</p>
+      <p style="font-size:0.95rem;color:var(--ink-soft);"><b>Nominal value.</b> Every round so far runs on Stellar testnet between freshly created test accounts, and the asset has no monetary worth. What is real is the chain, the contracts, the proof and the verification path.</p>
     </div>
   </div>
 </section>
@@ -594,7 +592,7 @@ pnpm verify:evidence
   <div class="wrap">
     <span class="foot-mono">Tally · MIT licensed · built in the open</span>
     <a class="foot-mono" href="https://github.com/Tally-Network/Tally" style="color:var(--accent);">Repository →</a>
-    <span class="foot-mono">Measured on Stellar testnet, then running Protocol 27</span>
+    <span class="foot-mono">Re-measured on Stellar testnet, Protocol 29, 5 October 2026</span>
   </div>
 </footer>
 

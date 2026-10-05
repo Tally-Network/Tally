@@ -10,20 +10,20 @@ This is split deliberately along the line between failures that are **loud** and
 
 | | Where | Verified |
 |:---|:---|:---|
-| Key derivation, §5.2 signer checks, proving, submission, chain read-back | [`core.ts`](core.ts) | ✅ **Yes — headless, against live testnet.** [`test-core.ts`](test-core.ts), 9 checks |
-| Wallet connect button, Freighter plumbing, layout | [`index.html`](index.html) | ❌ **No.** Needs a browser with a wallet extension |
+| Key derivation, mandatory signer checks, proving, submission, chain read-back | [`core.ts`](core.ts) | ✅ **Yes — headless, against live testnet.** [`test-core.ts`](test-core.ts), 9 checks |
+| Wallet connect button, Freighter plumbing, layout | — | ❌ **Not built.** There is no browser page in this repository; a wallet UI would wrap `core.ts` |
 
-A broken connect button fails in front of you. A wrong key derivation does not: it registers an account that looks fine and is permanently unreachable from the key the contributor believes controls it. So the second is tested and the first is not, rather than the other way round.
+A broken connect button would fail in front of you. A wrong key derivation does not: it registers an account that looks fine and is permanently unreachable from the key the contributor believes controls it. So the second is tested and the first is not, rather than the other way round.
 
 ```bash
 npx tsx registration/test-core.ts
 ```
 
-Last run: derivation deterministic and bound to both `addr_f` and `acct_f`; wrong-account and non-deterministic signers both rejected; raw-root fallback reports its form; proof generated client-side in **932 ms**; account registered on testnet; **on-chain viewing key matched the wallet-derived key**.
+Last run: derivation deterministic and bound to both `addr_f` and `acct_f`; wrong-account and non-deterministic signers both rejected; raw-root fallback reports its form; proof generated client-side in **882 ms**; account registered on testnet (OpenZeppelin v0.9.0 deployment, 2026-10-05); **on-chain viewing key matched the wallet-derived key**.
 
 ## Derivation is normative, not ours to choose
 
-`SDK.md` §5.1–§5.2. Implementations MUST NOT substitute a different KDF — the choice is arbitrary in isolation, but has to be identical across clients or the same wallet derives different accounts in different apps.
+OpenZeppelin v0.9.0 `docs/sdk/key-derivation.md` ("Derivation"). Implementations MUST NOT substitute a different KDF — the choice is arbitrary in isolation, but has to be identical across clients or the same wallet derives different accounts in different apps.
 
 ```
 msg  = "openzeppelin/confidential-token/v1/sk" \n <token contract> \n <account>
@@ -46,17 +46,12 @@ Each guards a failure that otherwise succeeds quietly.
 
 ## Required disclosure
 
-`SDK.md` §5.2 requires this at the point of account creation, and the page shows it before anything is signed:
+OpenZeppelin v0.9.0 `docs/sdk/key-derivation.md` requires a raw root to be surfaced for backup at creation ("Raw roots and imported keys") and `sk` export to be offered as a backup ("Signer roots"). A wallet UI built on `core.ts` should show this before anything is signed:
 
 > Your confidential account is only as private as the key that signs for this address. Anyone who obtains that key can both view and spend. Registration is single-use, so the key cannot be rotated in place — recovering from a compromise means registering a new address and moving the funds.
 
-## Running the page
+The wording is Tally's; the obligations behind it are upstream's.
 
-```bash
-pnpm --filter @ctd/sdk build      # the vendored SDK compiles to dist/
-python3 -m http.server -d registration 8080
-```
+## Browser page
 
-Serve rather than bundle. Browser bundlers rewrite bb.js's worker URL into a hashed chunk and proving hangs — the SDK documents this, and serving native ESM avoids it entirely.
-
-**Untested.** Needs Freighter and a testnet account. If you run it, the meaningful check is the last one: after registering, `confidential_balance(yourAddress).viewing_public_key` must equal the key the page derived.
+Not built. There is no `index.html` in this repository; an earlier version of this README pointed at one that was never committed. Only the headless core and its live-testnet test exist.

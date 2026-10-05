@@ -3,12 +3,12 @@
 ```bash
 git clone --recurse-submodules https://github.com/Tally-Network/Tally
 cd Tally
-git submodule update --init      # OZ contracts @ 539968f, reference demo (pinned)
+git submodule update --init      # OpenZeppelin stellar-contracts v0.9.0 @ df602b6
 pnpm install
 pnpm demo
 ```
 
-Runs against Stellar **testnet** using the deployment in [`deployment.testnet.json`](deployment.testnet.json) and the round registry at [`CCKWYTHG…R3ES`](https://stellar.expert/explorer/testnet/contract/CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES). Override with `TALLY_REGISTRY`, `TALLY_DEPLOYMENT`, `TALLY_RPC`. Takes ~6 minutes; accounts are created fresh each run, so it is idempotent.
+Runs against Stellar **testnet** using the deployment in [`deployment.testnet.json`](deployment.testnet.json) and the round registry it names (currently [`CDWIXFBO…BK7W`](https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W)). `deployment.testnet.json` holds public data only; the auditor secret is never in the repository. Override with `TALLY_REGISTRY`, `TALLY_DEPLOYMENT`, `TALLY_RPC`. Takes several minutes; accounts are created fresh each run, so it is idempotent.
 
 ## What it does
 
@@ -41,6 +41,6 @@ It is the negative case, and it runs every time. Without it the window looks dec
 
 ## What the donor is given
 
-The funder address and the round id. Nothing else. The lane set, the window, the transfer set, and every public input to the proof are resolved from chain state — never from the funder's bundle (`SELECTIVE_DISCLOSURE.md` §5.3). The donor holds its own disclosure keypair and issues its own nonce; it never receives any secret of the funder's.
+The funder address and the round id. Nothing else. The lane set, the window, the transfer set, and every public input to the proof are resolved from chain state — never from the funder's bundle (OZ v0.9.0 `docs/selective-disclosure/protocol.md`). The donor holds its own disclosure keypair and issues its own nonce; it never receives any secret of the funder's.
 
 See [docs/TRUST-STATEMENT.md](../docs/TRUST-STATEMENT.md) for exactly what this does and does not assure.

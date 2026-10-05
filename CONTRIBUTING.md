@@ -23,7 +23,7 @@ So the question to ask of any claim is not *"is this sentence true?"* — it wil
 
 - **Any sentence in `site/`, `README.md`, or the trust statement.** Public text aimed at reviewers who read exactly that sentence.
 - **Proving-mode flags.** `keccak` vs `keccakZK` — see [`demo/zk-prover.ts`](demo/zk-prover.ts). Transfers non-zk, disclosure zk. Changing either silently changes what is guaranteed.
-- **Upstream revision claims.** We pin `vendor/stellar-contracts` at `539968f`; the branch tip behaves differently ([`docs/SDK-SAFETY-INVARIANTS.md`](docs/SDK-SAFETY-INVARIANTS.md) §I3).
+- **Upstream revision claims.** We pin `vendor/stellar-contracts` at v0.9.0 (`df602b6`); other revisions behave differently ([`docs/SDK-SAFETY-INVARIANTS.md`](docs/SDK-SAFETY-INVARIANTS.md) §I3).
 - **Anything sourced from a document rather than from code.** Documentation goes stale silently. Two claims in this repo were wrong because they came from a docs table rather than a schema or a source file — cite the file and revision you actually read.
 
 ### Practice

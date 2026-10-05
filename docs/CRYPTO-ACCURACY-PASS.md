@@ -1,5 +1,7 @@
 # Cryptographic accuracy pass over all public text
 
+> **Historical (August 2026).** Checked against OpenZeppelin `539968f`. The instruction cap it cites (100,000,000) is now 400,000,000, and the spec documents it cites have moved; see [MEASUREMENTS.md](../MEASUREMENTS.md) and [SDK-SAFETY-INVARIANTS.md](SDK-SAFETY-INVARIANTS.md) §I3.
+
 **Scope:** every cryptographic claim on the landing page and in the READMEs — curves, transcripts, protocol versions, host functions, proof-system names, proof sizes.
 
 **Prompted by:** "UltraHonk over Grumpkin" shipping to a page aimed at reviewers who read exactly that sentence. It was plausible enough to survive drafting, which is the property that makes this class of error dangerous.

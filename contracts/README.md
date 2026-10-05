@@ -4,7 +4,7 @@
 
 The on-chain half of the completeness story. It records **which sender accounts count** for a disbursement round and **over what ledger window** — and nothing else.
 
-Deployed (testnet): [`CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES`](https://stellar.expert/explorer/testnet/contract/CCKWYTHGFIBJ5EOYWACFYI6XTKTVONXQRA3XTMQ7CGCU23UVKTXER3ES)
+Deployed (testnet, soroban-sdk 28.0.0, 2026-10-05): [`CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W`](https://stellar.expert/explorer/testnet/contract/CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W). The August deployment `CCKWYTHG…R3ES` (soroban-sdk 26) is retired.
 
 ```
 open_round(funder, round_id, lanes[])  -> Round    // stamps opened_at from the ledger

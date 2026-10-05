@@ -30,7 +30,7 @@ If real monetary value is required, that is a mainnet requirement, and mainnet i
 
 ## What already exists
 
-- Round registry, deployed and namespaced (`CCKWYTHG…R3ES`)
+- Round registry, deployed and namespaced (`CDWIXFBO…BK7W`)
 - Aggregate circuits `n ∈ {8, 16, 64}` with pinned zero-knowledge VKs
 - Fan-out orchestration across lanes
 - `tally challenge` / `prove` / `verify`, with negative cases verified

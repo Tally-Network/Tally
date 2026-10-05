@@ -1,5 +1,7 @@
 # Phase 0 — Investigation Findings
 
+> **Historical (2026-08-21).** Written against OpenZeppelin `539968f` and a 100,000,000-instruction cap. Superseded where it conflicts with [MEASUREMENTS.md](MEASUREMENTS.md) (2026-10-05, v0.9.0, 400,000,000 cap) — in particular "there is no batch primitive" (four transfers now fit in one transaction through a wrapper contract) and its references to `SELECTIVE_DISCLOSURE.md` / `SDK.md`, which OpenZeppelin has since split into `docs/selective-disclosure/` and `docs/sdk/`.
+
 **Project:** Confidential Disbursement on Stellar
 **Investigator:** Claude (for Jagadeesh B)
 **Date:** 21 August 2026

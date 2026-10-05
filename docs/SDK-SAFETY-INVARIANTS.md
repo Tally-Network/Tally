@@ -64,7 +64,7 @@ The default is correct. The override is a loaded gun: passing `p.rE` is a one-to
 3. **Family capacity respects the floor.** A circuit with `N < MIN_ACTIVE` can never prove, so `circuits/scripts/generate.sh` refuses to emit one. This is why the family starts at `n = 8`.
 4. **The SDK MUST surface the effective set size to the caller** before producing a disclosure, and MUST refuse below the floor with a typed error rather than a generic proof failure.
 
-**Verifier obligations** (beyond `SELECTIVE_DISCLOSURE.md` §5.3), since the circuit cannot see these:
+**Verifier obligations** (beyond OZ v0.9.0 `docs/selective-disclosure/protocol.md`), since the circuit cannot see these:
 
 - **Reject duplicate event references among active slots.** The circuit cannot detect that the same event was supplied twice; counting one event twice inflates the total.
 - Resolve every `PVK_A,ᵢ` from `Eᵢ.from` and `PVK_B,ᵢ` from `Eᵢ.to` — never from the bundle.
@@ -74,9 +74,9 @@ The default is correct. The override is a loaded gun: passing `p.rE` is a one-to
 
 ## I3 — Pinned upstream revision (build invariant)
 
-**Invariant.** Circuits, contracts, and SDK crypto MUST all be built against **the same** `OpenZeppelin/stellar-contracts` revision — currently `539968f`, pinned as a git submodule at `vendor/stellar-contracts`.
+**Invariant.** Circuits, contracts, and SDK crypto MUST all be built against **the same** `OpenZeppelin/stellar-contracts` revision — currently **v0.9.0 (`df602b6`)**, pinned as a git submodule at `vendor/stellar-contracts`. Until 2026-10-05 it was `539968f`.
 
-**Why it is silent — and why this one is not hypothetical.** It bit during development. Between the demo's pinned `539968f` and the branch tip `98090b3`, the shared Noir library changed `ecdh`:
+**Why it is silent — and why this one is not hypothetical.** It bit during development (August 2026, before the uplift below). Between the demo's pinned `539968f` and the branch tip `98090b3`, the shared Noir library changed `ecdh`:
 
 ```rust
 // 539968f — what the deployed contracts and the TS SDK use
@@ -91,11 +91,11 @@ pub fn ecdh(scalar: Field, point: EmbeddedCurvePoint) -> Field {
 }
 ```
 
-A circuit compiled against the tip cannot reconstruct amounts from events produced by contracts built at `539968f` — the shared secret differs. Here it surfaced loudly as an unsatisfiable constraint, which is the *lucky* outcome; `SDK.md` §8.1 warns of the quiet version, where drift yields verification keys that differ from the deployed ones "while every local test passes."
+A circuit compiled against the tip cannot reconstruct amounts from events produced by contracts built at `539968f` — the shared secret differs. Here it surfaced loudly as an unsatisfiable constraint, which is the *lucky* outcome; OpenZeppelin's SDK specification (then `SDK.md` §8.1; now `docs/sdk/requirements.md`, "Supply chain") warns of the quiet version, where drift yields verification keys that differ from the deployed ones "while every local test passes."
 
 **Note.** The tip's change is a *security hardening* — the Poseidon funnel removes the `(P, −P)` negation invariance of x-only extraction. Tally must adopt it. It is tracked as a named milestone, not an intention:
 
-### Milestone U1 — Upstream revision uplift
+### Milestone U1 — Upstream revision uplift — ✅ done 2026-10-05
 
 **Move `vendor/stellar-contracts` from `539968f` to the then-current upstream revision, in one coordinated change.**
 
@@ -173,14 +173,16 @@ Therefore:
 
 #### Sequencing
 
-After the demonstration targets, before any mainnet claim. A mainnet product whose disclosures expire after a week is not the product the landing page describes.
+**Done 2026-10-05, in one change,** moving to v0.9.0 (`df602b6`):
+- token, verifier and auditor rebuilt from `ct/contracts` and redeployed;
+- the six v0.9.0 VKs registered (copied byte-for-byte from upstream, which I reproduced with nargo 1.0.0-beta.11 and bb 0.87.0);
+- aggregate circuits recompiled and `vk.zk.bin` re-pinned;
+- the client SDK ported to `ct/sdk`, passing the 19 upstream primitive vectors it implements (`pnpm test:conformance`).
 
-**Stated here so a reviewer sees that we know it**, rather than discovering it by trying to verify a round on day eight.
+`pnpm demo` verified a full round on the new deployment. Rounds published before that date were produced by the retired deployment and cannot be reproduced with the current code.
 
 ---
 
-## Related upstream defect (not a Tally invariant)
+## Related upstream defect (resolved upstream)
 
-The reference demo's single-event disclosure circuits hardcode `δ_disc = 13`, which is `δ_ecdh`'s value in the normative table (`DESIGN_cont.md` §13, which assigns `δ_disc = 16` and `δ_disc_bind = 15`). That table states all sixteen values "MUST still be distinct and each MUST be confined to a single sponge mode."
-
-Tally's aggregate circuit uses the specified `δ_disc_bind = 15`. To be reported upstream.
+The August reference demo's single-event disclosure circuits used `δ_disc = 13`, which the normative table assigns to `δ_ecdh`. OpenZeppelin v0.9.0's `docs/protocol/domain-separators.md` now assigns 13 = `δ_ecdh`, 14 = `δ_eph`, 15 = `δ_disc_bind`, 16 = `δ_disc` and requires all values to be distinct. Tally's aggregate circuit uses `δ_disc_bind = 15`, and `ct/sdk` follows the v0.9.0 table.

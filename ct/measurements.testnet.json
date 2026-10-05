@@ -1,0 +1,146 @@
+{
+  "network": "testnet",
+  "rpc": "https://soroban-testnet.stellar.org",
+  "measuredAt": "2026-10-05T03:23:11.562Z",
+  "latestLedger": 5029400,
+  "protocolVersion": 29,
+  "deployment": {
+    "token": "CDRRP2JFAPIM47QBAC7U2WYRTSMEC4SMM6QAP3HX7DPFIZTTATQCURGN",
+    "verifier": "CAGL7SYHENABJPNPTSUO5RCROAUGTOSDVFWDDSDVHTLTR7V2N4QJB5LL",
+    "openZeppelin": "stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65"
+  },
+  "limits": {
+    "txMaxInstructions": 400000000,
+    "txMaxSizeBytes": 132096,
+    "txMaxDiskReadEntries": 200,
+    "txMaxWriteLedgerEntries": 200,
+    "txMaxWriteBytes": 132096,
+    "txMemoryLimit": 41943040
+  },
+  "register": {
+    "ok": true,
+    "instructions": 88344016,
+    "diskReadBytes": 0,
+    "writeBytes": 568,
+    "readOnlyEntries": 7,
+    "readWriteEntries": 1,
+    "minResourceFee": "550806",
+    "txSizeBytes": 30464
+  },
+  "confidentialTransfer": {
+    "ok": true,
+    "instructions": 91193854,
+    "diskReadBytes": 0,
+    "writeBytes": 1136,
+    "readOnlyEntries": 7,
+    "readWriteEntries": 2,
+    "minResourceFee": "1311887",
+    "txSizeBytes": 31876
+  },
+  "batching": {
+    "benchContract": "CB6U7QX2OR3ADD3NW6NSZQWNADIC3LFJKM3MN3NND4VPPDWTPQDDA3VV",
+    "rows": [
+      {
+        "k": 1,
+        "ok": true,
+        "instructions": 91550838,
+        "diskReadBytes": 0,
+        "writeBytes": 1136,
+        "readOnlyEntries": 9,
+        "readWriteEntries": 2,
+        "minResourceFee": "1313146",
+        "txSizeBytes": 32084,
+        "withinSizeLimit": true
+      },
+      {
+        "k": 2,
+        "ok": true,
+        "instructions": 182067642,
+        "diskReadBytes": 0,
+        "writeBytes": 1704,
+        "readOnlyEntries": 9,
+        "readWriteEntries": 3,
+        "minResourceFee": "2608520",
+        "txSizeBytes": 63264,
+        "withinSizeLimit": true
+      },
+      {
+        "k": 3,
+        "ok": true,
+        "instructions": 272645811,
+        "diskReadBytes": 0,
+        "writeBytes": 2272,
+        "readOnlyEntries": 9,
+        "readWriteEntries": 4,
+        "minResourceFee": "3903935",
+        "txSizeBytes": 94444,
+        "withinSizeLimit": true
+      },
+      {
+        "k": 4,
+        "ok": true,
+        "instructions": 363272171,
+        "diskReadBytes": 0,
+        "writeBytes": 2840,
+        "readOnlyEntries": 9,
+        "readWriteEntries": 5,
+        "minResourceFee": "5199399",
+        "txSizeBytes": 125624,
+        "withinSizeLimit": true
+      },
+      {
+        "k": 5,
+        "ok": false,
+        "error": "HostError: Error(Budget, ExceededLimit)",
+        "withinSizeLimit": false
+      }
+    ],
+    "largestThatFits": 4,
+    "submittedTx": "fe362834f8ddf8cb16cde66e71d64fc75dd7103a4968141bca4bd2faeab59384"
+  },
+  "aggregateOnChainVerification": {
+    "benchVerifier": "CACEIWIWMRIC4XQJKO4BYUWGBSV5DTMI36JPLARUCUNLV6Q6VWO54UQJ",
+    "slot": "Withdraw (1), measurement-only verifier",
+    "rows": [
+      {
+        "n": 8,
+        "publicInputs": 80,
+        "verified": true,
+        "ok": true,
+        "instructions": 91214362,
+        "diskReadBytes": 0,
+        "writeBytes": 0,
+        "readOnlyEntries": 2,
+        "readWriteEntries": 0,
+        "minResourceFee": "157308",
+        "txSizeBytes": 17452
+      },
+      {
+        "n": 16,
+        "publicInputs": 152,
+        "verified": true,
+        "ok": true,
+        "instructions": 100835059,
+        "diskReadBytes": 0,
+        "writeBytes": 0,
+        "readOnlyEntries": 2,
+        "readWriteEntries": 0,
+        "minResourceFee": "175096",
+        "txSizeBytes": 19756
+      },
+      {
+        "n": 64,
+        "publicInputs": 584,
+        "verified": true,
+        "ok": true,
+        "instructions": 150810864,
+        "diskReadBytes": 0,
+        "writeBytes": 0,
+        "readOnlyEntries": 2,
+        "readWriteEntries": 0,
+        "minResourceFee": "276382",
+        "txSizeBytes": 33580
+      }
+    ]
+  }
+}
