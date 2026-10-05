@@ -1,162 +1,809 @@
 {
   "$comment": "Every statement of fact on the landing page, the Agenforce component its section is built from, and the repository file that backs it. scripts/check-claims.mjs fails the build if a `site` string is missing from the page source, a source file is missing, or a source no longer contains its `contains` string. `fact` entries name a key in content/generated/facts.json, which the checker re-derives from the repository's JSON files.",
   "page": "/",
-  "siteFiles": ["components/tally/sections.tsx", "components/tally/round-explainer.tsx", "components/tally/faq.tsx", "components/navbar.tsx", "components/footer.tsx", "content/team.ts"],
+  "siteFiles": [
+    "components/tally/sections.tsx",
+    "components/tally/round-explainer.tsx",
+    "components/tally/faq.tsx",
+    "components/navbar.tsx",
+    "components/footer.tsx",
+    "content/team.ts",
+    "components/tally/verifier.tsx",
+    "app/(marketing)/verify/page.tsx"
+  ],
   "sections": [
     {
-      "id": "hero", "title": "Hero", "agenforce": "hero.tsx",
+      "id": "hero",
+      "title": "Hero",
+      "agenforce": "hero.tsx",
       "claims": [
-        { "site": "Disclosure\", \"and\", \"audit\", \"for\", \"Stellar's\", \"privacy\", \"tokens.", "note": "Category headline: names the category, asserts no guarantee", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "A headline may name the problem or the category" }] },
-        { "site": "confidential payouts to many\n        recipients, with totals an outside party can verify", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Confidential one-to-many payouts with a provable total are the first use case" }] },
-        { "site": "The operator service\n        (split auditor-key custody, scoped audit requests, tax export) is <strong>designed, not built</strong>", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "The operator service itself is a design" }, { "file": "docs/OPERATOR-DESIGN.md", "contains": "2-of-3 threshold custody" }] },
-        { "site": "OpenZeppelin Confidential Tokens v0.9.0", "fact": "openZeppelin", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "stellar-contracts v0.9.0" }] },
-        { "site": "Demo video slot. Until the video exists, this is a still of the round explainer", "sources": [{ "file": "evidence/latest.json", "contains": "round-004" }] }
+        {
+          "site": "Disclosure\", \"and\", \"audit\", \"for\", \"Stellar's\", \"privacy\", \"tokens.",
+          "note": "Category headline: names the category, asserts no guarantee",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "A headline may name the problem or the category"
+            }
+          ]
+        },
+        {
+          "site": "confidential payouts to many\n        recipients, with totals an outside party can verify",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Confidential one-to-many payouts with a provable total are the first use case"
+            }
+          ]
+        },
+        {
+          "site": "The operator service\n        (split auditor-key custody, scoped audit requests, tax export) is <strong>designed, not built</strong>",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "The operator service itself is a design"
+            },
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "2-of-3 threshold custody"
+            }
+          ]
+        },
+        {
+          "site": "OpenZeppelin Confidential Tokens v0.9.0",
+          "fact": "openZeppelin",
+          "sources": [
+            {
+              "file": "demo/deployment.testnet.json",
+              "contains": "stellar-contracts v0.9.0"
+            }
+          ]
+        },
+        {
+          "site": "Demo video slot. Until the video exists, this is a still of the round explainer",
+          "sources": [
+            {
+              "file": "evidence/latest.json",
+              "contains": "round-004"
+            }
+          ]
+        },
+        {
+          "site": "<Link href=\"/verify\">Verify this round</Link>",
+          "note": "Links to the in-browser verifier",
+          "sources": [
+            {
+              "file": "verify/core.ts",
+              "contains": "export async function verifyRound("
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "built-on", "title": "Built on Stellar's privacy standard", "agenforce": "logo-cloud.tsx (slot reused for the stack, no logos)",
+      "id": "built-on",
+      "title": "Built on Stellar's privacy standard",
+      "agenforce": "logo-cloud.tsx (slot reused for the stack, no logos)",
       "claims": [
-        { "site": "v0.9.0 @ ${ozRev}", "fact": "openZeppelin", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65" }, { "file": "ct/NOTICE.md", "contains": "vendor/stellar-contracts" }] },
-        { "site": "Stellar testnet, protocol ${facts.measurements.protocolVersion}", "fact": "measurements.protocolVersion", "sources": [{ "file": "ct/measurements.testnet.json", "contains": "\"protocolVersion\": 29" }] },
-        { "site": "No endorsement by, or partnership with, Stellar, SDF or\n        OpenZeppelin is implied.", "sources": [{ "file": "ct/NOTICE.md", "contains": "MIT (OpenZeppelin)" }] }
+        {
+          "site": "v0.9.0 @ ${ozRev}",
+          "fact": "openZeppelin",
+          "sources": [
+            {
+              "file": "demo/deployment.testnet.json",
+              "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65"
+            },
+            {
+              "file": "ct/NOTICE.md",
+              "contains": "vendor/stellar-contracts"
+            }
+          ]
+        },
+        {
+          "site": "Stellar testnet, protocol ${facts.measurements.protocolVersion}",
+          "fact": "measurements.protocolVersion",
+          "sources": [
+            {
+              "file": "ct/measurements.testnet.json",
+              "contains": "\"protocolVersion\": 29"
+            }
+          ]
+        },
+        {
+          "site": "No endorsement by, or partnership with, Stellar, SDF or\n        OpenZeppelin is implied.",
+          "sources": [
+            {
+              "file": "ct/NOTICE.md",
+              "contains": "MIT (OpenZeppelin)"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "problem", "title": "The problem", "agenforce": "features/ (bento cards)",
+      "id": "problem",
+      "title": "The problem",
+      "agenforce": "features/ (bento cards)",
       "claims": [
-        { "site": "Paying off-chain hides the amounts but gives up the audit trail.", "sources": [{ "file": "README.md", "contains": "Tally" }] },
-        { "site": "Amounts stay sealed on-chain; the round's total stays provable", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "total exactly the disclosed amount" }] }
+        {
+          "site": "Paying off-chain hides the amounts but gives up the audit trail.",
+          "sources": [
+            {
+              "file": "README.md",
+              "contains": "Tally"
+            }
+          ]
+        },
+        {
+          "site": "Amounts stay sealed on-chain; the round's total stays provable",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "total exactly the disclosed amount"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "who", "title": "Who it is for", "agenforce": "features-secondary/ (three-column bordered grid)",
+      "id": "who",
+      "title": "Who it is for",
+      "agenforce": "features-secondary/ (three-column bordered grid)",
       "claims": [
-        { "site": "Pays many recipients from lane accounts it declared on-chain before the round opened.", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "the lane accounts Tally declared on-chain before the round opened" }] },
-        { "site": "Registers a confidential account from their own wallet signature; the key never leaves their device.", "sources": [{ "file": "docs/NON-CUSTODIAL-REGISTRATION.md", "contains": "freighter.signMessage(msg)" }] },
-        { "site": "Checks the total with their own key and a fresh nonce.", "sources": [{ "file": "cli/README.md", "contains": "challenge" }] }
+        {
+          "site": "Pays many recipients from lane accounts it declared on-chain before the round opened.",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "the lane accounts Tally declared on-chain before the round opened"
+            }
+          ]
+        },
+        {
+          "site": "Registers a confidential account from their own wallet signature; the key never leaves their device.",
+          "sources": [
+            {
+              "file": "docs/NON-CUSTODIAL-REGISTRATION.md",
+              "contains": "freighter.signMessage(msg)"
+            }
+          ]
+        },
+        {
+          "site": "Checks the total with their own key and a fresh nonce.",
+          "sources": [
+            {
+              "file": "cli/README.md",
+              "contains": "challenge"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "how", "title": "How a round works", "agenforce": "speed.tsx (layout) with the animated round explainer",
+      "id": "how",
+      "title": "How a round works",
+      "agenforce": "speed.tsx (layout) with the animated round explainer",
       "claims": [
-        { "site": "Alice records the round id and its lanes in the round registry. The contract stamps the opening ledger.", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "`open_round` stamps its ledger from the contract, not from the caller" }] },
-        { "site": "TOTAL = 3160", "sources": [{ "file": "evidence/README.md", "contains": "TOTAL DISBURSED: 3160" }] },
-        { "site": "One zero-knowledge proof, 16,224 B", "sources": [{ "file": "evidence/README.md", "contains": "proof verified (16224 B, zero-knowledge)" }] },
-        { "site": "{t.vTilde.slice(0, 8)}", "fact": "round.chain.transfers", "note": "Ciphertext prefixes are round-004's on-chain v_tilde values; names are illustrative", "sources": [{ "file": "evidence/round-004/round.json", "contains": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc" }] },
-        { "site": "the chain never holds an amount in plaintext", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "Transfer.from" }] }
+        {
+          "site": "Alice records the round id and its lanes in the round registry. The contract stamps the opening ledger.",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "`open_round` stamps its ledger from the contract, not from the caller"
+            }
+          ]
+        },
+        {
+          "site": "TOTAL = 3160",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "TOTAL DISBURSED: 3160"
+            }
+          ]
+        },
+        {
+          "site": "One zero-knowledge proof, 16,224 B",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "proof verified (16224 B, zero-knowledge)"
+            }
+          ]
+        },
+        {
+          "site": "{t.vTilde.slice(0, 8)}",
+          "fact": "round.chain.transfers",
+          "note": "Ciphertext prefixes are round-004's on-chain v_tilde values; names are illustrative",
+          "sources": [
+            {
+              "file": "evidence/round-004/round.json",
+              "contains": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc"
+            }
+          ]
+        },
+        {
+          "site": "the chain never holds an amount in plaintext",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "Transfer.from"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "use-cases", "title": "Use cases", "agenforce": "features-tertiary/ (icon grid)",
+      "id": "use-cases",
+      "title": "Use cases",
+      "agenforce": "features-tertiary/ (icon grid)",
       "claims": [
-        { "site": "Tally has no users today; these are the situations it is built for.", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Positioning" }] },
-        { "site": "Needs the operator service: designed, not built", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "What the tax export does not do" }] }
+        {
+          "site": "Tally has no users today; these are the situations it is built for.",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Positioning"
+            }
+          ]
+        },
+        {
+          "site": "Needs the operator service: designed, not built",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "What the tax export does not do"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "verifier", "title": "What an outside verifier learns, and does not", "agenforce": "outcomes.tsx (two columns at equal weight)",
+      "id": "verifier",
+      "title": "What an outside verifier learns, and does not",
+      "agenforce": "outcomes.tsx (two columns at equal weight)",
       "claims": [
-        { "site": "How many transfers that total covers (the circuit publishes the count).", "sources": [{ "file": "circuits/README.md", "contains": "`n_active` is a public input so the disclosure recipient sees the true set size" }] },
-        { "site": "TRUST_STATEMENT_VERBATIM", "note": "Both sentences, checked character for character against the rendered page after build", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "Both sentences ship verbatim, everywhere they appear" }] }
+        {
+          "site": "How many transfers that total covers (the circuit publishes the count).",
+          "sources": [
+            {
+              "file": "circuits/README.md",
+              "contains": "`n_active` is a public input so the disclosure recipient sees the true set size"
+            }
+          ]
+        },
+        {
+          "site": "TRUST_STATEMENT_VERBATIM",
+          "note": "Both sentences, checked character for character against the rendered page after build",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "Both sentences ship verbatim, everywhere they appear"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "operator", "title": "The operator service, planned", "agenforce": "features-secondary/ (two-column bordered grid)",
+      "id": "operator",
+      "title": "The operator service, planned",
+      "agenforce": "features-secondary/ (two-column bordered grid)",
       "claims": [
-        { "site": "<Badge>Designed, not built</Badge>", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "nothing below demonstrates it" }] },
-        { "site": "held two-of-three by the issuer, Tally and an independent custodian", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "a 2-of-3 multisig of tenant, Tally and the independent party" }] },
-        { "site": "Each custodian checks scope itself and contributes only for events it resolves from the chain.", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "only for events they resolve themselves" }] },
-        { "site": "Not tax advice and no fiat valuation.", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "It is a verifiable transaction statement, not tax advice." }] },
-        { "site": "the auditor key would be reassembled briefly\n        inside an attested enclave", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "Used only as a short-lived proving step inside option C" }] }
+        {
+          "site": "<Badge>Designed, not built</Badge>",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "nothing below demonstrates it"
+            }
+          ]
+        },
+        {
+          "site": "held two-of-three by the issuer, Tally and an independent custodian",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "a 2-of-3 multisig of tenant, Tally and the independent party"
+            }
+          ]
+        },
+        {
+          "site": "Each custodian checks scope itself and contributes only for events it resolves from the chain.",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "only for events they resolve themselves"
+            }
+          ]
+        },
+        {
+          "site": "Not tax advice and no fiat valuation.",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "It is a verifiable transaction statement, not tax advice."
+            }
+          ]
+        },
+        {
+          "site": "the auditor key would be reassembled briefly\n        inside an attested enclave",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "Used only as a short-lived proving step inside option C"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "evidence", "title": "Live evidence", "agenforce": "features-secondary/ (two-column grid) with a table",
+      "id": "evidence",
+      "title": "Live evidence",
+      "agenforce": "features-secondary/ (two-column grid) with a table",
       "claims": [
-        { "site": "until about ledger ${n(round.verifiable_until_ledger)}", "fact": "round.verifiable_until_ledger", "sources": [{ "file": "evidence/round-004/round.json", "contains": "5153815" }] },
-        { "site": "3,160 stroops of the wrapped asset, from the declared lanes in {round.dir}", "sources": [{ "file": "evidence/README.md", "contains": "TOTAL DISBURSED: 3160  (stroops of the wrapped asset)" }] },
-        { "site": "{transfers.length} across {round.chain.lanes} declared lanes", "fact": "round.chain.transfers", "sources": [{ "file": "evidence/README.md", "contains": "over 16 transfers from 5 declared lanes, ledgers 5032842–5032851" }] },
-        { "site": "[\"Round registry\", c.registry]", "fact": "contracts", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W" }] }
+        {
+          "site": "until about ledger ${n(round.verifiable_until_ledger)}",
+          "fact": "round.verifiable_until_ledger",
+          "sources": [
+            {
+              "file": "evidence/round-004/round.json",
+              "contains": "5153815"
+            }
+          ]
+        },
+        {
+          "site": "3,160 stroops of the wrapped asset, from the declared lanes in {round.dir}",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "TOTAL DISBURSED: 3160  (stroops of the wrapped asset)"
+            }
+          ]
+        },
+        {
+          "site": "{transfers.length} across {round.chain.lanes} declared lanes",
+          "fact": "round.chain.transfers",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "over 16 transfers from 5 declared lanes, ledgers 5032842–5032851"
+            }
+          ]
+        },
+        {
+          "site": "[\"Round registry\", c.registry]",
+          "fact": "contracts",
+          "sources": [
+            {
+              "file": "demo/deployment.testnet.json",
+              "contains": "CDWIXFBOR5DB4UVQXYL3VY7OQZNUAWAVEPSKKTNH3R5XI6CJ2IS7BK7W"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "try", "title": "Try it yourself", "agenforce": "features/ (cards) with copy buttons",
+      "id": "try",
+      "title": "Try it yourself",
+      "agenforce": "features/ (cards) with copy buttons",
       "claims": [
-        { "site": "✓ round found: 5 lanes, window [5032842, 5032851]", "sources": [{ "file": "evidence/README.md", "contains": "✓ round found: 5 lanes, window [5032842, 5032851]" }] },
-        { "site": "✓ verification key matches the pinned artifact (1760 B)", "sources": [{ "file": "evidence/README.md", "contains": "✓ verification key matches the pinned artifact (1760 B)" }] },
-        { "site": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified", "sources": [{ "file": "demo/README.md", "contains": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified" }] },
-        { "site": "excluded by the window                   :  1   ← the pre-round transfer", "sources": [{ "file": "demo/README.md", "contains": "excluded by the window                   :  1   ← the pre-round transfer" }] },
-        { "site": "Exit 0 means verified, 2 means the proof was rejected, 3 means the round aged out of the RPC window, 1 means it could not be checked.", "sources": [{ "file": "cli/tally.ts", "contains": "process.exit(3);" }, { "file": "cli/tally.ts", "contains": "process.exit(2); }" }] },
-        { "site": "Verifying needs no Noir toolchain: the compiled circuits are in the repository.", "sources": [{ "file": "circuits/aggregate_n16/circuit.json", "exists": true }] }
+        {
+          "site": "✓ round found: 5 lanes, window [5032842, 5032851]",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "✓ round found: 5 lanes, window [5032842, 5032851]"
+            }
+          ]
+        },
+        {
+          "site": "✓ verification key matches the pinned artifact (1760 B)",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "✓ verification key matches the pinned artifact (1760 B)"
+            }
+          ]
+        },
+        {
+          "site": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified",
+          "sources": [
+            {
+              "file": "demo/README.md",
+              "contains": "proof 16224B in 2032ms (zero-knowledge), spans 5 sender accounts, verified"
+            }
+          ]
+        },
+        {
+          "site": "excluded by the window                   :  1   ← the pre-round transfer",
+          "sources": [
+            {
+              "file": "demo/README.md",
+              "contains": "excluded by the window                   :  1   ← the pre-round transfer"
+            }
+          ]
+        },
+        {
+          "site": "Exit 0 means verified, 2 means the proof was rejected, 3 means the round aged out of the RPC window, 1 means it could not be checked.",
+          "sources": [
+            {
+              "file": "cli/tally.ts",
+              "contains": "process.exit(3);"
+            },
+            {
+              "file": "cli/tally.ts",
+              "contains": "process.exit(2); }"
+            }
+          ]
+        },
+        {
+          "site": "Verifying needs no Noir toolchain: the compiled circuits are in the repository.",
+          "sources": [
+            {
+              "file": "circuits/aggregate_n16/circuit.json",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "site": "using the same code as <code className=\"font-mono\">tally verify</code>",
+          "sources": [
+            {
+              "file": "cli/tally.ts",
+              "contains": "} from \"../verify/core.js\";"
+            },
+            {
+              "file": "site/components/tally/verifier.tsx",
+              "contains": "import(\"../../../verify/core\")"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "measured", "title": "Measured", "agenforce": "features-tertiary/ (stat grid)",
+      "id": "measured",
+      "title": "Measured",
+      "agenforce": "features-tertiary/ (stat grid)",
       "claims": [
-        { "site": "n(m.confidentialTransfer.instructions)", "fact": "measurements.confidentialTransfer.instructions", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `confidential_transfer` | 91,193,854 | 22.8 % |" }] },
-        { "site": "String(batch.largestThatFits)", "fact": "measurements.batching.largestThatFits", "sources": [{ "file": "MEASUREMENTS.md", "contains": "Four confidential transfers from one sender landed in a single transaction" }] },
-        { "site": "\"16,224 B\", d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"", "sources": [{ "file": "MEASUREMENTS.md", "contains": "16,224 B" }, { "file": "circuits/README.md", "contains": "n = 8" }] },
-        { "site": "aggRows.find((r) => r.n === 64)", "fact": "measurements.aggregate.rows", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| 64 | 584 | 150,810,864 | 37.7 % |" }] },
-        { "site": "n(m.register.instructions)", "fact": "measurements.register.instructions", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `register` | 88,344,016 | 22.1 % |" }] },
-        { "site": "\"1.32 s\", d: \"Warm, on an Apple M4 Pro\"", "sources": [{ "file": "MEASUREMENTS.md", "contains": "1.32 s warm on this machine" }, { "file": "MEASUREMENTS.md", "contains": "Apple M4 Pro" }] },
-        { "site": "Earlier figures (one transfer per transaction, under a 100,000,000 cap) are superseded.", "sources": [{ "file": "MEASUREMENTS.md", "contains": "Phase 1 measured one transfer per transaction under the 100M cap" }] }
+        {
+          "site": "n(m.confidentialTransfer.instructions)",
+          "fact": "measurements.confidentialTransfer.instructions",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| `confidential_transfer` | 91,193,854 | 22.8 % |"
+            }
+          ]
+        },
+        {
+          "site": "String(batch.largestThatFits)",
+          "fact": "measurements.batching.largestThatFits",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "Four confidential transfers from one sender landed in a single transaction"
+            }
+          ]
+        },
+        {
+          "site": "\"16,224 B\", d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "16,224 B"
+            },
+            {
+              "file": "circuits/README.md",
+              "contains": "n = 8"
+            }
+          ]
+        },
+        {
+          "site": "aggRows.find((r) => r.n === 64)",
+          "fact": "measurements.aggregate.rows",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| 64 | 584 | 150,810,864 | 37.7 % |"
+            }
+          ]
+        },
+        {
+          "site": "n(m.register.instructions)",
+          "fact": "measurements.register.instructions",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| `register` | 88,344,016 | 22.1 % |"
+            }
+          ]
+        },
+        {
+          "site": "\"1.32 s\", d: \"Warm, on an Apple M4 Pro\"",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "1.32 s warm on this machine"
+            },
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "Apple M4 Pro"
+            }
+          ]
+        },
+        {
+          "site": "Earlier figures (one transfer per transaction, under a 100,000,000 cap) are superseded.",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "Phase 1 measured one transfer per transaction under the 100M cap"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "safeguards", "title": "Safeguards", "agenforce": "features-secondary/ (four-column bordered grid)",
+      "id": "safeguards",
+      "title": "Safeguards",
+      "agenforce": "features-secondary/ (four-column bordered grid)",
       "claims": [
-        { "site": "fails the build if a Stellar seed, a private key, or a hex secret appears in any tracked file. It also detects the retired demo auditor key.", "sources": [{ "file": "scripts/check-secrets.ts", "contains": "Stellar secret seeds" }, { "file": "scripts/check-secrets.ts", "contains": "the retired demo auditor key" }] },
-        { "site": "CI rebuilds the circuits and fails on any drift.", "sources": [{ "file": ".github/workflows/ci.yml", "contains": "git diff --exit-code -- circuits/" }] },
-        { "site": "all 19 OpenZeppelin v0.9.0 test vectors for the primitives it uses. One spender-only vector is not used.", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements" }, { "file": "ct/sdk/test/conformance.ts", "contains": "Spender-only primitive" }] },
-        { "site": "A bundle whose sealed total was altered by one, and a bundle replayed against a different challenge, both fail with exit code 2.", "sources": [{ "file": "evidence/README.md", "contains": "# inflate the sealed total by one" }, { "file": "evidence/README.md", "contains": "# replay the bundle against a challenge it was not built for" }] }
+        {
+          "site": "fails the build if a Stellar seed, a private key, or a hex secret appears in any tracked file. It also detects the retired demo auditor key.",
+          "sources": [
+            {
+              "file": "scripts/check-secrets.ts",
+              "contains": "Stellar secret seeds"
+            },
+            {
+              "file": "scripts/check-secrets.ts",
+              "contains": "the retired demo auditor key"
+            }
+          ]
+        },
+        {
+          "site": "CI rebuilds the circuits and fails on any drift.",
+          "sources": [
+            {
+              "file": ".github/workflows/ci.yml",
+              "contains": "git diff --exit-code -- circuits/"
+            }
+          ]
+        },
+        {
+          "site": "all 19 OpenZeppelin v0.9.0 test vectors for the primitives it uses. One spender-only vector is not used.",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements"
+            },
+            {
+              "file": "ct/sdk/test/conformance.ts",
+              "contains": "Spender-only primitive"
+            }
+          ]
+        },
+        {
+          "site": "A bundle whose sealed total was altered by one, and a bundle replayed against a different challenge, both fail with exit code 2.",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "# inflate the sealed total by one"
+            },
+            {
+              "file": "evidence/README.md",
+              "contains": "# replay the bundle against a challenge it was not built for"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "compare", "title": "How Tally differs", "agenforce": "pricing.tsx (table frame)",
+      "id": "compare",
+      "title": "How Tally differs",
+      "agenforce": "pricing.tsx (table frame)",
       "claims": [
-        { "site": "[\"Remi (SCF #44)\"", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Remi** (SCF #44, $133.7k)" }] },
-        { "site": "[\"Arcane (SCF #42)\"", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Arcane** (SCF #42, $150k)" }] },
-        { "site": "[\"ZKELLA (SCF #45)\"", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**ZKELLA** (SCF #45, $127.8k)" }] },
-        { "site": "[\"Moonlight (SCF #37)\"", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Moonlight** (SCF #37, The AHA Co.)" }] },
-        { "site": "[\"Haven (SCF #45)\"", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Haven** (SCF #45, $97k)" }] },
-        { "site": "SDF asked for someone to run the operator role", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "OpenZeppelin is a tooling provider, not an operator… go be the operator." }] }
+        {
+          "site": "[\"Remi (SCF #44)\"",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Remi** (SCF #44, $133.7k)"
+            }
+          ]
+        },
+        {
+          "site": "[\"Arcane (SCF #42)\"",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Arcane** (SCF #42, $150k)"
+            }
+          ]
+        },
+        {
+          "site": "[\"ZKELLA (SCF #45)\"",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**ZKELLA** (SCF #45, $127.8k)"
+            }
+          ]
+        },
+        {
+          "site": "[\"Moonlight (SCF #37)\"",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Moonlight** (SCF #37, The AHA Co.)"
+            }
+          ]
+        },
+        {
+          "site": "[\"Haven (SCF #45)\"",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Haven** (SCF #45, $97k)"
+            }
+          ]
+        },
+        {
+          "site": "SDF asked for someone to run the operator role",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "OpenZeppelin is a tooling provider, not an operator… go be the operator."
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "status", "title": "Built, designed, and the limits", "agenforce": "pricing.tsx (three cards at equal weight)",
+      "id": "status",
+      "title": "Built, designed, and the limits",
+      "agenforce": "pricing.tsx (three cards at equal weight)",
       "claims": [
-        { "site": "Round registry contract on testnet, 16 tests, 10 of them negative", "sources": [{ "file": "contracts/README.md", "contains": "16 tests, **10 of them negative**" }] },
-        { "site": "Non-custodial registration, tested against live testnet", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "Headless non-custodial derivation following OZ" }] },
-        { "site": "\"Durable event archive\"", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Durable verification beyond the ~7-day RPC event window | ❌ Not built" }] },
-        { "site": "\"Auditor client that decrypts every event type\"", "sources": [{ "file": "docs/SCOPE-LEDGER.md", "contains": "Auditor client: three-lane decryption" }] },
-        { "site": "Registration runs headless; there is no wallet page yet", "sources": [{ "file": "registration/README.md", "contains": "There is no browser page in this repository" }] },
-        { "site": "The demo sends one transfer per transaction", "sources": [{ "file": "MEASUREMENTS.md", "contains": "The demo still sends one transfer per transaction" }] }
+        {
+          "site": "Round registry contract on testnet, 16 tests, 10 of them negative",
+          "sources": [
+            {
+              "file": "contracts/README.md",
+              "contains": "16 tests, **10 of them negative**"
+            }
+          ]
+        },
+        {
+          "site": "Non-custodial registration, tested against live testnet",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "Headless non-custodial derivation following OZ"
+            }
+          ]
+        },
+        {
+          "site": "\"Durable event archive\"",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Durable verification beyond the ~7-day RPC event window | ❌ Not built"
+            }
+          ]
+        },
+        {
+          "site": "\"Auditor client that decrypts every event type\"",
+          "sources": [
+            {
+              "file": "docs/SCOPE-LEDGER.md",
+              "contains": "Auditor client: three-lane decryption"
+            }
+          ]
+        },
+        {
+          "site": "Registration runs headless; there is no wallet page yet",
+          "sources": [
+            {
+              "file": "registration/README.md",
+              "contains": "There is no browser page in this repository"
+            }
+          ]
+        },
+        {
+          "site": "The demo sends one transfer per transaction",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "The demo still sends one transfer per transaction"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "roadmap", "title": "Roadmap", "agenforce": "features-secondary/ (three-column bordered grid)",
+      "id": "roadmap",
+      "title": "Roadmap",
+      "agenforce": "features-secondary/ (three-column bordered grid)",
       "claims": [
-        { "site": "After SDF approves Confidential Tokens for mainnet", "sources": [{ "file": "docs/SCOPE-LEDGER.md", "contains": "Follows SDF's approval of Confidential Tokens for mainnet" }] },
-        { "site": "a pilot with one issuer", "sources": [{ "file": "docs/SCOPE-LEDGER.md", "contains": "pilot" }] }
+        {
+          "site": "After SDF approves Confidential Tokens for mainnet",
+          "sources": [
+            {
+              "file": "docs/SCOPE-LEDGER.md",
+              "contains": "Follows SDF's approval of Confidential Tokens for mainnet"
+            }
+          ]
+        },
+        {
+          "site": "a pilot with one issuer",
+          "sources": [
+            {
+              "file": "docs/SCOPE-LEDGER.md",
+              "contains": "pilot"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "faq", "title": "FAQ", "agenforce": "faqs.tsx",
+      "id": "faq",
+      "title": "FAQ",
+      "agenforce": "faqs.tsx",
       "claims": [
-        { "site": "the verifier says so with exit code 3 instead of reporting a failed proof", "sources": [{ "file": "cli/tally.ts", "contains": "process.exit(3);" }, { "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Soroban RPC keeps about 7 days of events" }] },
-        { "site": "Neither Tally nor the confidential-token suite it uses has been audited.", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "neither published as a package nor audited" }] }
+        {
+          "site": "the verifier says so with exit code 3 instead of reporting a failed proof",
+          "sources": [
+            {
+              "file": "cli/tally.ts",
+              "contains": "process.exit(3);"
+            },
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Soroban RPC keeps about 7 days of events"
+            }
+          ]
+        },
+        {
+          "site": "Neither Tally nor the confidential-token suite it uses has been audited.",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "neither published as a package nor audited"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "team", "title": "Team", "agenforce": "outcomes.tsx (cards), data-driven from content/team.ts",
+      "id": "team",
+      "title": "Team",
+      "agenforce": "outcomes.tsx (cards), data-driven from content/team.ts",
       "claims": [
-        { "site": "name: \"Jagadeesh B\"", "sources": [{ "file": "LICENSE", "contains": "Copyright (c) 2026 Jagadeesh B" }] }
+        {
+          "site": "name: \"Jagadeesh B\"",
+          "sources": [
+            {
+              "file": "LICENSE",
+              "contains": "Copyright (c) 2026 Jagadeesh B"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "cta", "title": "Closing call to action", "agenforce": "hero.tsx (button group, reused)",
+      "id": "cta",
+      "title": "Closing call to action",
+      "agenforce": "hero.tsx (button group, reused)",
       "claims": [
-        { "site": "issues/new?title=Design%20partner", "note": "Contact is a GitHub issue; no email address is published", "sources": [{ "file": "package.json", "contains": "\"license\": \"MIT\"" }] }
+        {
+          "site": "issues/new?title=Design%20partner",
+          "note": "Contact is a GitHub issue; no email address is published",
+          "sources": [
+            {
+              "file": "package.json",
+              "contains": "\"license\": \"MIT\""
+            }
+          ]
+        }
       ]
     }
   ]

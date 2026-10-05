@@ -88,25 +88,33 @@ jobs:
       - run: cargo build --manifest-path ct/contracts/Cargo.toml --target wasm32v1-none --release
 
   site:
-    # Builds the landing page and docs. The prebuild step checks every claim
-    # against its source file; the crawl checks links, anchors, repository
-    # paths and the verbatim trust statement.
+    # Builds the landing page and docs (claims checked first), crawls the
+    # result, and drives /verify in a browser: the published round verifies,
+    # both tampering cases are rejected, an aged-out round is reported as such.
+    # The site imports verify/core.ts, so the repository's packages are
+    # installed too.
     needs: secrets
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: site
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: npm ci
+        working-directory: site
       - run: npm run build
-      - name: Crawl the built site
+        working-directory: site
+      - run: npx playwright install --with-deps chromium
+        working-directory: site
+      - name: Crawl the built site and check the verifier
+        working-directory: site
         run: |
           npx next start -p 3123 &
           for i in $(seq 1 60); do curl -sf http://localhost:3123 >/dev/null && break; sleep 1; done
           npm run check:site -- http://localhost:3123
+          npm run check:verifier -- http://localhost:3123

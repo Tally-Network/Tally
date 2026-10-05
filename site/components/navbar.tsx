@@ -13,6 +13,7 @@ const navlinks = [
   { title: "Measured", href: "/#measured" },
   { title: "Built vs designed", href: "/#status" },
   { title: "Operator (planned)", href: "/#operator" },
+  { title: "Verify", href: "/verify" },
   { title: "Docs", href: "/docs" },
 ];
 

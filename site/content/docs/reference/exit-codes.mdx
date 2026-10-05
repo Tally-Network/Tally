@@ -7,10 +7,10 @@ description: "What tally verify and the secret guard return, so scripts can rely
 
 | Code | Meaning | Examples | Source |
 |---:|:---|:---|:---|
-| `0` | Verified. The total printed is the round's total from the declared lanes in the window | A valid bundle | `cli/tally.ts`: `verify` completes without an explicit exit |
-| `1` | Could not verify | A missing argument; no round with that id under that funder; fewer than 5 transfers; a derived verification key that differs from the pinned `vk.zk.bin` (line 336); a network error | `cli/tally.ts`, lines 60 and 458 |
-| `2` | The proof was rejected (`PROOF FAILED`) | The sealed total altered by one; a bundle replayed against a different challenge | `cli/tally.ts`, line 347 |
-| `3` | The round has aged out of the RPC's event window. This is not a proof failure | A round older than about seven days | `cli/tally.ts`, line 161 |
+| `0` | Verified. The total printed is the round's total from the declared lanes in the window | A valid bundle | `cli/tally.ts`: `cmdVerify` returns normally after a `verified` result from `verifyRound` |
+| `1` | Could not verify | A missing argument; no round with that id under that funder; fewer than 5 transfers; a derived verification key that differs from the pinned `vk.zk.bin`; a network error | `VerifyError` (code 1) in `verify/core.ts`; `die` in `cli/tally.ts` |
+| `2` | The proof was rejected (`PROOF FAILED`) | The sealed total altered by one; a bundle replayed against a different challenge | `cli/tally.ts`: a `rejected` result from `verifyRound` |
+| `3` | The round has aged out of the RPC's event window. This is not a proof failure | A round older than about seven days | `cli/tally.ts`: an `expired` result from `verifyRound` |
 
 A verification-key mismatch exits with `1`, not `2`: the tool refuses to check the proof at all rather than reporting it as rejected.
 

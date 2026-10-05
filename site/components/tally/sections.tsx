@@ -93,8 +93,9 @@ export const Hero = () => (
         (split auditor-key custody, scoped audit requests, tax export) is <strong>designed, not built</strong>.
       </p>
       <div className="flex flex-wrap items-center gap-4">
-        <Button asChild className="shadow-brand"><Link href="/docs/quickstart">Run the demo</Link></Button>
-        <Button asChild variant="outline"><Link href="/docs">Read the docs</Link></Button>
+        <Button asChild className="shadow-brand"><Link href="/verify">Verify this round</Link></Button>
+        <Button asChild variant="outline"><Link href="/docs/quickstart">Run the demo</Link></Button>
+        <Button asChild variant="ghost"><Link href="/docs">Read the docs</Link></Button>
         <Button asChild variant="ghost"><a href={REPO}>View the code</a></Button>
       </div>
       <figure id="video" className="mt-14 scroll-mt-24">
@@ -430,8 +431,21 @@ donor total = 3160   expected 3160   MATCH`,
 
 export const TryIt = () => (
   <Container className="py-10 md:py-20">
-    <Reveal><SectionHead id="try" title="Try it yourself" sub="Three steps, with the output recorded in the repository from the last run." /></Reveal>
-    <div className="mt-10 grid grid-cols-1 gap-4 md:mt-16 lg:grid-cols-3">
+    <Reveal><SectionHead id="try" title="Try it yourself" sub="In your browser with no clone, or from a clone in three steps with the output recorded in the repository from the last run." /></Reveal>
+    <Reveal>
+      <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-3xl bg-primary/5 p-6 ring-1 ring-primary/20 md:mt-16 md:flex-row md:items-center md:p-8">
+        <div>
+          <p className="font-inter text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">No clone needed</p>
+          <p className="mt-2 font-display text-xl font-bold">Verify the published round in your browser</p>
+          <p className="mt-1 max-w-2xl font-inter text-sm text-neutral-600 dark:text-neutral-400">
+            Your browser reads the round and its transfers from testnet RPC, rebuilds every public input and checks the proof
+            with bb.js, using the same code as <code className="font-mono">tally verify</code>. Two buttons let you tamper with the bundle and watch it fail.
+          </p>
+        </div>
+        <Button asChild className="shrink-0 shadow-brand"><Link href="/verify">Verify this round</Link></Button>
+      </div>
+    </Reveal>
+    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
       {STEPS.map((s, i) => (
         <Reveal key={s.t} delay={i * 0.06} className="min-w-0">
           <div className="flex h-full min-w-0 flex-col rounded-3xl bg-neutral-50 p-6 dark:bg-neutral-800">

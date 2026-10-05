@@ -15,6 +15,7 @@ Facts snapshot: generated 2026-10-05T08:13:21.902Z; chain read 2026-10-05T08:13:
 | Hero | hero.tsx | The operator service (split auditor-key custody, scoped audit requests, tax export) is <strong>designed, not built</strong> | `docs/DEMONSTRATION-STATUS.md`: "The operator service itself is a design"<br>`docs/OPERATOR-DESIGN.md`: "2-of-3 threshold custody" |
 | Hero | hero.tsx | OpenZeppelin Confidential Tokens v0.9.0 (facts: `openZeppelin`) | `demo/deployment.testnet.json`: "stellar-contracts v0.9.0" |
 | Hero | hero.tsx | Demo video slot. Until the video exists, this is a still of the round explainer | `evidence/latest.json`: "round-004" |
+| Hero | hero.tsx | <Link href="/verify">Verify this round</Link>. Links to the in-browser verifier | `verify/core.ts`: "export async function verifyRound(" |
 | Built on Stellar's privacy standard | logo-cloud.tsx (slot reused for the stack, no logos) | v0.9.0 @ ${ozRev} (facts: `openZeppelin`) | `demo/deployment.testnet.json`: "df602b613fbc4ae1e98ff62ba3caef671a370f65"<br>`ct/NOTICE.md`: "vendor/stellar-contracts" |
 | Built on Stellar's privacy standard | logo-cloud.tsx (slot reused for the stack, no logos) | Stellar testnet, protocol ${facts.measurements.protocolVersion} (facts: `measurements.protocolVersion`) | `ct/measurements.testnet.json`: ""protocolVersion": 29" |
 | Built on Stellar's privacy standard | logo-cloud.tsx (slot reused for the stack, no logos) | No endorsement by, or partnership with, Stellar, SDF or OpenZeppelin is implied. | `ct/NOTICE.md`: "MIT (OpenZeppelin)" |
@@ -47,6 +48,7 @@ Facts snapshot: generated 2026-10-05T08:13:21.902Z; chain read 2026-10-05T08:13:
 | Try it yourself | features/ (cards) with copy buttons | excluded by the window                   :  1   ← the pre-round transfer | `demo/README.md`: "excluded by the window                   :  1   ← the pre-round transfer" |
 | Try it yourself | features/ (cards) with copy buttons | Exit 0 means verified, 2 means the proof was rejected, 3 means the round aged out of the RPC window, 1 means it could not be checked. | `cli/tally.ts`: "process.exit(3);"<br>`cli/tally.ts`: "process.exit(2); }" |
 | Try it yourself | features/ (cards) with copy buttons | Verifying needs no Noir toolchain: the compiled circuits are in the repository. | `circuits/aggregate_n16/circuit.json` |
+| Try it yourself | features/ (cards) with copy buttons | using the same code as <code className="font-mono">tally verify</code> | `cli/tally.ts`: "} from "../verify/core.js";"<br>`site/components/tally/verifier.tsx`: "import("../../../verify/core")" |
 | Measured | features-tertiary/ (stat grid) | n(m.confidentialTransfer.instructions) (facts: `measurements.confidentialTransfer.instructions`) | `MEASUREMENTS.md`: "\| `confidential_transfer` \| 91,193,854 \| 22.8 % \|" |
 | Measured | features-tertiary/ (stat grid) | String(batch.largestThatFits) (facts: `measurements.batching.largestThatFits`) | `MEASUREMENTS.md`: "Four confidential transfers from one sender landed in a single transaction" |
 | Measured | features-tertiary/ (stat grid) | "16,224 B", d: "Zero-knowledge, the same size for 8, 16 or 64 transfers" | `MEASUREMENTS.md`: "16,224 B"<br>`circuits/README.md`: "n = 8" |
@@ -87,11 +89,11 @@ Facts snapshot: generated 2026-10-05T08:13:21.902Z; chain read 2026-10-05T08:13:
 | Learn | `concepts/aggregate-proof.mdx` | Zero-knowledge costs 1,632 B over the non-zero-knowledge size (14,592 B) | `circuits/README.md`: "zero-knowledge costs +1,632 B and ~50 ms" |
 | Learn | `concepts/aggregate-proof.mdx` | `n = 64` uses 37.7 | `MEASUREMENTS.md`: "\| 64 \| 584 \| 150,810,864 \| 37.7 % \|" |
 | Learn | `concepts/completeness.mdx` | finds 17 transfers from the declared lanes in all, keeps the 16 inside the window | `demo/README.md`: "transfers from declared lanes (all time) : 17" |
-| Learn | `concepts/minimum-group-size.mdx` | refuses a round with fewer than 5 transfers before it checks any proof | `cli/tally.ts`: "const minActive = 5;" |
+| Learn | `concepts/minimum-group-size.mdx` | refuses a round with fewer than 5 transfers before it checks any proof | `verify/core.ts`: "export const MIN_ACTIVE = 5;" |
 | Learn | `concepts/rounds-and-lanes.mdx` | The contract has 16 tests, 10 of them negative | `contracts/README.md`: "16 tests, **10 of them negative**" |
 | Learn | `walkthrough.mdx` | The total from the 5 declared lanes in the window, and that it covers 16 transfers | `evidence/README.md`: "over 16 transfers from 5 declared lanes" |
 | Use it | `quickstart.mdx` | about 120,960 ledgers or roughly seven days | `evidence/round-004/round.json`: "120960" |
-| Use it | `guides/verifying.mdx` | at least 17,280 ledgers (about a day) | `cli/tally.ts`: "warnBelow = 17280" |
+| Use it | `guides/verifying.mdx` | at least 17,280 ledgers (about a day) | `verify/core.ts`: "warnBelow = 17280" |
 | Use it | `guides/registering.mdx` | generated the proof client-side in 882 ms | `registration/README.md`: "proof generated client-side in **882 ms**" |
 | Use it | `guides/running-a-round.mdx` | the donor total matching the expected 3160 | `demo/README.md`: "donor total = 3160   expected 3160   MATCH" |
 | Use it | `reference/exit-codes.mdx` | if the window does not contain exactly 16 transfers | `demo/run-round.ts`: "if (inWindow.length !== N) throw"<br>`demo/run-round.ts`: "process.exit(1)" |
@@ -102,6 +104,11 @@ Facts snapshot: generated 2026-10-05T08:13:21.902Z; chain read 2026-10-05T08:13:
 | Use it | `measurements.mdx` | \| 16 \| 152 \| 100,835,059 \| 25.2 % \| 19,756 B \| true \| | `MEASUREMENTS.md`: "\| 16 \| 152 \| 100,835,059 \| 25.2 % \| 19,756 B \| true \|" |
 | Use it | `measurements.mdx` | 17,126 instructions to spare | `MEASUREMENTS.md`: "17,126 instructions of margin" |
 | Use it | `reference/sdk.mdx` | conformance.ts | `docs/DEMONSTRATION-STATUS.md`: "It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements" |
+| Use it | `guides/verify-in-browser.mdx` | **Only the proof, `R_disc` and `ṽ_disc`** | `verify/core.ts`: "From the funder's bundle it takes EXACTLY THREE"<br>`verify/core.ts`: "r_disc_x: bundle.r_disc_x, r_disc_y: bundle.r_disc_y, v_tilde_disc: bundle.v_tilde_disc" |
+| Use it | `guides/verify-in-browser.mdx` | It runs the same module as `tally verify` | `cli/tally.ts`: "} from "../verify/core.js";"<br>`site/components/tally/verifier.tsx`: "import("../../../verify/core")" |
+| Use it | `guides/verify-in-browser.mdx` | bb.js, the prover library, about 2.5 MB | `MEASUREMENTS.md`: "\| bb.js chunk, loaded on the first button press \| 2,488 KB \|" |
+| Use it | `guides/verify-in-browser.mdx` | a check takes about 8 seconds | `MEASUREMENTS.md`: "\| Verify this round, button press to total \| 7.7 s \|" |
+| Use it | `measurements.mdx` | \| Button press to total \| 7.7 s \| | `MEASUREMENTS.md`: "\| Verify this round, button press to total \| 7.7 s \|" |
 | Trust | `security/trust-statement.mdx` | Both trust-statement sentences, verbatim | `docs/TRUST-STATEMENT.md`: "Both sentences ship verbatim" |
 | Trust | `security/known-limits.mdx` | about 120,960 ledgers or roughly 7 days on testnet | `docs/DEMONSTRATION-STATUS.md`: "Soroban RPC keeps about 7 days of events" |
 | Trust | `operator/design.mdx` | Designed, not built | `docs/OPERATOR-DESIGN.md`: "2-of-3 threshold custody" |

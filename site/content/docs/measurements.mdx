@@ -74,6 +74,19 @@ Tally verifies aggregate proofs off-chain. These figures only answer whether on-
 
 All three fit. Verification stays off-chain anyway: putting it on-chain would publish that a disclosure happened, to whom and when, and would force a proof mode that is not witness-hiding.
 
+## In-browser verification
+
+Measured on 2026-10-05 against `round-004`, in headless Chromium on an Apple M4 Pro, from a production build of the site. bb.js runs single-threaded on the [/verify](/verify) page.
+
+| Item | Value |
+|:---|---:|
+| bb.js, loaded on the first button press | 2,488 KB |
+| Structured reference string from `crs.aztec.network` | 2,051 KB |
+| Round, deployment, circuits and pinned keys from the site | about 300 KB |
+| Button press to total | 7.7 s |
+
+Most of that time is reading account keys and events from RPC; deriving the verification key and verifying the proof take about 2 s.
+
 ## Corrected figures
 
 | Previously published (August 2026, 100M cap) | Now |

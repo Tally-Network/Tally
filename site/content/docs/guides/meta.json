@@ -1,6 +1,7 @@
 {
   "title": "Guides",
   "pages": [
+    "verify-in-browser",
     "running-a-round",
     "registering",
     "verifying"

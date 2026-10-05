@@ -1,0 +1,57 @@
+---
+title: "Verifying in the browser"
+description: "What the /verify page checks, where each value comes from, and how it reports tampering and aged-out rounds."
+---
+
+[Verify this round](/verify) checks the published round without cloning the repository. It runs the same module as `tally verify`, [`verify/core.ts`](https://github.com/Tally-Network/Tally/blob/main/verify/core.ts), so the two cannot disagree about what a valid round is.
+
+## What it does
+
+When you press **Verify this round**, your browser:
+
+1. Reads the round from the round registry on Stellar testnet: its lanes and its ledger window.
+2. Checks the RPC's oldest ledger. If the round is older, it stops and says so (see [When a round ages out](#when-a-round-ages-out)).
+3. Lists every transfer sent from a declared lane inside the window, from chain events.
+4. Reads each sender's and recipient's public viewing key from the token contract, and rebuilds every public input of the aggregate proof.
+5. Derives the verification key from the circuit and compares it byte for byte with the pinned `vk.zk.bin`.
+6. Verifies the zero-knowledge proof with bb.js.
+7. Decrypts the total with the donor key published in the round's `challenge.json`.
+
+Each step appears on the page as it completes, with the same wording the command-line tool prints.
+
+## Where each value comes from
+
+| Value | Source |
+|:---|:---|
+| Which round to check: funder, round id, registry | `evidence/latest.json` and the round's `round.json`, from the commit the site was built from |
+| Lanes and window | The round registry contract, through Soroban RPC |
+| Transfers, `R_e`, `σ`, `ṽ` | Token contract events, through Soroban RPC |
+| Account viewing keys | The token contract's account state, through Soroban RPC |
+| The donor's disclosure key and nonce | The round's `challenge.json` (the donor's own values, published on purpose for this demonstration round) |
+| Circuit and pinned verification key | `circuits/aggregate_nN/circuit.json` and `vk.zk.bin` |
+| **From the funder's bundle** | **Only the proof, `R_disc` and `ṽ_disc`** |
+
+This is the same trust boundary as the command-line tool. See [Verifying a round](/docs/guides/verifying).
+
+## What it downloads
+
+- The site's own copies of the published round, the deployment and the circuits (about 300 KB).
+- bb.js, the prover library, about 2.5 MB, loaded only when you press a button.
+- The structured reference string that bb.js needs, about 2 MB, from `crs.aztec.network`.
+
+Its requests go to Soroban testnet RPC, `crs.aztec.network` and this site. Nothing is sent to a Tally server; there is none. bb.js runs single-threaded here, and a check takes about 8 seconds on a recent laptop.
+
+## The tampering buttons
+
+Each button changes one thing a funder could change and then runs the same verification:
+
+- **Alter the sealed total by one.** Adds one to `ṽ_disc`. The proof no longer matches, and the page shows the proof as rejected.
+- **Replay against a new challenge.** Generates a fresh donor key and nonce in your browser and checks the published bundle against them. The proof was made for a different challenge, so it is rejected.
+
+In both cases the command-line tool would exit with code `2`.
+
+## When a round ages out
+
+Soroban RPC keeps about seven days of events. If the round's opening ledger is older than the RPC's oldest ledger, the page says the round has aged out, shows both ledger numbers, and does not show a failed proof. The command-line tool exits with code `3` in the same case.
+
+A scheduled job publishes a fresh round before the current one ages out, and the site is rebuilt with it. See [Measurements](/docs/measurements) for what each step costs on-chain, and the [Quickstart](/docs/quickstart) for the command-line route.

@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "prebuild": "node scripts/check-claims.mjs",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "prebuild": "node scripts/check-claims.mjs && node scripts/copy-verify-data.mjs",
+    "build": "next build --webpack",
     "start": "next start",
     "check:claims": "node scripts/check-claims.mjs",
-    "check:site": "node scripts/check-site.mjs"
+    "check:site": "node scripts/check-site.mjs",
+    "predev": "node scripts/copy-verify-data.mjs",
+    "check:verifier": "node scripts/check-verifier.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",
@@ -32,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "playwright": "1.63",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4.3.3",

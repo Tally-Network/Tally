@@ -2,51 +2,413 @@
   "$comment": "Figure-bearing statements in the docs and the repository file behind each. `page` is relative to content/docs; `site` must appear in that page; each source must exist and contain its `contains` string. The checker also scans every docs page for contract ids, which must belong to the deployment or the measurement contracts.",
   "groups": [
     {
-      "id": "learn", "title": "Learn",
+      "id": "learn",
+      "title": "Learn",
       "claims": [
-        { "page": "concepts/aggregate-proof.mdx", "site": "| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |", "sources": [{ "file": "circuits/README.md", "contains": "| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |" }] },
-        { "page": "concepts/aggregate-proof.mdx", "site": "| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |", "sources": [{ "file": "circuits/README.md", "contains": "| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |" }] },
-        { "page": "concepts/aggregate-proof.mdx", "site": "about 38 ACIR opcodes and about 85 ms per transfer", "sources": [{ "file": "circuits/README.md", "contains": "~**38 ACIR opcodes** and ~**85 ms** per event" }] },
-        { "page": "concepts/aggregate-proof.mdx", "site": "Zero-knowledge costs 1,632 B over the non-zero-knowledge size (14,592 B)", "sources": [{ "file": "circuits/README.md", "contains": "zero-knowledge costs +1,632 B and ~50 ms" }] },
-        { "page": "concepts/aggregate-proof.mdx", "site": "`n = 64` uses 37.7", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| 64 | 584 | 150,810,864 | 37.7 % |" }] },
-        { "page": "concepts/completeness.mdx", "site": "finds 17 transfers from the declared lanes in all, keeps the 16 inside the window", "sources": [{ "file": "demo/README.md", "contains": "transfers from declared lanes (all time) : 17" }] },
-        { "page": "concepts/minimum-group-size.mdx", "site": "refuses a round with fewer than 5 transfers before it checks any proof", "sources": [{ "file": "cli/tally.ts", "contains": "const minActive = 5;" }] },
-        { "page": "concepts/rounds-and-lanes.mdx", "site": "The contract has 16 tests, 10 of them negative", "sources": [{ "file": "contracts/README.md", "contains": "16 tests, **10 of them negative**" }] },
-        { "page": "walkthrough.mdx", "site": "The total from the 5 declared lanes in the window, and that it covers 16 transfers", "sources": [{ "file": "evidence/README.md", "contains": "over 16 transfers from 5 declared lanes" }] }
+        {
+          "page": "concepts/aggregate-proof.mdx",
+          "site": "| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |",
+          "sources": [
+            {
+              "file": "circuits/README.md",
+              "contains": "| 64 | 2,460 | 5,983 ms | 1,472 ms | 16,224 B | 584 |"
+            }
+          ]
+        },
+        {
+          "page": "concepts/aggregate-proof.mdx",
+          "site": "| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |",
+          "sources": [
+            {
+              "file": "circuits/README.md",
+              "contains": "| 8 | 332 | 1,163 ms | 380 ms | 16,224 B | 80 |"
+            }
+          ]
+        },
+        {
+          "page": "concepts/aggregate-proof.mdx",
+          "site": "about 38 ACIR opcodes and about 85 ms per transfer",
+          "sources": [
+            {
+              "file": "circuits/README.md",
+              "contains": "~**38 ACIR opcodes** and ~**85 ms** per event"
+            }
+          ]
+        },
+        {
+          "page": "concepts/aggregate-proof.mdx",
+          "site": "Zero-knowledge costs 1,632 B over the non-zero-knowledge size (14,592 B)",
+          "sources": [
+            {
+              "file": "circuits/README.md",
+              "contains": "zero-knowledge costs +1,632 B and ~50 ms"
+            }
+          ]
+        },
+        {
+          "page": "concepts/aggregate-proof.mdx",
+          "site": "`n = 64` uses 37.7",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| 64 | 584 | 150,810,864 | 37.7 % |"
+            }
+          ]
+        },
+        {
+          "page": "concepts/completeness.mdx",
+          "site": "finds 17 transfers from the declared lanes in all, keeps the 16 inside the window",
+          "sources": [
+            {
+              "file": "demo/README.md",
+              "contains": "transfers from declared lanes (all time) : 17"
+            }
+          ]
+        },
+        {
+          "page": "concepts/minimum-group-size.mdx",
+          "site": "refuses a round with fewer than 5 transfers before it checks any proof",
+          "sources": [
+            {
+              "file": "verify/core.ts",
+              "contains": "export const MIN_ACTIVE = 5;"
+            }
+          ]
+        },
+        {
+          "page": "concepts/rounds-and-lanes.mdx",
+          "site": "The contract has 16 tests, 10 of them negative",
+          "sources": [
+            {
+              "file": "contracts/README.md",
+              "contains": "16 tests, **10 of them negative**"
+            }
+          ]
+        },
+        {
+          "page": "walkthrough.mdx",
+          "site": "The total from the 5 declared lanes in the window, and that it covers 16 transfers",
+          "sources": [
+            {
+              "file": "evidence/README.md",
+              "contains": "over 16 transfers from 5 declared lanes"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "use", "title": "Use it",
+      "id": "use",
+      "title": "Use it",
       "claims": [
-        { "page": "quickstart.mdx", "site": "about 120,960 ledgers or roughly seven days", "sources": [{ "file": "evidence/round-004/round.json", "contains": "120960" }] },
-        { "page": "guides/verifying.mdx", "site": "at least 17,280 ledgers (about a day)", "sources": [{ "file": "cli/tally.ts", "contains": "warnBelow = 17280" }] },
-        { "page": "guides/registering.mdx", "site": "generated the proof client-side in 882 ms", "sources": [{ "file": "registration/README.md", "contains": "proof generated client-side in **882 ms**" }] },
-        { "page": "guides/running-a-round.mdx", "site": "the donor total matching the expected 3160", "sources": [{ "file": "demo/README.md", "contains": "donor total = 3160   expected 3160   MATCH" }] },
-        { "page": "reference/exit-codes.mdx", "site": "if the window does not contain exactly 16 transfers", "sources": [{ "file": "demo/run-round.ts", "contains": "if (inWindow.length !== N) throw" }, { "file": "demo/run-round.ts", "contains": "process.exit(1)" }] },
-        { "page": "reference/circuits.mdx", "site": "The demo's own n = 16 proof took 2,032 ms", "sources": [{ "file": "demo/README.md", "contains": "proof 16224B in 2032ms" }] },
-        { "page": "measurements.mdx", "site": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |" }] },
-        { "page": "measurements.mdx", "site": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |" }] },
-        { "page": "measurements.mdx", "site": "**363,272,171**", "sources": [{ "file": "MEASUREMENTS.md", "contains": "**363,272,171**" }] },
-        { "page": "measurements.mdx", "site": "| 16 | 152 | 100,835,059 | 25.2 % | 19,756 B | true |", "sources": [{ "file": "MEASUREMENTS.md", "contains": "| 16 | 152 | 100,835,059 | 25.2 % | 19,756 B | true |" }] },
-        { "page": "measurements.mdx", "site": "17,126 instructions to spare", "sources": [{ "file": "MEASUREMENTS.md", "contains": "17,126 instructions of margin" }] },
-        { "page": "reference/sdk.mdx", "site": "conformance.ts", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements" }] }
+        {
+          "page": "quickstart.mdx",
+          "site": "about 120,960 ledgers or roughly seven days",
+          "sources": [
+            {
+              "file": "evidence/round-004/round.json",
+              "contains": "120960"
+            }
+          ]
+        },
+        {
+          "page": "guides/verifying.mdx",
+          "site": "at least 17,280 ledgers (about a day)",
+          "sources": [
+            {
+              "file": "verify/core.ts",
+              "contains": "warnBelow = 17280"
+            }
+          ]
+        },
+        {
+          "page": "guides/registering.mdx",
+          "site": "generated the proof client-side in 882 ms",
+          "sources": [
+            {
+              "file": "registration/README.md",
+              "contains": "proof generated client-side in **882 ms**"
+            }
+          ]
+        },
+        {
+          "page": "guides/running-a-round.mdx",
+          "site": "the donor total matching the expected 3160",
+          "sources": [
+            {
+              "file": "demo/README.md",
+              "contains": "donor total = 3160   expected 3160   MATCH"
+            }
+          ]
+        },
+        {
+          "page": "reference/exit-codes.mdx",
+          "site": "if the window does not contain exactly 16 transfers",
+          "sources": [
+            {
+              "file": "demo/run-round.ts",
+              "contains": "if (inWindow.length !== N) throw"
+            },
+            {
+              "file": "demo/run-round.ts",
+              "contains": "process.exit(1)"
+            }
+          ]
+        },
+        {
+          "page": "reference/circuits.mdx",
+          "site": "The demo's own n = 16 proof took 2,032 ms",
+          "sources": [
+            {
+              "file": "demo/README.md",
+              "contains": "proof 16224B in 2032ms"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| `confidential_transfer` | 91,193,854 | 22.8 % | 31,876 B | 1,136 | 7 / 2 | 1,311,887 |"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| `register` | 88,344,016 | 22.1 % | 30,464 B | 568 | 7 / 1 | 550,806 |"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "**363,272,171**",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "**363,272,171**"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "| 16 | 152 | 100,835,059 | 25.2 % | 19,756 B | true |",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| 16 | 152 | 100,835,059 | 25.2 % | 19,756 B | true |"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "17,126 instructions to spare",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "17,126 instructions of margin"
+            }
+          ]
+        },
+        {
+          "page": "reference/sdk.mdx",
+          "site": "conformance.ts",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements"
+            }
+          ]
+        },
+        {
+          "page": "guides/verify-in-browser.mdx",
+          "site": "**Only the proof, `R_disc` and `ṽ_disc`**",
+          "sources": [
+            {
+              "file": "verify/core.ts",
+              "contains": "From the funder's bundle it takes EXACTLY THREE"
+            },
+            {
+              "file": "verify/core.ts",
+              "contains": "r_disc_x: bundle.r_disc_x, r_disc_y: bundle.r_disc_y, v_tilde_disc: bundle.v_tilde_disc"
+            }
+          ]
+        },
+        {
+          "page": "guides/verify-in-browser.mdx",
+          "site": "It runs the same module as `tally verify`",
+          "sources": [
+            {
+              "file": "cli/tally.ts",
+              "contains": "} from \"../verify/core.js\";"
+            },
+            {
+              "file": "site/components/tally/verifier.tsx",
+              "contains": "import(\"../../../verify/core\")"
+            }
+          ]
+        },
+        {
+          "page": "guides/verify-in-browser.mdx",
+          "site": "bb.js, the prover library, about 2.5 MB",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| bb.js chunk, loaded on the first button press | 2,488 KB |"
+            }
+          ]
+        },
+        {
+          "page": "guides/verify-in-browser.mdx",
+          "site": "a check takes about 8 seconds",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| Verify this round, button press to total | 7.7 s |"
+            }
+          ]
+        },
+        {
+          "page": "measurements.mdx",
+          "site": "| Button press to total | 7.7 s |",
+          "sources": [
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| Verify this round, button press to total | 7.7 s |"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "trust", "title": "Trust",
+      "id": "trust",
+      "title": "Trust",
       "claims": [
-        { "page": "security/trust-statement.mdx", "site": "TRUST_STATEMENT_VERBATIM", "sources": [{ "file": "docs/TRUST-STATEMENT.md", "contains": "Both sentences ship verbatim" }] },
-        { "page": "security/known-limits.mdx", "site": "about 120,960 ledgers or roughly 7 days on testnet", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Soroban RPC keeps about 7 days of events" }] },
-        { "page": "operator/design.mdx", "site": "Designed, not built", "sources": [{ "file": "docs/OPERATOR-DESIGN.md", "contains": "2-of-3 threshold custody" }] },
-        { "page": "compare.mdx", "site": "**Remi** (SCF #44, $133.7k)", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Remi** (SCF #44, $133.7k)" }] },
-        { "page": "compare.mdx", "site": "**Arcane** (SCF #42, $150k)", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Arcane** (SCF #42, $150k)" }] },
-        { "page": "compare.mdx", "site": "**ZKELLA** (SCF #45, $127.8k)", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**ZKELLA** (SCF #45, $127.8k)" }] },
-        { "page": "compare.mdx", "site": "**Haven** (SCF #45, $97k)", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Haven** (SCF #45, $97k)" }] },
-        { "page": "compare.mdx", "site": "Merkle Science (SCF #41, $138k)", "sources": [{ "file": "docs/research/OVERLAP.md", "contains": "**Merkle Science** (SCF #41, $138k)" }] },
-        { "page": "licence.mdx", "site": "copyright 2026 Jagadeesh B", "sources": [{ "file": "LICENSE", "contains": "Copyright (c) 2026 Jagadeesh B" }] },
-        { "page": "licence.mdx", "site": "v0.9.0 branch head (`df602b6`)", "sources": [{ "file": "demo/deployment.testnet.json", "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65" }] },
-        { "page": "changelog.mdx", "site": "onward has a new id", "sources": [{ "file": "docs/HISTORY-REWRITE.md", "contains": "every commit from that one onward has a new id" }] },
-        { "page": "faq.mdx", "site": "Tally has no users, integrations or partners today.", "sources": [{ "file": "docs/DEMONSTRATION-STATUS.md", "contains": "Positioning" }] }
+        {
+          "page": "security/trust-statement.mdx",
+          "site": "TRUST_STATEMENT_VERBATIM",
+          "sources": [
+            {
+              "file": "docs/TRUST-STATEMENT.md",
+              "contains": "Both sentences ship verbatim"
+            }
+          ]
+        },
+        {
+          "page": "security/known-limits.mdx",
+          "site": "about 120,960 ledgers or roughly 7 days on testnet",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Soroban RPC keeps about 7 days of events"
+            }
+          ]
+        },
+        {
+          "page": "operator/design.mdx",
+          "site": "Designed, not built",
+          "sources": [
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "2-of-3 threshold custody"
+            }
+          ]
+        },
+        {
+          "page": "compare.mdx",
+          "site": "**Remi** (SCF #44, $133.7k)",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Remi** (SCF #44, $133.7k)"
+            }
+          ]
+        },
+        {
+          "page": "compare.mdx",
+          "site": "**Arcane** (SCF #42, $150k)",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Arcane** (SCF #42, $150k)"
+            }
+          ]
+        },
+        {
+          "page": "compare.mdx",
+          "site": "**ZKELLA** (SCF #45, $127.8k)",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**ZKELLA** (SCF #45, $127.8k)"
+            }
+          ]
+        },
+        {
+          "page": "compare.mdx",
+          "site": "**Haven** (SCF #45, $97k)",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Haven** (SCF #45, $97k)"
+            }
+          ]
+        },
+        {
+          "page": "compare.mdx",
+          "site": "Merkle Science (SCF #41, $138k)",
+          "sources": [
+            {
+              "file": "docs/research/OVERLAP.md",
+              "contains": "**Merkle Science** (SCF #41, $138k)"
+            }
+          ]
+        },
+        {
+          "page": "licence.mdx",
+          "site": "copyright 2026 Jagadeesh B",
+          "sources": [
+            {
+              "file": "LICENSE",
+              "contains": "Copyright (c) 2026 Jagadeesh B"
+            }
+          ]
+        },
+        {
+          "page": "licence.mdx",
+          "site": "v0.9.0 branch head (`df602b6`)",
+          "sources": [
+            {
+              "file": "demo/deployment.testnet.json",
+              "contains": "df602b613fbc4ae1e98ff62ba3caef671a370f65"
+            }
+          ]
+        },
+        {
+          "page": "changelog.mdx",
+          "site": "onward has a new id",
+          "sources": [
+            {
+              "file": "docs/HISTORY-REWRITE.md",
+              "contains": "every commit from that one onward has a new id"
+            }
+          ]
+        },
+        {
+          "page": "faq.mdx",
+          "site": "Tally has no users, integrations or partners today.",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "Positioning"
+            }
+          ]
+        }
       ]
     }
   ]
