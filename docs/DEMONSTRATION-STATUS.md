@@ -29,6 +29,6 @@
 
 **The SDK is Tally's own port.** The code under `ct/sdk` ports the reference demo's client SDK to v0.9.0. It passes all 19 OpenZeppelin v0.9.0 primitive vectors that it implements (`pnpm test:conformance`). It is neither published as a package nor audited.
 
-**The exposed demo key.** Commit `83f3f8c` put an auditor secret in `demo/deployment.testnet.json`. That key was demo-only, guarded nothing of value, and is retired: the deployment it belonged to is no longer used. The current deployment's auditor key has never been in the repository. See the README.
+**The exposed demo key.** The commit "feat(demo): reproducible round" (originally `83f3f8c`) put an auditor secret in `demo/deployment.testnet.json`. That key was demo-only, guarded nothing of value, and is retired: the deployment it belonged to is no longer used. The current deployment's auditor key has never been in the repository. See the README.
 
 **History.** An earlier version of this page (21–22 Aug 2026) tracked targets built around one specific platform integration. That integration was never built, so it now appears only as row 10, without naming a platform.

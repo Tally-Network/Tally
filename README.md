@@ -26,7 +26,7 @@ pnpm demo                 # run a fresh round on testnet
 
 ## A retired key, stated plainly
 
-Commit `83f3f8c` (2026-08-21) put a **demo auditor secret key** in `demo/deployment.testnet.json`.
+The commit "feat(demo): reproducible round" (2026-08-21; originally `83f3f8c`) put a **demo auditor secret key** in `demo/deployment.testnet.json`. The value has since been removed from the working tree and from history; [docs/HISTORY-REWRITE.md](docs/HISTORY-REWRITE.md) maps the old commit ids to the new ones.
 - That key was generated for the testnet demo and guarded nothing of value.
 - It has been **retired**. The deployment it belonged to (token `CCDZ52D7…JYHD`) is no longer used.
 

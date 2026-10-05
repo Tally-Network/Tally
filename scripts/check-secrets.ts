@@ -7,7 +7,8 @@
  *   - PEM private-key blocks
  *   - a 32-byte-or-longer hex value assigned to a secret-looking name
  *     (secret*, *secretHex, private*, *_sk, sk, seed, mnemonic)
- *   - the retired demo auditor key exposed in commit 83f3f8c, matched by
+ *   - the retired demo auditor key exposed in "feat(demo): reproducible round"
+ *     (originally 83f3f8c, before the 2026-10-05 history rewrite), matched by
  *     SHA-256 so this file does not itself contain it
  *
  * Deliberate exceptions live in .secret-allowlist as `<path-glob> <reason>`.
@@ -19,7 +20,7 @@ import { createHash } from "node:crypto";
 import { StrKey } from "@stellar/stellar-sdk";
 
 const RETIRED_SHA256 = new Set([
-  // demo auditor secret from demo/deployment.testnet.json @ 83f3f8c — retired
+  // demo auditor secret once in demo/deployment.testnet.json (originally 83f3f8c) — retired
   "2038a1462bb366e2e2f04d80d5ffc8260ed94e364f2d5b319383461e7ae03e90",
 ]);
 
@@ -49,7 +50,7 @@ for (const f of files) {
     if (PEM.test(line)) findings.push(`${at}  PEM private key`);
     for (const m of line.matchAll(HEX64)) {
       if (RETIRED_SHA256.has(createHash("sha256").update(Buffer.from(m[1]!, "hex")).digest("hex"))) {
-        findings.push(`${at}  RETIRED auditor key (exposed in 83f3f8c)`);
+        findings.push(`${at}  RETIRED demo auditor key`);
       }
     }
     if (!allowed(f)) for (const m of line.matchAll(NAMED)) findings.push(`${at}  hex value assigned to "${m[1]}"`);
