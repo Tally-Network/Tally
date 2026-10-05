@@ -1,0 +1,88 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    # Runs first and alone: a secret in a tracked file fails the build.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:secrets
+      - run: pnpm test:secrets
+
+  typescript:
+    needs: secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test:conformance
+      - run: pnpm test:prove
+      - run: pnpm test:retention
+
+  circuits:
+    # Rebuilds the aggregate circuits with the pinned toolchain and fails if the
+    # pinned verification keys drift.
+    needs: secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install nargo 1.0.0-beta.11
+        run: |
+          curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
+          "$HOME/.nargo/bin/noirup" -v 1.0.0-beta.11
+          echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
+      - run: pnpm build:circuits
+      - run: git diff --exit-code -- circuits/
+
+  contracts:
+    needs: secrets
+    runs-on: ubuntu-latest
+    env:
+      # What `stellar contract build` sets; lets plain cargo build the
+      # OpenZeppelin crates that use spec shaking.
+      SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - run: cargo test --manifest-path contracts/Cargo.toml
+      - run: cargo build --manifest-path ct/contracts/Cargo.toml --target wasm32v1-none --release
