@@ -9,7 +9,7 @@
 | # | What is demonstrated | Status | Evidence |
 |:--|:---|:---|:---|
 | 1 | A funder pays ≥ 10 recipients in one round on testnet | ✅ | `pnpm demo`: 16 recipients across 5 lanes on OpenZeppelin v0.9.0 contracts (run 2026-10-05) |
-| 2 | Explorers show transfers with no amount visible | ✅ on the retired deployment only | [`evidence/explorer-view.md`](../evidence/explorer-view.md) decodes a transfer from the August deployment; not regenerated against v0.9.0 |
+| 2 | Explorers show transfers with no amount visible | ✅ | [`evidence/explorer-view.md`](../evidence/explorer-view.md) decodes a transfer from the v0.9.0 deployment (regenerated 2026-10-05) |
 | 3 | A donor verifies the round total with only their own key and nonce | ✅ | `pnpm demo` step [5]; the standalone `tally challenge` / `prove` / `verify` in [`cli/`](../cli/) |
 | 4 | A published round that anyone can re-verify | ✅ while inside the RPC retention window | [`evidence/`](../evidence/), checked with `pnpm verify:evidence` |
 | 5 | Non-custodial registration from a wallet signature | ✅ headless only | `pnpm test:registration`: 9 checks against live testnet, including the v0.9.0 account binding |

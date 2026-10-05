@@ -26,13 +26,15 @@ Runs against Stellar **testnet** using the deployment in [`deployment.testnet.js
 
 ## Last verified run
 
+2026-10-05, OpenZeppelin v0.9.0 deployment, from a clean clone (`pnpm evidence:refresh`, which runs this demo and published `evidence/round-003`):
+
 ```
-opened_at 4260769  ·  closed_at 4260778  ·  window [4260769, 4260778]
+opened_at 5029651  ·  closed_at 5029660  ·  window [5029651, 5029660]
 transfers from declared lanes (all time) : 17
 inside the declared window               : 16
 excluded by the window                   :  1   ← the pre-round transfer
-proof 16,224 B in 1,943 ms (zero-knowledge), spans 5 sender accounts, verified
-donor total = 3160  (expected 3160)  MATCH
+proof 16224B in 2361ms (zero-knowledge), spans 5 sender accounts, verified
+donor total = 3160   expected 3160   MATCH
 ```
 
 ## Why the pre-round transfer is in the script

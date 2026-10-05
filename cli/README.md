@@ -47,4 +47,4 @@ Exit codes are distinct so this can gate a script: `0` verified, `2` proof rejec
 
 `prove` needs the funder's lane spending keys, which grant **both view and spend**. A real funder holds them in a signer service; `demo/last-round.json` writes them in plaintext because it is a testnet demo, and is gitignored.
 
-`r_e` is never stored — `prove` re-derives it from `(lane vk, event σ)` and refuses any event it cannot re-derive, which is the disclosability test `SDK.md` §12.2 requires rather than assumes.
+`r_e` is never stored — `prove` re-derives it from `(lane vk, event σ)` and refuses any event it cannot re-derive, which is the disclosability check OpenZeppelin's v0.9.0 SDK specification (`docs/sdk/`) requires rather than assumes.

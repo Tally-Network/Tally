@@ -36,7 +36,7 @@ const rE = p.rE ?? deriveEphemeralRE(keys.vk, sigma);
 The default is correct. The override is a loaded gun: passing `p.rE` is a one-token change that silently destroys disclosability for that transfer, forever.
 
 **Enforcement.**
-1. Tally's transfer path MUST NOT expose an `rE` parameter at all. Not defaulted — **absent**.
+1. Tally's transfer path MUST NOT expose an `rE` parameter at all. Not defaulted — **absent**. *(Enforced in `ct/sdk/src/witness/transfer.ts` since 2026-10-05: `TransferParams` has no `rE` field.)*
 2. A test MUST assert that a transfer's emitted `R_e` equals `deriveEphemeralRE(vk, σ)·H`.
 3. The auditor CLI MUST **test** disclosability per event rather than assume it (`SDK.md` §12.2), and report any event it cannot prove.
 

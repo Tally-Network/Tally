@@ -199,6 +199,7 @@ async function main() {
   console.log(`  verified  ${ok ? "yes" : "NO"}`);
   console.log(`  donor total = ${donorSees}   expected ${expected}   ${donorSees === expected ? "MATCH" : "MISMATCH"}`);
   console.log(`  pre-round 999 correctly NOT counted: ${donorSees === expected ? "yes" : "no"}`);
+  if (!ok || donorSees !== expected) throw new Error("donor verification did not match the expected total");
 
   console.log("\n=== ROUND VERIFIED ===");
   console.log(`  ${N} recipients paid across ${K} lanes; no amount visible on chain.`);

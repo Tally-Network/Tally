@@ -39,7 +39,6 @@ export interface TransferParams {
   /** Sender's auditor key `K_aud_s`. */
   kAudS: Point;
   sigma?: bigint;
-  rE?: bigint;
 }
 
 export interface TransferWitness {
@@ -84,11 +83,10 @@ export function buildTransferWitness(p: TransferParams): TransferWitness {
   if (vNew < 0n) throw new Error("transfer amount exceeds spendable balance");
 
   const sigma = p.sigma ?? randomScalar();
-  // Deterministic by default (vk + sigma) so the sender can re-derive r_e
-  // from the emitted event alone and build D-sender disclosures later. The
-  // circuit only constrains R_e = r_e·H and r_e ≠ 0, so an explicit random
-  // p.rE remains equally valid.
-  const rE = p.rE ?? deriveEphemeralRE(keys.vk, sigma);
+  // Always derived from (vk, sigma), never supplied by the caller
+  // (docs/SDK-SAFETY-INVARIANTS.md §I1): the sender must be able to re-derive
+  // r_e from the emitted event alone to build a disclosure later.
+  const rE = deriveEphemeralRE(keys.vk, sigma);
 
   // Sender balance conservation.
   const cSpend = commit(v, r);
