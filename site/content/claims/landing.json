@@ -1,13 +1,22 @@
 {
-  "$comment": "Every statement of fact on the landing page, the Agenforce component its section is built from, and the repository file that backs it. scripts/check-claims.mjs fails the build if a `site` string is missing from the page source, a source file is missing, or a source no longer contains its `contains` string. `fact` entries name a key in content/generated/facts.json, which the checker re-derives from the repository's JSON files.",
+  "$comment": "Every statement of fact on the landing page, the template block or Aceternity component its section is built from (Nodus template since the 2026-10 redesign), and the repository file that backs it. scripts/check-claims.mjs fails the build if a `site` string is missing from the page source, a source file is missing, or a source no longer contains its `contains` string. `fact` entries name a key in content/generated/facts.json, which the checker re-derives from the repository's JSON files.",
   "page": "/",
   "siteFiles": [
-    "components/tally/sections.tsx",
-    "components/tally/round-explainer.tsx",
-    "components/tally/faq.tsx",
-    "components/navbar.tsx",
-    "components/footer.tsx",
-    "content/team.ts",
+    "components/tally/landing/hero.tsx",
+    "components/tally/landing/frame.tsx",
+    "components/tally/landing/round-hero.tsx",
+    "components/tally/landing/parts.tsx",
+    "components/tally/landing/sections-a.tsx",
+    "components/tally/landing/who-for.tsx",
+    "components/tally/landing/how-it-works.tsx",
+    "components/tally/landing/use-cases.tsx",
+    "components/tally/landing/sections-b.tsx",
+    "components/tally/landing/copy.tsx",
+    "components/tally/landing/measured.tsx",
+    "components/tally/landing/sections-c.tsx",
+    "components/tally/landing/faq.tsx",
+    "components/nodus/navbar.tsx",
+    "components/nodus/footer.tsx",
     "components/tally/verifier.tsx",
     "app/(marketing)/verify/page.tsx"
   ],
@@ -15,10 +24,10 @@
     {
       "id": "hero",
       "title": "Hero",
-      "agenforce": "hero.tsx",
+      "component": "Nodus hero.tsx + hero-image.tsx; round: Nodus tech-card.tsx and deploy rows, Aceternity Pro animated-beam-path-illustration, Aceternity encrypted-text, Aceternity Pro stats-with-number-ticker",
       "claims": [
         {
-          "site": "Disclosure\", \"and\", \"audit\", \"for\", \"Stellar's\", \"privacy\", \"tokens.",
+          "site": "Disclosure and audit for <br className=\"hidden md:block\" /> Stellar&apos;s <span className=\"text-brand\">privacy tokens.</span>",
           "note": "Category headline: names the category, asserts no guarantee",
           "sources": [
             {
@@ -28,24 +37,11 @@
           ]
         },
         {
-          "site": "confidential payouts to many\n        recipients, with totals an outside party can verify",
+          "site": "confidential payouts to many recipients, with totals an outside party can verify",
           "sources": [
             {
               "file": "docs/DEMONSTRATION-STATUS.md",
               "contains": "Confidential one-to-many payouts with a provable total are the first use case"
-            }
-          ]
-        },
-        {
-          "site": "The operator service\n        (split auditor-key custody, scoped audit requests, tax export) is <strong>designed, not built</strong>",
-          "sources": [
-            {
-              "file": "docs/DEMONSTRATION-STATUS.md",
-              "contains": "The operator service itself is a design"
-            },
-            {
-              "file": "docs/OPERATOR-DESIGN.md",
-              "contains": "2-of-3 threshold custody"
             }
           ]
         },
@@ -60,16 +56,7 @@
           ]
         },
         {
-          "site": "Demo video slot. Until the video exists, this is a still of the round explainer",
-          "sources": [
-            {
-              "file": "evidence/latest.json",
-              "contains": "\"dir\""
-            }
-          ]
-        },
-        {
-          "site": "<Link href=\"/verify\">Verify this round</Link>",
+          "site": "<Button as={Link} href=\"/verify\">Verify this round</Button>",
           "note": "Links to the in-browser verifier",
           "sources": [
             {
@@ -83,7 +70,7 @@
     {
       "id": "built-on",
       "title": "Built on Stellar's privacy standard",
-      "agenforce": "logo-cloud.tsx (slot reused for the stack, no logos)",
+      "component": "Nodus logo-cloud.tsx grid (text cells, no logos)",
       "claims": [
         {
           "site": "v0.9.0 @ ${ozRev}",
@@ -110,7 +97,7 @@
           ]
         },
         {
-          "site": "No endorsement by, or partnership with, Stellar, SDF or\n        OpenZeppelin is implied.",
+          "site": "No endorsement by, or partnership with, Stellar, SDF or OpenZeppelin is implied.",
           "sources": [
             {
               "file": "ct/NOTICE.md",
@@ -123,7 +110,7 @@
     {
       "id": "problem",
       "title": "The problem",
-      "agenforce": "features/ (bento cards)",
+      "component": "Nodus agentic-intelligence card row + icon-block",
       "claims": [
         {
           "site": "Paying off-chain hides the amounts but gives up the audit trail.",
@@ -148,7 +135,7 @@
     {
       "id": "who",
       "title": "Who it is for",
-      "agenforce": "features-secondary/ (three-column bordered grid)",
+      "component": "Nodus benefits.tsx (three cards, middle card, three cards)",
       "claims": [
         {
           "site": "Pays many recipients from lane accounts it declared on-chain before the round opened.",
@@ -182,7 +169,7 @@
     {
       "id": "how",
       "title": "How a round works",
-      "agenforce": "speed.tsx (layout) with the animated round explainer",
+      "component": "Nodus how-it-works (tabs, loader, pixelated-canvas, skeletons) + Aceternity terminal",
       "claims": [
         {
           "site": "Alice records the round id and its lanes in the round registry. The contract stamps the opening ledger.",
@@ -215,7 +202,7 @@
           ]
         },
         {
-          "site": "{t.vTilde.slice(0, 8)}",
+          "site": "t.vTilde.slice(0, 6)",
           "fact": "round.chain.transfers",
           "note": "Ciphertext prefixes are the published round's on-chain v_tilde values; names are illustrative",
           "sources": [
@@ -237,9 +224,26 @@
       ]
     },
     {
+      "id": "video",
+      "title": "Demo video",
+      "component": "Nodus hero-image.tsx frame with a still of the round",
+      "claims": [
+        {
+          "site": "Demo video slot. Until the video exists, this is a still of the round explainer",
+          "sources": [
+            {
+              "file": "evidence/latest.json",
+              "contains": "\"dir\""
+            }
+          ],
+          "note": "The video is not recorded; the slot shows a still of the round with real on-chain values"
+        }
+      ]
+    },
+    {
       "id": "use-cases",
       "title": "Use cases",
-      "agenforce": "features-tertiary/ (icon grid)",
+      "component": "Nodus use-cases.tsx",
       "claims": [
         {
           "site": "Tally has no users today; these are the situations it is built for.",
@@ -264,7 +268,7 @@
     {
       "id": "verifier",
       "title": "What an outside verifier learns, and does not",
-      "agenforce": "outcomes.tsx (two columns at equal weight)",
+      "component": "Nodus security.tsx band (two columns at equal weight)",
       "claims": [
         {
           "site": "How many transfers that total covers (the circuit publishes the count).",
@@ -290,10 +294,23 @@
     {
       "id": "operator",
       "title": "The operator service, planned",
-      "agenforce": "features-secondary/ (two-column bordered grid)",
+      "component": "Nodus agentic-intelligence 2x2 grid + scale.tsx hatch",
       "claims": [
         {
-          "site": "<Badge>Designed, not built</Badge>",
+          "site": "This is a design document today; none of it runs.",
+          "sources": [
+            {
+              "file": "docs/DEMONSTRATION-STATUS.md",
+              "contains": "The operator service itself is a design"
+            },
+            {
+              "file": "docs/OPERATOR-DESIGN.md",
+              "contains": "2-of-3 threshold custody"
+            }
+          ]
+        },
+        {
+          "site": "Designed, not built",
           "sources": [
             {
               "file": "docs/DEMONSTRATION-STATUS.md",
@@ -329,7 +346,7 @@
           ]
         },
         {
-          "site": "the auditor key would be reassembled briefly\n        inside an attested enclave",
+          "site": "the auditor key would be reassembled briefly inside an attested enclave",
           "sources": [
             {
               "file": "docs/OPERATOR-DESIGN.md",
@@ -342,7 +359,7 @@
     {
       "id": "evidence",
       "title": "Live evidence",
-      "agenforce": "features-secondary/ (two-column grid) with a table",
+      "component": "Nodus pricing-table.tsx frame + Aceternity encrypted-text",
       "claims": [
         {
           "site": "until about ledger ${n(round.verifiable_until_ledger)}",
@@ -355,7 +372,7 @@
           ]
         },
         {
-          "site": "{n(round.run.donorTotal)} stroops of the wrapped asset, from the declared lanes in {round.dir}",
+          "site": "{n(round.run.donorTotal)}</span> stroops of the wrapped asset, from the declared lanes in {round.dir}",
           "fact": "round.run",
           "sources": [
             {
@@ -389,10 +406,10 @@
     {
       "id": "try",
       "title": "Try it yourself",
-      "agenforce": "features/ (cards) with copy buttons",
+      "component": "Nodus security.tsx band + Aceternity terminal",
       "claims": [
         {
-          "site": "out: verifyOutput(published),",
+          "site": "0: verifyOutput(published).split(\"\\n\")",
           "fact": "round.run",
           "note": "Rendered by scripts/round-docs.ts, the same function that writes the README block the check compares against",
           "sources": [
@@ -407,7 +424,7 @@
           ]
         },
         {
-          "site": "out: demoSummary(published),",
+          "site": "1: demoSummary(published).split(\"\\n\")",
           "fact": "round.run",
           "note": "Rendered from the run that produced the published round",
           "sources": [
@@ -452,7 +469,7 @@
             },
             {
               "file": "site/components/tally/verifier.tsx",
-              "contains": "import(\"../../../verify/core\")"
+              "contains": "import(\"@tally/verify/core\")"
             }
           ]
         }
@@ -461,10 +478,10 @@
     {
       "id": "measured",
       "title": "Measured",
-      "agenforce": "features-tertiary/ (stat grid)",
+      "component": "Aceternity Pro stats-with-number-ticker",
       "claims": [
         {
-          "site": "n(m.confidentialTransfer.instructions)",
+          "site": "<AnimatedNumber value={m.confidentialTransfer.instructions} once />",
           "fact": "measurements.confidentialTransfer.instructions",
           "sources": [
             {
@@ -474,7 +491,7 @@
           ]
         },
         {
-          "site": "String(batch.largestThatFits)",
+          "site": "<AnimatedNumber value={batch.largestThatFits} once />",
           "fact": "measurements.batching.largestThatFits",
           "sources": [
             {
@@ -484,7 +501,7 @@
           ]
         },
         {
-          "site": "v: `${n(round.run.proofBytes)} B`, d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"",
+          "site": "<AnimatedNumber value={round.run.proofBytes} once /> B</>, d: \"Zero-knowledge, the same size for 8, 16 or 64 transfers\"",
           "fact": "round.run",
           "sources": [
             {
@@ -508,7 +525,7 @@
           ]
         },
         {
-          "site": "n(m.register.instructions)",
+          "site": "<AnimatedNumber value={m.register.instructions} once />",
           "fact": "measurements.register.instructions",
           "sources": [
             {
@@ -544,7 +561,7 @@
     {
       "id": "safeguards",
       "title": "Safeguards",
-      "agenforce": "features-secondary/ (four-column bordered grid)",
+      "component": "Nodus benefits.tsx card",
       "claims": [
         {
           "site": "fails the build if a Stellar seed, a private key, or a hex secret appears in any tracked file. It also detects the retired demo auditor key.",
@@ -599,7 +616,7 @@
     {
       "id": "compare",
       "title": "How Tally differs",
-      "agenforce": "pricing.tsx (table frame)",
+      "component": "Nodus pricing-table.tsx frame",
       "claims": [
         {
           "site": "[\"Remi (SCF #44)\"",
@@ -660,7 +677,7 @@
     {
       "id": "status",
       "title": "Built, designed, and the limits",
-      "agenforce": "pricing.tsx (three cards at equal weight)",
+      "component": "Nodus pricing.tsx (three tiers at equal weight, no prices)",
       "claims": [
         {
           "site": "Round registry contract on testnet, 16 tests, 10 of them negative",
@@ -721,7 +738,7 @@
     {
       "id": "roadmap",
       "title": "Roadmap",
-      "agenforce": "features-secondary/ (three-column bordered grid)",
+      "component": "Aceternity timeline",
       "claims": [
         {
           "site": "After SDF approves Confidential Tokens for mainnet",
@@ -746,7 +763,7 @@
     {
       "id": "faq",
       "title": "FAQ",
-      "agenforce": "faqs.tsx",
+      "component": "Nodus faqs.tsx",
       "claims": [
         {
           "site": "the verifier says so with exit code 3 instead of reporting a failed proof",
@@ -773,25 +790,9 @@
       ]
     },
     {
-      "id": "team",
-      "title": "Team",
-      "agenforce": "outcomes.tsx (cards), data-driven from content/team.ts",
-      "claims": [
-        {
-          "site": "name: \"Jagadeesh B\"",
-          "sources": [
-            {
-              "file": "LICENSE",
-              "contains": "Copyright (c) 2026 Jagadeesh B"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "cta",
       "title": "Closing call to action",
-      "agenforce": "hero.tsx (button group, reused)",
+      "component": "Nodus cta.tsx (CTAOrbit with Tally glyphs)",
       "claims": [
         {
           "site": "issues/new?title=Design%20partner",

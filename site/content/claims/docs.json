@@ -250,7 +250,7 @@
             },
             {
               "file": "site/components/tally/verifier.tsx",
-              "contains": "import(\"../../../verify/core\")"
+              "contains": "import(\"@tally/verify/core\")"
             }
           ]
         },

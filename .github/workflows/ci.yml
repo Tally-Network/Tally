@@ -87,12 +87,11 @@ jobs:
       - run: cargo test --manifest-path contracts/Cargo.toml
       - run: cargo build --manifest-path ct/contracts/Cargo.toml --target wasm32v1-none --release
 
-  site:
-    # Builds the landing page and docs (claims checked first), crawls the
-    # result, and drives /verify in a browser: the published round verifies,
-    # both tampering cases are rejected, an aged-out round is reported as such.
-    # The site imports verify/core.ts, so the repository's packages are
-    # installed too.
+  site-content:
+    # The website's application is in a private repository (licensed template
+    # code). Its content lives here: this checks facts.json against the
+    # repository, every claim's source quote, the docs claims and the banned
+    # phrasing. The landing page's own text is checked by the site build.
     needs: secrets
     runs-on: ubuntu-latest
     steps:
@@ -105,16 +104,4 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: npm ci
-        working-directory: site
-      - run: npm run build
-        working-directory: site
-      - run: npx playwright install --with-deps chromium
-        working-directory: site
-      - name: Crawl the built site and check the verifier
-        working-directory: site
-        run: |
-          npx next start -p 3123 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3123 >/dev/null && break; sleep 1; done
-          npm run check:site -- http://localhost:3123
-          npm run check:verifier -- http://localhost:3123
+      - run: node site/scripts/check-claims.mjs

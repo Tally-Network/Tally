@@ -68,7 +68,7 @@ See [docs/TRUST-STATEMENT.md](docs/TRUST-STATEMENT.md) for why it is worded this
 | [`cli/`](cli/) | `tally challenge` / `prove` / `verify`: independent round verification |
 | [`registration/`](registration/) | Non-custodial key derivation and registration (headless; there is no browser page) |
 | [`evidence/`](evidence/) | A published round anyone can verify: `pnpm verify:evidence` |
-| [`site/`](site/) | Landing page and docs (Next.js + Fumadocs), with claim and link checks |
+| [`site/`](site/) | The website's content: docs pages, generated facts and the claims map, with their checks (the application itself is in a private repository) |
 | [`MEASUREMENTS.md`](MEASUREMENTS.md) | Current on-chain costs and limits (2026-10-05) |
 | [`docs/DEMONSTRATION-STATUS.md`](docs/DEMONSTRATION-STATUS.md) | What is demonstrated and what is not |
 | [`docs/OPERATOR-DESIGN.md`](docs/OPERATOR-DESIGN.md) | Design of the compliance and disclosure operator (not built) |
