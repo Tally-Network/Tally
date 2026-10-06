@@ -16,6 +16,7 @@ const OUT = R + "site/content/generated/facts.json";
 
 const dep = json("demo/deployment.testnet.json");
 const meas = json("ct/measurements.testnet.json");
+const proving = json("ct/measurements.proving.json");
 const latest = json("evidence/latest.json");
 const round = json(`evidence/${latest.dir}/round.json`);
 const run = json(`evidence/${latest.dir}/run.json`);
@@ -63,7 +64,7 @@ const facts = {
   measurements: {
     measuredAt: meas.measuredAt, protocolVersion: meas.protocolVersion, latestLedger: meas.latestLedger,
     limits: meas.limits, register: meas.register, confidentialTransfer: meas.confidentialTransfer,
-    batching: meas.batching, aggregate: meas.aggregateOnChainVerification,
+    batching: meas.batching, aggregate: meas.aggregateOnChainVerification, proving,
   },
   round: { dir: latest.dir, published: latest.published, ...round, run, vkBytes, chain },
   submodule: /url = (.*)/.exec(lock)?.[1] ?? null,

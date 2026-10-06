@@ -535,8 +535,17 @@
           ]
         },
         {
-          "site": "\"1.32 s\", d: \"Warm, on an Apple M4 Pro\"",
+          "site": "(m.proving.circuits.transfer.warmMs / 1000).toFixed(2)",
+          "fact": "measurements.proving.circuits.transfer.warmMs",
           "sources": [
+            {
+              "file": "ct/measurements.proving.json",
+              "contains": "\"warmMs\": 1321"
+            },
+            {
+              "file": "MEASUREMENTS.md",
+              "contains": "| `transfer` (25 public inputs) | 2,005 ms | 1,321 ms |"
+            },
             {
               "file": "MEASUREMENTS.md",
               "contains": "1.32 s warm on this machine"

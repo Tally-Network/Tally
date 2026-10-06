@@ -1,0 +1,12 @@
+{
+  "measuredAt": "2026-10-05",
+  "machine": "Apple M4 Pro",
+  "node": "24.20.0",
+  "bbjs": "0.87.0",
+  "source": "Console output of `pnpm test:prove` (ct/sdk/test/prove.ts) and `pnpm demo`, as tabulated in MEASUREMENTS.md. Warm is the second proof after the backend is initialised.",
+  "circuits": {
+    "register": { "publicInputs": 6, "firstMs": 1199, "warmMs": 696, "proofBytes": 14592 },
+    "transfer": { "publicInputs": 25, "firstMs": 2005, "warmMs": 1321, "proofBytes": 14592 },
+    "tally_aggregate_n16_zk": { "firstMs": 2260, "warmMs": null, "proofBytes": 16224 }
+  }
+}

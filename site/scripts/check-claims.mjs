@@ -42,6 +42,7 @@ const fail = (msg) => errors.push(msg);
 const facts = json(join(SITE, "content/generated/facts.json"));
 const dep = json(repo("demo/deployment.testnet.json"));
 const meas = json(repo("ct/measurements.testnet.json"));
+const proving = json(repo("ct/measurements.proving.json"));
 const latest = json(repo("evidence/latest.json"));
 const round = json(repo(`evidence/${latest.dir}/round.json`));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -55,6 +56,7 @@ const factChecks = [
   ["measurements.confidentialTransfer", facts.measurements.confidentialTransfer, meas.confidentialTransfer],
   ["measurements.batching", facts.measurements.batching, meas.batching],
   ["measurements.aggregate", facts.measurements.aggregate, meas.aggregateOnChainVerification],
+  ["measurements.proving", facts.measurements.proving, proving],
   ["round.dir", facts.round.dir, latest.dir],
 ];
 for (const k of Object.keys(round)) factChecks.push([`round.${k}`, facts.round[k], round[k]]);
@@ -71,6 +73,16 @@ if (run.donorTotal !== run.expectedTotal) fail(`run.json donor total ${run.donor
   if (r.status !== 0) fail((r.stderr || r.stdout).trim() || "scripts/render-round-docs.ts --check failed");
 }
 for (const [k, got, want] of factChecks) if (!same(got, want)) fail(`facts.json ${k} differs from the repository; run \`pnpm site:facts\``);
+// ct/measurements.proving.json transcribes MEASUREMENTS.md's proving table; the two must agree.
+{
+  const md = readFileSync(repo("MEASUREMENTS.md"), "utf8");
+  const ms = (x) => (x == null ? "—" : `${x.toLocaleString("en-US")} ms`);
+  for (const [name, c] of Object.entries(proving.circuits)) {
+    const cells = `| ${ms(c.firstMs)} | ${ms(c.warmMs)} | ${c.proofBytes.toLocaleString("en-US")} B |`;
+    if (!md.includes(cells)) fail(`MEASUREMENTS.md has no proving row ${cells} for ${name} (ct/measurements.proving.json)`);
+  }
+  if (!md.includes(proving.machine)) fail(`MEASUREMENTS.md does not name the proving machine "${proving.machine}"`);
+}
 
 // The chain snapshot must agree with the published evidence's own summary line.
 const ev = read(repo("evidence/README.md"));

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T21:15:01.573Z",
+  "generatedAt": "2026-10-06T11:06:34.683Z",
   "network": "testnet",
   "openZeppelin": "stellar-contracts v0.9.0 @ df602b613fbc4ae1e98ff62ba3caef671a370f65",
   "contracts": {
@@ -147,6 +147,32 @@
           "txSizeBytes": 33580
         }
       ]
+    },
+    "proving": {
+      "measuredAt": "2026-10-05",
+      "machine": "Apple M4 Pro",
+      "node": "24.20.0",
+      "bbjs": "0.87.0",
+      "source": "Console output of `pnpm test:prove` (ct/sdk/test/prove.ts) and `pnpm demo`, as tabulated in MEASUREMENTS.md. Warm is the second proof after the backend is initialised.",
+      "circuits": {
+        "register": {
+          "publicInputs": 6,
+          "firstMs": 1199,
+          "warmMs": 696,
+          "proofBytes": 14592
+        },
+        "transfer": {
+          "publicInputs": 25,
+          "firstMs": 2005,
+          "warmMs": 1321,
+          "proofBytes": 14592
+        },
+        "tally_aggregate_n16_zk": {
+          "firstMs": 2260,
+          "warmMs": null,
+          "proofBytes": 16224
+        }
+      }
     }
   },
   "round": {
@@ -295,7 +321,7 @@
           "vTilde": "2af63b97898096937b8bda05ee9ad0bc383c49a82189a143b529739304f289d8"
         }
       ],
-      "readAt": "2026-10-05T21:15:01.572Z",
+      "readAt": "2026-10-06T11:06:34.682Z",
       "readFrom": "https://soroban-testnet.stellar.org"
     }
   },
