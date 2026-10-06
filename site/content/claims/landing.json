@@ -4,6 +4,7 @@
   "siteFiles": [
     "components/tally/landing/hero.tsx",
     "components/tally/landing/frame.tsx",
+    "components/tally/landing/demo-video.tsx",
     "components/tally/landing/round-hero.tsx",
     "components/tally/landing/parts.tsx",
     "components/tally/landing/sections-a.tsx",
@@ -226,17 +227,66 @@
     {
       "id": "video",
       "title": "Demo video",
-      "component": "Nodus hero-image.tsx frame with a still of the round",
+      "component": "Nodus hero-image.tsx frame holding a click-to-load video player (poster: the film's verified state)",
       "claims": [
         {
-          "site": "Demo video slot. Until the video exists, this is a still of the round explainer",
+          "site": "Recorded against round-006 on Stellar testnet",
           "sources": [
             {
-              "file": "evidence/latest.json",
-              "contains": "\"dir\""
+              "file": "evidence/round-006/round.json",
+              "contains": "\"network\": \"Stellar testnet\""
+            },
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"recordedOn\": \"2026-10-06\""
+            },
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"network\": \"Stellar testnet\""
             }
           ],
-          "note": "The video is not recorded; the slot shows a still of the round with real on-chain values"
+          "note": "The video is pinned to round-006 (the round it was recorded against); the evidence path, not a quote, names it, so the claim stays valid after later rounds"
+        },
+        {
+          "site": "The browser verification plays in real time",
+          "sources": [
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"verifyRun\": \"real time"
+            }
+          ]
+        },
+        {
+          "site": "the two tampering checks are sped up and labelled with their real durations",
+          "sources": [
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"realSeconds\": 5.7"
+            },
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"realSeconds\": 5.3"
+            }
+          ]
+        },
+        {
+          "site": "both tampering attempts rejected",
+          "sources": [
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"result\": \"rejected\""
+            }
+          ]
+        },
+        {
+          "site": "Play the demo · 2:21",
+          "sources": [
+            {
+              "file": "site/public/video/tally-demo.json",
+              "contains": "\"runningTime\": \"2:21.67\""
+            }
+          ],
+          "note": "2:21.67, shown as players show it (whole seconds elapsed)"
         }
       ]
     },
