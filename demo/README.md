@@ -27,14 +27,14 @@ Runs against Stellar **testnet** using the deployment in [`deployment.testnet.js
 ## Last verified run
 
 <!-- round:last-run -->
-2026-10-22, OpenZeppelin v0.9.0 deployment, from `main` at `2a61fdf` (`pnpm evidence:refresh`, which runs this demo and published `evidence/round-009`). The figures are recorded in [`evidence/round-009/run.json`](../evidence/round-009/run.json):
+2026-10-27, OpenZeppelin v0.9.0 deployment, from `main` at `2e574db` (`pnpm evidence:refresh`, which runs this demo and published `evidence/round-010`). The figures are recorded in [`evidence/round-010/run.json`](../evidence/round-010/run.json):
 
 ```
-resolved from chain: 5 lanes, window [5328271, 5328285]
+resolved from chain: 5 lanes, window [5414908, 5414923]
 transfers from declared lanes (all time) : 17
 inside the declared window               : 16
 excluded by the window                   : 1  <- the pre-round transfer
-proof     16224B in 4801ms, spans 5 sender accounts
+proof     16224B in 4708ms, spans 5 sender accounts
 donor total = 3160   expected 3160   MATCH
 === ROUND VERIFIED ===
 ```

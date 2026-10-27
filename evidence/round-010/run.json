@@ -1,0 +1,16 @@
+{
+  "note": "Figures from the `pnpm demo` run that produced this round, parsed from its output.",
+  "date": "2026-10-27",
+  "commit": "2e574db",
+  "openedAt": 5414908,
+  "closedAt": 5414923,
+  "lanes": 5,
+  "allTime": 17,
+  "inWindow": 16,
+  "excluded": 1,
+  "proofBytes": 16224,
+  "proofMs": 4708,
+  "senders": 5,
+  "donorTotal": 3160,
+  "expectedTotal": 3160
+}
