@@ -1,0 +1,7 @@
+{
+  "note": "PUBLISHED DELIBERATELY. secret_r_R is the DONOR's key, not the funder's. Publishing it makes everyone the donor for this demonstration round. It reveals nothing about individual amounts and nothing about the funder. A real donor keeps r_R private.",
+  "p_r_x": "0x17965112e187e3a1f5e67804c87456a762cc93416c242a318feb0084e8d618e3",
+  "p_r_y": "0x230512abf5dcd49a7761575ee6ce3533d632450a42c385c670de410cc5622002",
+  "nu": "0x007d6a97855dc7a024c675c7959056dc83ab8e3d22484a38b81223a505fb6805",
+  "secret_r_R": "0x00079c354d24e278062ec2dbc98e508d80fdcf76fcf74d2ae6795241d20b9982"
+}
